@@ -1,4 +1,5 @@
 import click
+import threading
 from config import load_config, save_config, ensure_output_dir
 from data_retrieval.json_scraper import scrape_json
 from data_retrieval.web_scraper import scrape_web
@@ -63,11 +64,18 @@ def run_cli():
     ensure_output_dir()
     setup_logger()
 
-    # Perform scraping based on chosen method
-    if method in [1, 3]:
+    if method == 1:
         scrape_json(config)
-    if method in [2, 3]:
+    elif method == 2:
         scrape_web(config)
+    elif method == 3:
+        # Run both scrapers simultaneously using threading
+        json_thread = threading.Thread(target=scrape_json, args=(config,))
+        web_thread = threading.Thread(target=scrape_web, args=(config,))
+        json_thread.start()
+        web_thread.start()
+        json_thread.join()
+        web_thread.join()
 
     click.echo("Scraping completed.")
 

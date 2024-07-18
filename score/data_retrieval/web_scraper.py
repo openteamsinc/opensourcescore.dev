@@ -8,6 +8,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from data_storage.csv_storage import save_to_csv
 from data_storage.parquet_storage import save_to_parquet
 from logger import setup_logger
+from utils.common import get_all_package_names
+import os
 
 logger = setup_logger()
 
@@ -111,28 +113,9 @@ def get_package_data(package_name):
         return None
 
 
-def get_all_package_names():
-    """
-    Fetches the list of all package names from the PyPI Simple API.
-
-    Returns:
-        list: A list of all package names.
-    """
-    url = "https://pypi.org/simple/"
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        # Extract package names from the HTML response
-        package_names = re.findall(r'<a href="/simple/([^/]+)/">', response.text)
-        return package_names
-    except requests.RequestException as e:
-        print(f"Failed to retrieve the list of all packages: {e}")
-        return []
-
-
 def scrape_web(config):
     """
-    Initiates the scraping process by scraping the web pages based on the given configuration.
+    Initiates the web scraping process based on the given configuration.
 
     Args:
         config (dict): Configuration dictionary containing scraping parameters.
@@ -140,10 +123,15 @@ def scrape_web(config):
     package_names = get_all_package_names()
     letters = config["letters"]
 
-    # Use a ThreadPoolExecutor to parallelize the scraping process by letters
+    output_dir = os.path.join("output", "web")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     with ThreadPoolExecutor(max_workers=26) as executor:
         futures = [
-            executor.submit(process_packages_by_letter, letter, package_names, config)
+            executor.submit(
+                process_packages_by_letter, letter, package_names, config, output_dir
+            )
             for letter in letters
         ]
 
@@ -151,7 +139,7 @@ def scrape_web(config):
             future.result()
 
 
-def process_packages_by_letter(letter, package_names, config):
+def process_packages_by_letter(letter, package_names, config, output_dir):
     """
     Processes and saves package data for packages starting with a specific letter.
 
@@ -159,21 +147,19 @@ def process_packages_by_letter(letter, package_names, config):
         letter (str): The letter to filter package names by.
         package_names (list): List of all package names.
         config (dict): Configuration dictionary containing output parameters.
+        output_dir (str): Directory to save the output files.
     """
     # Filter package names that start with the specified letter
     letter_package_names = [name for name in package_names if name[0].lower() == letter]
 
     for package_name in tqdm(letter_package_names, desc=f"Processing letter {letter}"):
-        # Fetch and process package data
         package_data = get_package_data(package_name)
         if package_data:
             df = pd.DataFrame([package_data])
-            # Save data to CSV if specified in the config
             if config["output_format"] in [1, 3]:
-                save_to_csv(df, letter)
-            # Save data to Parquet if specified in the config
+                save_to_csv(df, letter, output_dir)
             if config["output_format"] in [2, 3]:
-                save_to_parquet(df, letter, config["entries_per_parquet"])
+                save_to_parquet(df, letter, config["entries_per_parquet"], output_dir)
 
 
 def extract_downloads_from_svg(svg_url, retries=3, delay=2):
