@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from data_storage.csv_storage import save_to_csv
 from data_storage.parquet_storage import save_to_parquet
 from logger import setup_logger
 from utils.common import get_all_package_names
@@ -60,6 +59,7 @@ def scrape_json(config):
     Args:
         config (dict): Configuration dictionary containing scraping parameters.
     """
+    # Get all package names from the PyPI Simple API
     package_names = get_all_package_names()
     letters = config["letters"]
 
@@ -99,8 +99,6 @@ def process_packages_by_letter(letter, package_names, config, output_dir):
     for package_name in tqdm(letter_package_names, desc=f"Processing letter {letter}"):
         package_data = get_package_data(package_name)
         if package_data:
-            df = pd.json_normalize(package_data)  # Normalize JSON data to a flat table
-            if config["output_format"] in [1, 3]:
-                save_to_csv(df, letter, output_dir)
-            if config["output_format"] in [2, 3]:
-                save_to_parquet(df, letter, config["entries_per_parquet"], output_dir)
+            # Normalize JSON data to a flat table
+            df = pd.json_normalize(package_data)
+            save_to_parquet(df, letter, output_dir)

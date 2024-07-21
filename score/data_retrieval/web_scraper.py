@@ -5,7 +5,6 @@ import time
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from data_storage.csv_storage import save_to_csv
 from data_storage.parquet_storage import save_to_parquet
 from logger import setup_logger
 from utils.common import get_all_package_names
@@ -93,6 +92,7 @@ def get_package_data(package_name):
                 if "Development Status" in text:
                     package_info["dev_status"] = text
 
+        # Extract release history
         extract_release_history(url, soup, package_info)
 
         # Extract monthly downloads from image URLs based on alt text
@@ -156,10 +156,7 @@ def process_packages_by_letter(letter, package_names, config, output_dir):
         package_data = get_package_data(package_name)
         if package_data:
             df = pd.DataFrame([package_data])
-            if config["output_format"] in [1, 3]:
-                save_to_csv(df, letter, output_dir)
-            if config["output_format"] in [2, 3]:
-                save_to_parquet(df, letter, config["entries_per_parquet"], output_dir)
+            save_to_parquet(df, letter, output_dir)
 
 
 def extract_downloads_from_svg(svg_url, retries=3, delay=2):
@@ -177,7 +174,6 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
     attempt = 0
     while attempt < retries:
         try:
-            print(f"Attempt {attempt + 1} to retrieve SVG from {svg_url}")
             response = requests.get(svg_url, timeout=5)
             response.raise_for_status()
             svg_content = response.text
@@ -185,19 +181,12 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
                 r"(\d[\d,]*[KM]?\s*/\s*month|\d[\d,]*[KM]?|\d+)\s*</text>", svg_content
             )
             if match:
-                print(f"Match found: {match.group(1)}")
                 return match.group(1).replace(",", "").replace("/month", "")
-            else:
-                print("No match found in SVG content.")
         except requests.RequestException as e:
-            print(f"Failed to retrieve SVG from {svg_url}: {e}")
+            logger.error(f"Failed to retrieve SVG from {svg_url}: {e}")
         attempt += 1
         if attempt < retries:
-            print(f"Retrying... ({attempt}/{retries})")
             time.sleep(delay)
-        else:
-            print(f"Exceeded maximum retries ({retries}) for {svg_url}")
-            return ""
     return ""
 
 
@@ -261,4 +250,4 @@ def extract_release_history(current_url, soup, package_info):
             package_info["last_release"] = release_history[0]["date"]
 
     except Exception as e:
-        print(f"Failed to extract release history: {e}")
+        logger.error(f"Failed to extract release history: {e}")

@@ -1,12 +1,11 @@
 import click
 import threading
-from config import load_config, save_config, ensure_output_dir
 from data_retrieval.json_scraper import scrape_json
 from data_retrieval.web_scraper import scrape_web
 from logger import setup_logger
 
 
-def parse_letters(letters_str):
+def input_formatter(letters_str):
     letters = set()
     if not letters_str:
         letters_str = "0-9,a-z"
@@ -24,61 +23,67 @@ def parse_letters(letters_str):
     return "".join(sorted(letters))
 
 
-@click.command()
-def run_cli():
-    # Ask for scraping method
-    method = click.prompt(
-        "Choose scraping method:\n1. JSON API\n2. Web Scraper\n3. Both",
-        type=int,
-        default=3,
-    )
+@click.group()
+def cli():
+    pass
 
-    # Ask for output format
-    output_format = click.prompt(
-        "Choose output format:\n1. CSV\n2. Parquet\n3. Both", type=int, default=3
-    )
 
-    # If Parquet or Both is chosen, ask for entries per Parquet file
-    entries_per_parquet = None
-    if output_format in [2, 3]:
-        entries_per_parquet = click.prompt(
-            "Enter the number of entries per Parquet file", type=int, default=1000
-        )
+@cli.command()
+@click.option(
+    "--letters",
+    default="0-9,a-z",
+    help="Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
+)
+def scrape_pypi(letters):
+    letters_to_scrape = input_formatter(letters)
 
-    # Ask for letters to scrape
-    letters = click.prompt(
-        "Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
-        type=str,
-        default="0-9,a-z",
-    )
-    parsed_letters = parse_letters(letters)
+    # Prepare the config
+    config = {"letters": letters_to_scrape}
 
-    # Save config
-    config = load_config()
-    config["method"] = method
-    config["output_format"] = output_format
-    config["entries_per_parquet"] = entries_per_parquet
-    config["letters"] = parsed_letters
-    save_config(config)
-
-    ensure_output_dir()
     setup_logger()
+    scrape_json(config)
+    click.echo("Scraping completed.")
 
-    if method == 1:
-        scrape_json(config)
-    elif method == 2:
-        scrape_web(config)
-    elif method == 3:
-        # Run both scrapers simultaneously using threading
-        json_thread = threading.Thread(target=scrape_json, args=(config,))
-        web_thread = threading.Thread(target=scrape_web, args=(config,))
-        json_thread.start()
-        web_thread.start()
-        json_thread.join()
-        web_thread.join()
+
+@cli.command()
+@click.option(
+    "--letters",
+    default="0-9,a-z",
+    help="Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
+)
+def scrape_pypi_web(letters):
+    letters_to_scrape = input_formatter(letters)
+
+    # Prepare the config
+    config = {"letters": letters_to_scrape}
+
+    setup_logger()
+    scrape_web(config)
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--letters",
+    default="0-9,a-z",
+    help="Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
+)
+def scrape_pypi_both(letters):
+    letters_to_scrape = input_formatter(letters)
+
+    # Prepare the config
+    config = {"letters": letters_to_scrape}
+
+    setup_logger()
+    json_thread = threading.Thread(target=scrape_json, args=(config,))
+    web_thread = threading.Thread(target=scrape_web, args=(config,))
+    json_thread.start()
+    web_thread.start()
+    json_thread.join()
+    web_thread.join()
 
     click.echo("Scraping completed.")
 
 
 if __name__ == "__main__":
-    run_cli()
+    cli()

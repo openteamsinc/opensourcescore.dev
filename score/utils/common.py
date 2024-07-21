@@ -1,7 +1,7 @@
 import os
-import pandas as pd
 import requests
 import re
+import pandas as pd
 
 
 def get_next_parquet_filename(base_name, extension=".parquet"):
@@ -25,6 +25,29 @@ def get_parquet_record_count(file_path):
         df = pd.read_parquet(file_path)
         return len(df)
     return 0
+
+
+def input_formatter(letters_str):
+    letters = set()
+    if not letters_str:
+        letters_str = "0-9,a-z"
+    for part in letters_str.split(","):
+        part = part.strip()
+        if "-" in part:
+            start, end = part.split("-")
+            start, end = start.strip(), end.strip()
+            if start.isdigit() and end.isdigit():
+                letters.update(str(i) for i in range(int(start), int(end) + 1))
+            elif start.isalpha() and end.isalpha():
+                letters.update(chr(i) for i in range(ord(start), ord(end) + 1))
+        else:
+            letters.add(part)
+    return "".join(sorted(letters))
+
+
+def ensure_output_dir():
+    if not os.path.exists("output"):
+        os.makedirs("output")
 
 
 def get_all_package_names():

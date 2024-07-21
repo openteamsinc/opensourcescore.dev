@@ -1,64 +1,78 @@
 import os
 import pandas as pd
-from utils.common import get_next_parquet_filename, get_parquet_record_count
+import duckdb
 
 
-def save_to_parquet(df, letter, max_records_per_parquet, output_dir):
+def save_to_parquet(df, letter, output_dir):
     """
-    Saves the given DataFrame to a Parquet file. If the Parquet file exceeds the specified maximum
-    number of records, a new Parquet file is created.
+    Saves the given DataFrame to a Parquet file using DuckDB for Hive-style partitioning.
 
     Args:
         df (DataFrame): The DataFrame to save.
         letter (str): The starting letter of the package names to include in the filename.
-        max_records_per_parquet (int): The maximum number of records allowed in a single Parquet file.
         output_dir (str): The directory to save the Parquet files in.
     """
     # Ensure the directory exists before generating the filename
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Base name for Parquet files
-    output_parquet_base = os.path.join(output_dir, f"pypi_packages_{letter}")
+    # Add the letter column to the DataFrame for partitioning
+    df["letter"] = letter
 
-    # Find existing Parquet files and sort them
-    parquet_files = sorted(
-        [
-            f
-            for f in os.listdir(output_dir)
-            if f.startswith(f"pypi_packages_{letter}") and f.endswith(".parquet")
-        ]
-    )
+    # Define the DuckDB connection
+    con = duckdb.connect()  # Connect to an in-memory DuckDB instance
+    parquet_file = os.path.join(output_dir, f"pypi_packages_{letter}.parquet")
 
-    # Determine the current Parquet file to write to
-    current_parquet = (
-        parquet_files[-1]
-        if parquet_files
-        else os.path.basename(get_next_parquet_filename(output_parquet_base))
-    )
+    # Check if the parquet file for the letter exists
+    if os.path.exists(parquet_file):
+        # Read the existing Parquet file into DuckDB
+        con.execute(f"CREATE TABLE existing_data AS SELECT * FROM '{parquet_file}'")
 
-    current_parquet_path = os.path.join(output_dir, current_parquet)
+        # Fetch the column names and types of the existing data
+        existing_columns = con.execute("PRAGMA table_info(existing_data)").fetchall()
+        existing_column_names = [col[1] for col in existing_columns]
+        existing_column_types = {col[1]: col[2] for col in existing_columns}
 
-    # Check the record count of the current Parquet file
-    if os.path.exists(current_parquet_path):
-        current_parquet_record_count = get_parquet_record_count(current_parquet_path)
-    else:
-        current_parquet_record_count = 0
+        # Ensure the new DataFrame has the same columns as the existing data
+        df = df.reindex(columns=existing_column_names, fill_value=None)
 
-    # If the current Parquet file exceeds the max records, create a new Parquet file
-    if current_parquet_record_count + len(df) > max_records_per_parquet:
-        current_parquet = os.path.basename(
-            get_next_parquet_filename(output_parquet_base)
+        # Convert the columns in the new DataFrame to match the existing data types
+        for column, dtype in existing_column_types.items():
+            if column in df.columns:
+                if "INT" in dtype.upper():
+                    df[column] = (
+                        pd.to_numeric(df[column], errors="coerce").fillna(0).astype(int)
+                    )
+                elif "FLOAT" in dtype.upper():
+                    df[column] = (
+                        pd.to_numeric(df[column], errors="coerce")
+                        .fillna(0.0)
+                        .astype(float)
+                    )
+                elif "BOOLEAN" in dtype.upper():
+                    df[column] = df[column].astype(bool)
+                else:
+                    df[column] = df[column].astype(str).fillna("")
+
+        # Register the new DataFrame as a DuckDB table
+        con.register("df_table", df)
+
+        # Combine the new data with existing data in DuckDB
+        con.execute("INSERT INTO existing_data SELECT * FROM df_table")
+
+        # Write the combined data back to the Parquet file with overwrite
+        con.execute(
+            f"""
+            COPY existing_data TO '{parquet_file}' (FORMAT PARQUET, OVERWRITE)
+        """
         )
-        current_parquet_path = os.path.join(output_dir, current_parquet)
-        current_parquet_record_count = 0
-
-    # Save DataFrame to the current Parquet file
-    if os.path.exists(current_parquet_path):
-        existing_parquet_df = pd.read_parquet(current_parquet_path)
-        combined_df = pd.concat([existing_parquet_df, df], ignore_index=True)
-        combined_df.to_parquet(current_parquet_path, index=False)
     else:
-        df.to_parquet(current_parquet_path, index=False)
+        # If no existing file, write the new DataFrame to the Parquet file
+        con.register("df_table", df)  # Register the DataFrame as a DuckDB table
+        con.execute(
+            f"""
+            COPY df_table TO '{parquet_file}' (FORMAT PARQUET)
+        """
+        )
 
-    current_parquet_record_count += len(df)
+    con.close()
