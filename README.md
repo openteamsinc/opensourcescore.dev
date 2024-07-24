@@ -15,7 +15,8 @@ The end product of this repo is a score dataset
 
 ## Maturity Categories
 
-### 1. Experimental 
+### 1. Experimental
+
 - **Definition**: The project is in the initial phase of its development lifecycle. It is primarily aimed at early adopters and developers interested in the latest features or in contributing to the project's development.
 - **Characteristics**:
   - **Frequent Breaking Changes**: The API or core functionality may change often, requiring adjustments in dependent code with each update.
@@ -23,10 +24,11 @@ The end product of this repo is a score dataset
   - **Small User Base**: Typically has a smaller community of users and contributors, which can affect the speed of issue resolution and feature requests.
   - **Use Case**: Best suited for development and testing environments, or for research and exploration of new concepts.
 
+### 2. Developing
 
-2. Developing
-3. Mature
-4. Legacy
+### 3. Mature
+
+### 4. Legacy
 
 ## Health & Risk Categories
 
