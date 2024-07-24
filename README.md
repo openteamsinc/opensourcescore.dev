@@ -22,9 +22,20 @@ The end product of this repo is a score dataset
 
 ## Health & Risk Categories
 
-1. Healthy
-2. Caution Needed
-3. High Risk
+### 1. Healthy
+
+### 2. Caution Needed
+
+- **Definition**: This category indicates that while the project or system may be functional, there are known issues or potential vulnerabilities that require attention. Users should proceed with caution, especially in production environments.
+- **Characteristics**:
+  - **Moderate Stability**: Generally stable but may have known bugs or performance issues that could impact its reliability.
+  - **Irregular Updates**: Updates and maintenance may be less frequent, potentially leaving some issues unresolved for longer periods.
+  - **Adequate Documentation and Support**: Documentation covers most aspects, but there may be gaps. Support is available but may not be as responsive or comprehensive.
+  - **Potential Security Concerns**: Some security vulnerabilities may have been identified, and while they may not be critical, they necessitate vigilance and regular monitoring.
+  - **Selective Adoption**: Used by a community of users, but its adoption may be limited to specific scenarios or environments where its known issues do not pose significant risks.
+- **Use Case**: Suitable for non-critical applications or environments where users can manage or mitigate known risks. Caution and additional testing are advised before deployment in production.
+
+### 3. High Risk
 
 ## Datasets:
 
