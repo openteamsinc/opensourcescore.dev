@@ -15,10 +15,20 @@ The end product of this repo is a score dataset
 
 ## Maturity Categories
 
-1. Mature
-2. Developing
-3. Experimental
-4. Legacy
+### 1. Experimental
+
+### 2. Developing
+
+- **Definition**: The project has progressed beyond the experimental stage and is in active development. It is becoming more stable but may still undergo significant changes.
+- **Characteristics**:
+  - **Moderate Stability**: The core API and features are more stable than in the experimental stage, but some changes and enhancements are still occurring.
+  - **Growing Documentation**: Documentation is more comprehensive and updated regularly, but may not cover all features or use cases.
+  - **Expanding User Base**: The community of users and contributors is growing, leading to more feedback, bug reports, and feature requests.
+  - **Use Case**: Suitable for projects that can accommodate some changes and are not critically dependent on absolute stability.
+
+### 3. Mature
+
+### 4. Legacy
 
 ## Health & Risk Categories
 
