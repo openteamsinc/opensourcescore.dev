@@ -22,7 +22,7 @@ The end product of this repo is a score dataset
   - **Frequent Breaking Changes**: The API or core functionality may change often, requiring adjustments in dependent code with each update.
   - **Limited Documentation**: Documentation may be sparse or in flux, as features are rapidly evolving.
   - **Small User Base**: Typically has a smaller community of users and contributors, which can affect the speed of issue resolution and feature requests.
-  - **Use Case**: Best suited for development and testing environments, or for research and exploration of new concepts.
+- **Use Case**: Best suited for development and testing environments, or for research and exploration of new concepts.
 
 ### 2. Developing
 
