@@ -28,7 +28,7 @@ The end product of this repo is a score dataset
   - **Limited Updates**: Updates are rare and typically only address critical bugs or security vulnerabilities.
   - **Stable but Outdated**: The project is stable but may not comply with current standards or best practices. New features and improvements are not being added.
   - **Declining User Base**: The community and user base may be shrinking, and finding support or resources can be challenging.
-  - **Use Case**: Suitable for systems that depend on it for legacy reasons but should be considered for replacement or upgrade in the near term.
+- **Use Case**: Suitable for systems that depend on it for legacy reasons but should be considered for replacement or upgrade in the near term.
 
 ## Health & Risk Categories
 
