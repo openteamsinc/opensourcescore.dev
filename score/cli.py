@@ -1,26 +1,9 @@
 import click
 import threading
+from utils.common import input_formatter
 from data_retrieval.json_scraper import scrape_json
 from data_retrieval.web_scraper import scrape_web
 from logger import setup_logger
-
-
-def input_formatter(letters_str):
-    letters = set()
-    if not letters_str:
-        letters_str = "0-9,a-z"
-    for part in letters_str.split(","):
-        part = part.strip()
-        if "-" in part:
-            start, end = part.split("-")
-            start, end = start.strip(), end.strip()
-            if start.isdigit() and end.isdigit():
-                letters.update(str(i) for i in range(int(start), int(end) + 1))
-            elif start.isalpha() and end.isalpha():
-                letters.update(chr(i) for i in range(ord(start), ord(end) + 1))
-        else:
-            letters.add(part)
-    return "".join(sorted(letters))
 
 
 @click.group()

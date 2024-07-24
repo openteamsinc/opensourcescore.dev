@@ -12,7 +12,7 @@ def save_to_parquet(df, letter, output_dir):
         letter (str): The starting letter of the package names to include in the filename.
         output_dir (str): The directory to save the Parquet files in.
     """
-    # Ensure the directory exists before generating the filename
+    # Ensure the output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -21,58 +21,33 @@ def save_to_parquet(df, letter, output_dir):
 
     # Define the DuckDB connection
     con = duckdb.connect()  # Connect to an in-memory DuckDB instance
-    parquet_file = os.path.join(output_dir, f"pypi_packages_{letter}.parquet")
+    partitioned_dir = os.path.join(output_dir, f"letter={letter}")
 
-    # Check if the parquet file for the letter exists
+    # Ensure the partitioned directory exists
+    if not os.path.exists(partitioned_dir):
+        os.makedirs(partitioned_dir)
+
+    parquet_file = os.path.join(partitioned_dir, "pypi_packages.parquet")
+
+    # Check if the Parquet file for the partition exists
     if os.path.exists(parquet_file):
-        # Read the existing Parquet file into DuckDB
-        con.execute(f"CREATE TABLE existing_data AS SELECT * FROM '{parquet_file}'")
+        # Read the existing Parquet file into a DataFrame
+        existing_df = con.execute(f"SELECT * FROM '{parquet_file}'").fetchdf()
 
-        # Fetch the column names and types of the existing data
-        existing_columns = con.execute("PRAGMA table_info(existing_data)").fetchall()
-        existing_column_names = [col[1] for col in existing_columns]
-        existing_column_types = {col[1]: col[2] for col in existing_columns}
-
-        # Ensure the new DataFrame has the same columns as the existing data
-        df = df.reindex(columns=existing_column_names, fill_value=None)
-
-        # Convert the columns in the new DataFrame to match the existing data types
-        for column, dtype in existing_column_types.items():
-            if column in df.columns:
-                if "INT" in dtype.upper():
-                    df[column] = (
-                        pd.to_numeric(df[column], errors="coerce").fillna(0).astype(int)
-                    )
-                elif "FLOAT" in dtype.upper():
-                    df[column] = (
-                        pd.to_numeric(df[column], errors="coerce")
-                        .fillna(0.0)
-                        .astype(float)
-                    )
-                elif "BOOLEAN" in dtype.upper():
-                    df[column] = df[column].astype(bool)
-                else:
-                    df[column] = df[column].astype(str).fillna("")
-
-        # Register the new DataFrame as a DuckDB table
-        con.register("df_table", df)
-
-        # Combine the new data with existing data in DuckDB
-        con.execute("INSERT INTO existing_data SELECT * FROM df_table")
-
-        # Write the combined data back to the Parquet file with overwrite
-        con.execute(
-            f"""
-            COPY existing_data TO '{parquet_file}' (FORMAT PARQUET, OVERWRITE)
-        """
-        )
+        # Combine the existing data with the new data
+        combined_df = pd.concat([existing_df, df], ignore_index=True)
     else:
-        # If no existing file, write the new DataFrame to the Parquet file
-        con.register("df_table", df)  # Register the DataFrame as a DuckDB table
-        con.execute(
-            f"""
-            COPY df_table TO '{parquet_file}' (FORMAT PARQUET)
-        """
-        )
+        combined_df = df
 
+    # Register the combined DataFrame as a DuckDB table
+    con.register("combined_df", combined_df)
+
+    # Write the combined data back to the Parquet file with overwrite
+    con.execute(
+        f"""
+        COPY combined_df TO '{parquet_file}' (FORMAT PARQUET, OVERWRITE)
+        """
+    )
+
+    # Close the DuckDB connection
     con.close()
