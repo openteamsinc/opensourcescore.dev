@@ -22,9 +22,24 @@ The end product of this repo is a score dataset
 
 ## Health & Risk Categories
 
-1. Healthy
-2. Caution Needed
-3. High Risk
+### 1. Healthy
+
+Here are detailed definitions for the Health & Risk Categories as outlined in your README.md file:
+
+### 1. Healthy
+
+- **Definition**: This category signifies that the project or system is in an optimal state of operation. It is stable, actively maintained, and has minimal issues or vulnerabilities that affect its functionality or security.
+- **Characteristics**:
+  - **Stability and Reliability**: Demonstrates consistent performance and reliability under various conditions.
+  - **Active Development and Maintenance**: Regular updates and active development indicate ongoing improvements and timely bug fixes.
+  - **Strong Documentation and Support**: Comprehensive documentation is available, and there is a responsive support system for addressing user queries and issues.
+  - **Low Security Risks**: Security measures are robust, with regular patches for vulnerabilities, ensuring a secure environment for users.
+  - **Broad Adoption**: Widely adopted by users, indicating trust and dependability in real-world applications.
+- **Use Case**: Ideal for critical applications where reliability and security are paramount. Suitable for both development and production environments.
+
+### 2. Caution Needed
+
+### 3. High Risk
 
 ## Datasets:
 
