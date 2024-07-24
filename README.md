@@ -15,10 +15,20 @@ The end product of this repo is a score dataset
 
 ## Maturity Categories
 
-1. Mature
-2. Developing
-3. Experimental
-4. Legacy
+### 1. Experimental
+
+### 2. Developing
+
+### 3. Mature
+
+- **Definition**: The project is stable and has reached a level of maturity where major changes are infrequent. It is suitable for production use.
+- **Characteristics**:
+  - **High Stability**: Core features and APIs are stable, with changes primarily focused on bug fixes, security improvements, and minor enhancements.
+  - **Comprehensive Documentation**: Documentation is thorough and stable, covering all aspects of the project including setup, configuration, and best practices.
+  - **Large User Base**: Has a large and active community providing extensive support, which contributes to a robust ecosystem of plugins, integrations, and tools.
+  - **Use Case**: Ideal for production environments where reliability and stability are paramount.
+
+### 4. Legacy
 
 ## Health & Risk Categories
 
