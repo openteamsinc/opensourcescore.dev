@@ -22,9 +22,20 @@ The end product of this repo is a score dataset
 
 ## Health & Risk Categories
 
-1. Healthy
-2. Caution Needed
-3. High Risk
+### 1. Healthy
+
+### 2. Caution Needed
+
+### 3. High Risk
+
+- **Definition**: This category is assigned to projects or systems that have significant issues or vulnerabilities that pose serious risks to stability, security, or performance. It may be in a state of neglect or facing challenges that critically impact its viability.
+- **Characteristics**:
+  - **Unstable and Unreliable**: Frequent crashes, data loss, or critical bugs significantly impair functionality and reliability.
+  - **Lack of Maintenance**: Little to no active development, with outstanding critical issues and vulnerabilities left unaddressed.
+  - **Insufficient Documentation and Support**: Documentation is outdated or incomplete, and support resources are scarce or non-existent.
+  - **Critical Security Vulnerabilities**: Known security vulnerabilities are severe and may compromise user data or system integrity.
+  - **Limited to No Adoption**: Very few users, if any, due to the risks and issues associated with its use.
+- **Use Case**: Not recommended for any new projects or production environments. Existing users should seek alternatives or plan for significant mitigation measures if continued use is absolutely necessary.
 
 ## Datasets:
 
