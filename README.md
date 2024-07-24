@@ -24,7 +24,7 @@ The end product of this repo is a score dataset
   - **Moderate Stability**: The core API and features are more stable than in the experimental stage, but some changes and enhancements are still occurring.
   - **Growing Documentation**: Documentation is more comprehensive and updated regularly, but may not cover all features or use cases.
   - **Expanding User Base**: The community of users and contributors is growing, leading to more feedback, bug reports, and feature requests.
-  - **Use Case**: Suitable for projects that can accommodate some changes and are not critically dependent on absolute stability.
+- **Use Case**: Suitable for projects that can accommodate some changes and are not critically dependent on absolute stability.
 
 ### 3. Mature
 
