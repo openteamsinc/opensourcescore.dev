@@ -26,7 +26,7 @@ The end product of this repo is a score dataset
   - **High Stability**: Core features and APIs are stable, with changes primarily focused on bug fixes, security improvements, and minor enhancements.
   - **Comprehensive Documentation**: Documentation is thorough and stable, covering all aspects of the project including setup, configuration, and best practices.
   - **Large User Base**: Has a large and active community providing extensive support, which contributes to a robust ecosystem of plugins, integrations, and tools.
-  - **Use Case**: Ideal for production environments where reliability and stability are paramount.
+- **Use Case**: Ideal for production environments where reliability and stability are paramount.
 
 ### 4. Legacy
 
