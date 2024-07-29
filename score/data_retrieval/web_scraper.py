@@ -4,8 +4,6 @@ import re
 import time
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from data_storage.parquet_storage import save_to_parquet
 from logger import setup_logger
 from utils.common import get_all_package_names
 import os
@@ -36,6 +34,7 @@ def get_package_data(package_name):
         # Initialize package information dictionary
         package_info = {
             "name": package_name,
+            "first_letter": package_name[0],
             "version": soup.find("h1").text.strip().split()[-1],
             "summary": summary,
             "author": "",
@@ -127,16 +126,8 @@ def scrape_web(config):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    with ThreadPoolExecutor(max_workers=26) as executor:
-        futures = [
-            executor.submit(
-                process_packages_by_letter, letter, package_names, config, output_dir
-            )
-            for letter in letters
-        ]
-
-        for future in as_completed(futures):
-            future.result()
+    for letter in letters:
+        process_packages_by_letter(letter, package_names, config, output_dir)
 
 
 def process_packages_by_letter(letter, package_names, config, output_dir):
@@ -152,11 +143,14 @@ def process_packages_by_letter(letter, package_names, config, output_dir):
     # Filter package names that start with the specified letter
     letter_package_names = [name for name in package_names if name[0].lower() == letter]
 
+    all_package_data = []
     for package_name in tqdm(letter_package_names, desc=f"Processing letter {letter}"):
         package_data = get_package_data(package_name)
         if package_data:
-            df = pd.DataFrame([package_data])
-            save_to_parquet(df, letter, output_dir)
+            all_package_data.append(package_data)
+
+    df = pd.DataFrame(all_package_data)
+    df.to_parquet(output_dir, partition_cols=["first_letter"])
 
 
 def extract_downloads_from_svg(svg_url, retries=3, delay=2):

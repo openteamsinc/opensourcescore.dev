@@ -1,9 +1,25 @@
 import click
 import threading
-from utils.common import input_formatter
 from data_retrieval.json_scraper import scrape_json
 from data_retrieval.web_scraper import scrape_web
 from logger import setup_logger
+
+
+def get_letter_range(start, end):
+    """
+    Generates a list of characters from start to end inclusive, supporting both numbers and letters.
+
+    Args:
+        start (str): The starting character (letter or number).
+        end (str): The ending character (letter or number).
+
+    Returns:
+        list: A list of characters from start to end.
+    """
+    all_chars = "0123456789abcdefghijklmnopqrstuvwxyz"
+    start_index = all_chars.index(start.lower())
+    end_index = all_chars.index(end.lower()) + 1
+    return list(all_chars[start_index:end_index])
 
 
 @click.group()
@@ -13,12 +29,17 @@ def cli():
 
 @cli.command()
 @click.option(
-    "--letters",
-    default="0-9,a-z",
-    help="Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
+    "--start",
+    required=True,
+    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
-def scrape_pypi(letters):
-    letters_to_scrape = input_formatter(letters)
+@click.option(
+    "--end",
+    required=True,
+    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+)
+def scrape_pypi(start, end):
+    letters_to_scrape = get_letter_range(start, end)
 
     # Prepare the config
     config = {"letters": letters_to_scrape}
@@ -30,12 +51,17 @@ def scrape_pypi(letters):
 
 @cli.command()
 @click.option(
-    "--letters",
-    default="0-9,a-z",
-    help="Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
+    "--start",
+    required=True,
+    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
-def scrape_pypi_web(letters):
-    letters_to_scrape = input_formatter(letters)
+@click.option(
+    "--end",
+    required=True,
+    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+)
+def scrape_pypi_web(start, end):
+    letters_to_scrape = get_letter_range(start, end)
 
     # Prepare the config
     config = {"letters": letters_to_scrape}
@@ -47,12 +73,17 @@ def scrape_pypi_web(letters):
 
 @cli.command()
 @click.option(
-    "--letters",
-    default="0-9,a-z",
-    help="Enter letters to scrape (e.g., 'a-c' or 'a,b,c,0-9'). Leave empty for all letters",
+    "--start",
+    required=True,
+    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
-def scrape_pypi_both(letters):
-    letters_to_scrape = input_formatter(letters)
+@click.option(
+    "--end",
+    required=True,
+    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+)
+def scrape_pypi_both(start, end):
+    letters_to_scrape = get_letter_range(start, end)
 
     # Prepare the config
     config = {"letters": letters_to_scrape}

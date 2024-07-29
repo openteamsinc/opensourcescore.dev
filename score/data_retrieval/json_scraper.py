@@ -1,8 +1,6 @@
 import requests
 import pandas as pd
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from data_storage.parquet_storage import save_to_parquet
 from logger import setup_logger
 from utils.common import get_all_package_names
 import os
@@ -26,24 +24,26 @@ def get_package_data(package_name):
         response.raise_for_status()  # Raise an error for bad status codes
         package_data = response.json()  # Parse the JSON response
 
-        # Extract and filter relevant fields from the JSON response
+        # Extract the 'info' section
+        info = package_data.get("info", {})
+
+        # Extract desired fields
         filtered_data = {
-            "info.bugtrack_url": package_data.get("info", {}).get("bugtrack_url", None),
-            "info.docs_url": package_data.get("info", {}).get("docs_url", None),
-            "info.home_page": package_data.get("info", {}).get("home_page", None),
-            "info.maintainer": package_data.get("info", {}).get("maintainer", None),
-            "info.maintainer_email": package_data.get("info", {}).get(
-                "maintainer_email", None
-            ),
-            "info.project_urls": package_data.get("info", {}).get("project_urls", None),
-            "info.release_url": package_data.get("info", {}).get("release_url", None),
-            "info.requires_dist": package_data.get("info", {}).get(
-                "requires_dist", None
-            ),
-            "info.version": package_data.get("info", {}).get("version", None),
-            "info.yanked_reason": package_data.get("info", {}).get(
-                "yanked_reason", None
-            ),
+            "name": info.get("name", None),
+            "first_letter": package_name[0],
+            "bugtrack_url": info.get("bugtrack_url", None),
+            "classifiers": info.get("classifiers", []),
+            "docs_url": info.get("docs_url", None),
+            "download_url": info.get("download_url", None),
+            "home_page": info.get("home_page", None),
+            "keywords": info.get("keywords", None),
+            "maintainer": info.get("maintainer", None),
+            "maintainer_email": info.get("maintainer_email", None),
+            "project_urls": info.get("project_urls", None),
+            "release_url": info.get("release_url", None),
+            "requires_python": info.get("requires_python", None),
+            "version": info.get("version", None),
+            "yanked_reason": info.get("yanked_reason", None),
         }
 
         return filtered_data
@@ -68,37 +68,27 @@ def scrape_json(config):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Use a ThreadPoolExecutor to process packages in parallel
-    with ThreadPoolExecutor(max_workers=26) as executor:
-        futures = [
-            executor.submit(
-                process_packages_by_letter, letter, package_names, config, output_dir
-            )
-            for letter in letters
-        ]
-
-        # Wait for all futures to complete
-        for future in as_completed(futures):
-            future.result()
+    for letter in letters:
+        process_packages_by_letter(letter, package_names, output_dir)
 
 
-def process_packages_by_letter(letter, package_names, config, output_dir):
+def process_packages_by_letter(letter, package_names, output_dir):
     """
     Processes packages by their first letter and saves the data to the specified output format.
 
     Args:
         letter (str): The starting letter of the packages to process.
         package_names (list): List of all package names.
-        config (dict): Configuration dictionary containing output parameters.
         output_dir (str): Directory to save the output files.
     """
     # Filter package names that start with the specified letter
     letter_package_names = [name for name in package_names if name[0].lower() == letter]
 
-    # Process each package and save the data
+    all_package_data = []
     for package_name in tqdm(letter_package_names, desc=f"Processing letter {letter}"):
         package_data = get_package_data(package_name)
         if package_data:
-            # Normalize JSON data to a flat table
-            df = pd.json_normalize(package_data)
-            save_to_parquet(df, letter, output_dir)
+            all_package_data.append(package_data)
+
+    df = pd.DataFrame(all_package_data)
+    df.to_parquet(output_dir, partition_cols=["first_letter"])
