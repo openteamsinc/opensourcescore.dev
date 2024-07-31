@@ -13,6 +13,15 @@ The end product of this repo is a score dataset
 - Data export to BigQuery for easy access and analysis
 - Open-source scraping scripts for transparency and collaboration
 
+## Sources 
+
+- PyPI (Python Package Index) - The official repository for Python packages
+- Conda - The package manager for the Anaconda distribution of Python packages
+- GitHub - The world's leading software development platform for open source projects
+- GitLab - A web-based DevOps lifecycle tool for open source projects
+- NPM (Node Package Manager) - The package manager for JavaScript and Node.js packages
+- SourceForge - A web-based source code repository for open source projects
+
 ## Maturity Categories
 
 1. Mature
