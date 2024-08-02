@@ -2,6 +2,7 @@ import click
 import threading
 from data_retrieval.json_scraper import scrape_json
 from data_retrieval.web_scraper import scrape_web
+from Score.score.data_retrieval.github_scraper import scrape_github_data
 from logger import setup_logger
 
 
@@ -96,6 +97,28 @@ def scrape_pypi_both(start, end):
     json_thread.join()
     web_thread.join()
 
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--start",
+    required=True,
+    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+)
+@click.option(
+    "--end",
+    required=True,
+    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+)
+def scrape_github(start, end):
+    letters_to_scrape = get_letter_range(start, end)
+
+    # Prepare the config
+    config = {"letters": letters_to_scrape}
+
+    setup_logger()
+    scrape_github_data(config)
     click.echo("Scraping completed.")
 
 

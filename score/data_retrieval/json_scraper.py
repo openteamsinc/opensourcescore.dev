@@ -87,6 +87,7 @@ def process_packages_by_letter(letter, package_names, output_dir):
     all_package_data = []
     for package_name in tqdm(letter_package_names, desc=f"Processing letter {letter}"):
         package_data = get_package_data(package_name)
+        df = pd.json_normalize(package_data)
         if package_data:
             all_package_data.append(package_data)
 
