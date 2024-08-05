@@ -9,7 +9,7 @@ from .data_retrieval.web_scraper import scrape_web
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "."))
 
 
-def get_letter_range(start, end):
+def get_letter_range(start: int, end: int):
     """
     Generates a list of characters from start to end inclusive, supporting both numbers and letters.
 
