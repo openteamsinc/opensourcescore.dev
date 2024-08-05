@@ -1,11 +1,14 @@
 import requests
+from typing import List
 import pandas as pd
 from tqdm import tqdm
-from logger import setup_logger
-from utils.common import get_all_package_names
+import logging
 import os
 
-logger = setup_logger()
+from ..utils.common import get_all_package_names
+
+
+log = logging.getLogger(__name__)
 
 
 def get_package_data(package_name):
@@ -19,40 +22,39 @@ def get_package_data(package_name):
         dict: A dictionary containing filtered package data.
     """
     url = f"https://pypi.org/pypi/{package_name}/json"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad status codes
-        package_data = response.json()  # Parse the JSON response
-
-        # Extract the 'info' section
-        info = package_data.get("info", {})
-
-        # Extract desired fields
-        filtered_data = {
-            "name": info.get("name", None),
-            "first_letter": package_name[0],
-            "bugtrack_url": info.get("bugtrack_url", None),
-            "classifiers": info.get("classifiers", []),
-            "docs_url": info.get("docs_url", None),
-            "download_url": info.get("download_url", None),
-            "home_page": info.get("home_page", None),
-            "keywords": info.get("keywords", None),
-            "maintainer": info.get("maintainer", None),
-            "maintainer_email": info.get("maintainer_email", None),
-            "project_urls": info.get("project_urls", None),
-            "release_url": info.get("release_url", None),
-            "requires_python": info.get("requires_python", None),
-            "version": info.get("version", None),
-            "yanked_reason": info.get("yanked_reason", None),
-        }
-
-        return filtered_data
-    except requests.RequestException as e:
-        logger.error(f"Failed to retrieve data for package {package_name}: {e}")
+    response = requests.get(url)
+    if response.status_code == 404:
+        log.debug(f"Skipping package not found for package {package_name}")
         return None
+    response.raise_for_status()  # Raise an error for bad status codes
+    package_data = response.json()  # Parse the JSON response
+
+    # Extract the 'info' section
+    info = package_data.get("info", {})
+
+    # Extract desired fields
+    filtered_data = {
+        "name": info.get("name", None),
+        "first_letter": package_name[0],
+        "bugtrack_url": info.get("bugtrack_url", None),
+        "classifiers": info.get("classifiers", []),
+        "docs_url": info.get("docs_url", None),
+        "download_url": info.get("download_url", None),
+        "home_page": info.get("home_page", None),
+        "keywords": info.get("keywords", None),
+        "maintainer": info.get("maintainer", None),
+        "maintainer_email": info.get("maintainer_email", None),
+        "project_urls": info.get("project_urls", None),
+        "release_url": info.get("release_url", None),
+        "requires_python": info.get("requires_python", None),
+        "version": info.get("version", None),
+        "yanked_reason": info.get("yanked_reason", None),
+    }
+
+    return filtered_data
 
 
-def scrape_json(config):
+def scrape_json(output_dir: str, letters: List[str]):
     """
     Initiates the scraping process using the JSON API based on the given configuration.
 
@@ -61,10 +63,8 @@ def scrape_json(config):
     """
     # Get all package names from the PyPI Simple API
     package_names = get_all_package_names()
-    letters = config["letters"]
 
     # Create the output directory if it doesn't exist
-    output_dir = os.path.join("output", "json")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -85,7 +85,9 @@ def process_packages_by_letter(letter, package_names, output_dir):
     letter_package_names = [name for name in package_names if name[0].lower() == letter]
 
     all_package_data = []
-    for package_name in tqdm(letter_package_names, desc=f"Processing letter {letter}"):
+    for package_name in tqdm(
+        letter_package_names, desc=f"Processing partition column {letter!r}"
+    ):
         package_data = get_package_data(package_name)
         df = pd.json_normalize(package_data)
         if package_data:
