@@ -1,14 +1,16 @@
+from typing import List
 import requests
 import pandas as pd
 import re
 import time
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from logger import setup_logger
-from utils.common import get_all_package_names
+import logging
+from ..utils.common import get_all_package_names
+
 import os
 
-logger = setup_logger()
+log = logging.getLogger(__name__)
 
 
 def get_package_data(package_name):
@@ -35,7 +37,7 @@ def get_package_data(package_name):
         package_info = {
             "name": package_name,
             "first_letter": package_name[0],
-            "version": soup.find("h1").text.strip().split()[-1],
+            "version": soup.find("h1").text.strip().split()[-1],  # type: ignore
             "summary": summary,
             "author": "",
             "license": "",
@@ -86,7 +88,7 @@ def get_package_data(package_name):
         # Extract classifiers (Development Status)
         classifiers_section = soup.find("ul", class_="sidebar-section__classifiers")
         if classifiers_section:
-            for classifier in classifiers_section.find_all("li"):
+            for classifier in classifiers_section.find_all("li"):  # type: ignore
                 text = classifier.text.strip()
                 if "Development Status" in text:
                     package_info["dev_status"] = text
@@ -108,11 +110,11 @@ def get_package_data(package_name):
 
         return package_info
     except requests.RequestException as e:
-        logger.error(f"Failed to retrieve data for package {package_name}: {e}")
+        log.error(f"Failed to retrieve data for package {package_name}: {e}")
         return None
 
 
-def scrape_web(config):
+def scrape_web(output_dir: str, letters: List[str]):
     """
     Initiates the web scraping process based on the given configuration.
 
@@ -120,17 +122,16 @@ def scrape_web(config):
         config (dict): Configuration dictionary containing scraping parameters.
     """
     package_names = get_all_package_names()
-    letters = config["letters"]
 
     output_dir = os.path.join("output", "web")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     for letter in letters:
-        process_packages_by_letter(letter, package_names, config, output_dir)
+        process_packages_by_letter(letter, package_names, output_dir)
 
 
-def process_packages_by_letter(letter, package_names, config, output_dir):
+def process_packages_by_letter(letter: str, package_names: List[str], output_dir: str):
     """
     Processes and saves package data for packages starting with a specific letter.
 
@@ -177,7 +178,7 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
             if match:
                 return match.group(1).replace(",", "").replace("/month", "")
         except requests.RequestException as e:
-            logger.error(f"Failed to retrieve SVG from {svg_url}: {e}")
+            log.error(f"Failed to retrieve SVG from {svg_url}: {e}")
         attempt += 1
         if attempt < retries:
             time.sleep(delay)
@@ -218,7 +219,7 @@ def extract_release_history(current_url, soup, package_info):
             return
 
         # Find all release cards within the history section
-        release_cards = releases_section.find_all("a", class_="card release__card")
+        release_cards = releases_section.find_all("a", class_="card release__card")  # type: ignore
 
         # Initialize a list to hold the release history information
         release_history = []
@@ -244,4 +245,4 @@ def extract_release_history(current_url, soup, package_info):
             package_info["last_release"] = release_history[0]["date"]
 
     except Exception as e:
-        logger.error(f"Failed to extract release history: {e}")
+        log.error(f"Failed to extract release history: {e}")
