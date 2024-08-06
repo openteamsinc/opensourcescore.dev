@@ -85,39 +85,7 @@ def scrape_pypi_web(start, end, output):
         f"Will process all packages starting with characters {letters_to_scrape}."
     )
 
-    # Prepare the config
-    config = {"letters": letters_to_scrape}
-
-    setup_logger()
-    scrape_web(config)
-    click.echo("Scraping completed.")
-
-
-@main.command()
-@click.option(
-    "--start",
-    required=True,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
-)
-@click.option(
-    "--end",
-    required=True,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
-)
-def scrape_pypi_both(start, end):
-    letters_to_scrape = get_letter_range(start, end)
-
-    # Prepare the config
-    config = {"letters": letters_to_scrape}
-
-    setup_logger()
-    json_thread = threading.Thread(target=scrape_json, args=(config,))
-    web_thread = threading.Thread(target=scrape_web, args=(config,))
-    json_thread.start()
-    web_thread.start()
-    json_thread.join()
-    web_thread.join()
-
+    scrape_web(output, letters_to_scrape)
     click.echo("Scraping completed.")
 
 
