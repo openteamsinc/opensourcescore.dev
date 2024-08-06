@@ -122,7 +122,7 @@ def scrape_web(output_dir: str, letters: List[str]):
         config (dict): Configuration dictionary containing scraping parameters.
     """
     package_names = get_all_package_names()
-    
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

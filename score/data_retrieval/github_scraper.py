@@ -1,17 +1,15 @@
 import os
-import re
 import pandas as pd
 import requests
-from pyarrow import parquet as pq
 from tqdm import tqdm
-from logger import setup_logger
+import logging
+from typing import List
 
-logger = setup_logger()
+log = logging.getLogger(__name__)
 
 # Constants
 GITHUB_API_URL = "https://api.github.com/repos/"
-AUTH_HEADER = {"Authorization": ""}
-# AUTH_HEADER = {"Authorization": os.getenv("GITHUB_TOKEN", "")}  # Use an environment variable for the GitHub token
+AUTH_HEADER = {"Authorization": f"token {os.getenv('GITHUB_TOKEN', '')}"}
 
 # Fields to extract from the GitHub API response
 FIELDS_TO_EXTRACT = {
@@ -43,83 +41,76 @@ def fetch_github_data(repo_url):
     """
     repo_name = "/".join(repo_url.split("/")[-2:])
     response = requests.get(GITHUB_API_URL + repo_name, headers=AUTH_HEADER)
-    if response.status_code == 200:
-        data = response.json()
-        extracted_data = {}
-        for key, field in FIELDS_TO_EXTRACT.items():
-            if "." in key:
-                top_level_key, nested_key = key.split(".")
-                top_level_data = data.get(top_level_key, {})
-                if isinstance(top_level_data, dict):
-                    extracted_data[field] = top_level_data.get(nested_key, None)
-                else:
-                    extracted_data[field] = None
-            else:
-                extracted_data[field] = data.get(key, None)
-        return extracted_data
-    else:
-        logger.error(f"Failed to fetch data for {repo_url}: {response.status_code}")
+    if response.status_code == 404:
+        log.debug(f"Skipping repository not found for URL {repo_url}")
         return None
+    response.raise_for_status()  # Raise an error for bad status codes
+    data = response.json()
+
+    extracted_data = {}
+    for key, field in FIELDS_TO_EXTRACT.items():
+        if "." in key:
+            top_level_key, nested_key = key.split(".")
+            top_level_data = data.get(top_level_key, {})
+            if isinstance(top_level_data, dict):
+                extracted_data[field] = top_level_data.get(nested_key, None)
+            else:
+                extracted_data[field] = None
+        else:
+            extracted_data[field] = data.get(key, None)
+    return extracted_data
 
 
-def scrape_github_data(config):
+def scrape_github_data(input_dir: str, output_dir: str, letters: List[str]):
     """
-    Scrapes GitHub data for packages specified by the configuration.
+    Initiates the scraping process using the GitHub API based on the given configuration.
 
     Args:
-        config (dict): Configuration dictionary containing letters to scrape.
+        input_dir (str): Directory to read the input files from.
+        output_dir (str): Directory to save the output files.
+        letters (List[str]): List of letters to process.
     """
-    letters_to_scrape = config["letters"]
-    all_data = []
+    # Create the output directory if it doesn't exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    for letter in letters_to_scrape:
-        directory = f"output/json/first_letter={letter}"
-        if os.path.exists(directory):
-            df = pd.read_parquet(directory, filters=[("first_letter", "in", letters_to_scrape)])
+    for letter in letters:
+        process_repos_by_letter(input_dir, output_dir, letter)
 
-            # Reconstruct project_urls from flattened columns
-            df["project_urls"] = df.filter(like="project_urls.").apply(
-                lambda row: {
-                    col.split(".")[-1]: row[col]
-                    for col in row.index
-                    if pd.notna(row[col])
-                },
-                axis=1,
-            )
-            for _, row in tqdm(
-                df.iterrows(), total=len(df), desc=f"Processing letter {letter}"
-            ):
-                package_name = row.get("name")
 
-                # Get the GitHub URL from project_urls or home_page
-                source_url = row.get("project_urls", {}).get("Some_identifier")
-                if not source_url or "github.com" not in source_url:
-                    source_url = row.get("home_page")
+def process_repos_by_letter(input_dir: str, output_dir: str, letter: str):
+    """
+    Processes repositories by their first letter and saves the data to the specified output format.
 
-                # Ensure the URL is in the correct format
-                if source_url and "github.com" in source_url:
-                    repo_match = re.match(
-                        r"https?://github\.com/[^/]+/[^/]+", source_url
-                    )
-                    if repo_match:
-                        data = fetch_github_data(repo_match.group())
-                        if data:
-                            data["first_letter"] = letter
-                            data["package_name"] = (
-                                package_name  # Add the package name
-                            )
-                            all_data.append(data)
+    Args:
+        input_dir (str): Directory to read the input files from.
+        output_dir (str): Directory to save the output files.
+        letter (str): The starting letter of the repositories to process.
+    """
+    input_path = os.path.join(input_dir, f"first_letter={letter}")
+    if not os.path.exists(input_path):
+        log.debug(f"No data for letter {letter}")
+        return
 
-    # Save the scraped data to a parquet file
-    if all_data:
-        output_df = pd.DataFrame(all_data)
-        output_dir = "output/github"
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        output_file = os.path.join(output_dir, "github_data.parquet")
-        output_df.to_parquet(output_file, partition_cols=["first_letter"])
-        logger.info(
-            "Scraping completed and data saved to output/github/github_data.parquet"
-        )
+    df = pd.read_parquet(input_path)
+    all_repo_data = []
+
+    for _, row in tqdm(
+        df.iterrows(), total=len(df), desc=f"Processing letter {letter}"
+    ):
+        package_name = row["name"]
+        source_url = row["source_url"]
+
+        data = fetch_github_data(source_url)
+        if data:
+            data["first_letter"] = letter
+            data["name"] = package_name
+            all_repo_data.append(data)
+
+    if all_repo_data:
+        output_df = pd.DataFrame(all_repo_data)
+        output_path = os.path.join(output_dir, f"first_letter={letter}")
+        output_df.to_parquet(output_path, partition_cols=["first_letter"])
+        log.info(f"Data saved for letter {letter} to {output_path}")
     else:
-        logger.info("No valid GitHub URLs found or failed to fetch data.")
+        log.info(f"No valid GitHub data found for letter {letter}")
