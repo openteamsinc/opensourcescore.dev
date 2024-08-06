@@ -21,7 +21,9 @@ def get_all_package_names(letter) -> list:
 
     """
     packages_name_list = list()
-    packages_name_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
+    packages_name_url = (
+        "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
+    )
 
     try:
         logger.info("Fetching all packages from URL: %s", packages_name_url)
