@@ -1,7 +1,6 @@
 import os
 import string
 import subprocess
-import threading
 from pathlib import Path
 
 import click
@@ -30,11 +29,11 @@ def get_letter_range(start: int, end: int):
 
 
 @click.group()
-def main():
-    pass
+def cli():
+    setup_logger()
 
 
-@main.command()
+@cli.command()
 @click.option(
     "--output",
     default=OUTPUT_ROOT / "output" / "pypi-json",
@@ -61,7 +60,7 @@ def scrape_pypi(start, end, output):
     click.echo("Scraping completed.")
 
 
-@main.command()
+@cli.command()
 @click.option(
     "--output",
     default=OUTPUT_ROOT / "output" / "pypi-web",
@@ -89,7 +88,7 @@ def scrape_pypi_web(start, end, output):
     click.echo("Scraping completed.")
 
 
-@main.command()
+@cli.command()
 @click.option(
     "--letter_to_scrape",
     "-l",
@@ -106,4 +105,4 @@ def conda(letter_to_scrape):
 
 
 if __name__ == "__main__":
-    main()
+    cli()
