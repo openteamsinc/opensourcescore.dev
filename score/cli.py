@@ -2,10 +2,10 @@ import subprocess
 import threading
 
 import click
-from conda import scrape_conda_packages
-from data_retrieval.json_scraper import scrape_json
-from data_retrieval.web_scraper import scrape_web
-from logger import setup_logger
+from .conda import scrape_conda_packages
+from .data_retrieval.json_scraper import scrape_json
+from .data_retrieval.web_scraper import scrape_web
+from .logger import setup_logger
 
 
 def get_letter_range(start, end):

@@ -1,7 +1,7 @@
 import logging
 
 import requests
-from common import json_to_parquet
+from .common import json_to_parquet
 
 # Set up logger
 logging.basicConfig(level=logging.INFO)
