@@ -1,14 +1,15 @@
-import subprocess
-import threading
-
 import click
-from .conda import scrape_conda_packages
+import string
+import os
+from pathlib import Path
+from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
-from .logger import setup_logger
+
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "."))
 
 
-def get_letter_range(start, end):
+def get_letter_range(start: int, end: int):
     """
     Generates a list of characters from start to end inclusive, supporting both numbers and letters.
 
@@ -19,86 +20,66 @@ def get_letter_range(start, end):
     Returns:
         list: A list of characters from start to end.
     """
-    all_chars = "0123456789abcdefghijklmnopqrstuvwxyz"
-    start_index = all_chars.index(start.lower())
-    end_index = all_chars.index(end.lower()) + 1
-    return list(all_chars[start_index:end_index])
+    all_chars = string.digits + string.ascii_lowercase
+    return list(all_chars[start:end])
 
 
 @click.group()
-def main():
-    pass
-
+def cli():
+    setup_logger()
 
 @main.command()
 @click.option(
+    "--output",
+    default=OUTPUT_ROOT / "output" / "pypi-json",
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
     "--start",
     required=True,
+    type=int,
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
 @click.option(
     "--end",
     required=True,
+    type=int,
     help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
 )
-def scrape_pypi(start, end):
+def scrape_pypi(start, end, output):
     letters_to_scrape = get_letter_range(start, end)
-
-    # Prepare the config
-    config = {"letters": letters_to_scrape}
-
-    setup_logger()
-    scrape_json(config)
+    click.echo(
+        f"Will process all packages starting with characters {letters_to_scrape}."
+    )
+    scrape_json(output, letters_to_scrape)
     click.echo("Scraping completed.")
 
 
 @main.command()
 @click.option(
+    "--output",
+    default=OUTPUT_ROOT / "output" / "pypi-web",
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
     "--start",
     required=True,
+    type=int,
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
 @click.option(
     "--end",
     required=True,
+    type=int,
     help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
 )
-def scrape_pypi_web(start, end):
+def scrape_pypi_web(start, end, output):
     letters_to_scrape = get_letter_range(start, end)
+    click.echo(
+        f"Will process all packages starting with characters {letters_to_scrape}."
+    )
 
-    # Prepare the config
-    config = {"letters": letters_to_scrape}
-
-    setup_logger()
-    scrape_web(config)
-    click.echo("Scraping completed.")
-
-
-@main.command()
-@click.option(
-    "--start",
-    required=True,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
-)
-@click.option(
-    "--end",
-    required=True,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
-)
-def scrape_pypi_both(start, end):
-    letters_to_scrape = get_letter_range(start, end)
-
-    # Prepare the config
-    config = {"letters": letters_to_scrape}
-
-    setup_logger()
-    json_thread = threading.Thread(target=scrape_json, args=(config,))
-    web_thread = threading.Thread(target=scrape_web, args=(config,))
-    json_thread.start()
-    web_thread.start()
-    json_thread.join()
-    web_thread.join()
-
+    scrape_web(output, letters_to_scrape)
     click.echo("Scraping completed.")
 
 
