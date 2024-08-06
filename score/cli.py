@@ -5,9 +5,14 @@ from pathlib import Path
 from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
+# from .data_retrieval.github_scraper import scrape_github_data
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "."))
 
+def validate_input(ctx, param, value):
+    if not (value.isdigit() or (len(value) == 1 and value.isalpha() and value.islower())):
+        raise click.BadParameter(f"{value} is not a valid input. Please enter a single letter (a-z) or number (0-9).")
+    return value
 
 def get_letter_range(start: int, end: int):
     """
@@ -21,13 +26,11 @@ def get_letter_range(start: int, end: int):
         list: A list of characters from start to end.
     """
     all_chars = string.digits + string.ascii_lowercase
-    return list(all_chars[start:end])
-
+    return list(all_chars[start:end+1])
 
 @click.group()
 def cli():
     setup_logger()
-
 
 @cli.command()
 @click.option(
@@ -38,23 +41,28 @@ def cli():
 @click.option(
     "--start",
     required=True,
-    type=int,
+    type=str,
+    callback=validate_input,
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
 @click.option(
     "--end",
     required=True,
-    type=int,
+    type=str,
+    callback=validate_input,
     help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
 )
 def scrape_pypi(start, end, output):
-    letters_to_scrape = get_letter_range(start, end)
+    all_chars = string.digits + string.ascii_lowercase
+    start_index = all_chars.index(start)
+    end_index = all_chars.index(end)
+    
+    letters_to_scrape = get_letter_range(start_index, end_index)
     click.echo(
         f"Will process all packages starting with characters {letters_to_scrape}."
     )
     scrape_json(output, letters_to_scrape)
     click.echo("Scraping completed.")
-
 
 @cli.command()
 @click.option(
@@ -65,17 +73,23 @@ def scrape_pypi(start, end, output):
 @click.option(
     "--start",
     required=True,
-    type=int,
+    type=str,
+    callback=validate_input,
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
 @click.option(
     "--end",
     required=True,
-    type=int,
+    type=str,
+    callback=validate_input,
     help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
 )
 def scrape_pypi_web(start, end, output):
-    letters_to_scrape = get_letter_range(start, end)
+    all_chars = string.digits + string.ascii_lowercase
+    start_index = all_chars.index(start)
+    end_index = all_chars.index(end)
+    
+    letters_to_scrape = get_letter_range(start_index, end_index)
     click.echo(
         f"Will process all packages starting with characters {letters_to_scrape}."
     )
@@ -83,6 +97,34 @@ def scrape_pypi_web(start, end, output):
     scrape_web(output, letters_to_scrape)
     click.echo("Scraping completed.")
 
+@cli.command()
+@click.option(
+    "--start",
+    required=True,
+    type=str,
+    callback=validate_input,
+    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+)
+@click.option(
+    "--end",
+    required=True,
+    type=str,
+    callback=validate_input,
+    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+)
+def scrape_github(start, end):
+    all_chars = string.digits + string.ascii_lowercase
+    start_index = all_chars.index(start)
+    end_index = all_chars.index(end)
+
+    letters_to_scrape = get_letter_range(start_index, end_index)
+
+    # Prepare the config
+    config = {"letters": letters_to_scrape}
+
+    setup_logger()
+#    scrape_github_data(config)
+    click.echo("Scraping completed.")
 
 if __name__ == "__main__":
     cli()
