@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from .conda import scrape_conda_packages
+from .conda import scrape_conda
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
 from .logger import setup_logger
@@ -89,16 +89,21 @@ def scrape_pypi_web(start, end, output):
 
 @cli.command()
 @click.option(
+    "--output",
+    default=OUTPUT_ROOT / "output" / "conda-json",
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
     "--letter_to_scrape",
     "-l",
     required=True,
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
-def conda(letter_to_scrape):
+def conda(output, letter_to_scrape):
     click.echo(
         f"Will process all packages starting with characters {letter_to_scrape}."
     )
-    scrape_conda_packages(letter_to_scrape)
+    scrape_conda(output, letter_to_scrape)
     click.echo("Scraping completed.")
 
 

@@ -1,4 +1,5 @@
 import logging
+import os
 
 import pandas as pd
 import requests
@@ -99,13 +100,15 @@ def get_package_data(package_name: str) -> dict:
     logger.info("Package Name : %s", package_name)
     package_url = f"https://api.anaconda.org/package/conda-forge/{package_name}"
     response = requests.get(package_url)
-    response.raise_for_status()
+    if response.status_code != 200:
+        logger.error("Failed to fetch data for package : %s", package_name)
+        return None
     package_data_response = response.json()
     required_json_data = get_required_json_data(package_data_response, package_url)
     return required_json_data
 
 
-def scrape_conda_packages(letter_to_scrape: str) -> None:
+def scrape_conda(output_dir: str, letter_to_scrape: str) -> None:
     """
     Scrapes all the conda packages data for the given letter
     and saves the data in a parquet file.
@@ -116,6 +119,10 @@ def scrape_conda_packages(letter_to_scrape: str) -> None:
     Returns:
         None
     """
+    output_dir = os.path.join("output", "conda")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     package_data_list = list()
     packages_name_list = get_all_package_names(letter_to_scrape)
     for package_name in list(packages_name_list):
@@ -124,9 +131,7 @@ def scrape_conda_packages(letter_to_scrape: str) -> None:
             package_data_list.append(package_data)
     if package_data_list:
         df = pd.DataFrame(package_data_list)
-        df.to_parquet(
-            f"conda_package_data_{letter_to_scrape}", partition_cols=["initial_letter"]
-        )
+        df.to_parquet(output_dir, partition_cols=["initial_letter"])
         logger.info("Data saved for package : %s", len(package_data_list))
     else:
         logger.error("Failed to save data for package letter : %s", letter_to_scrape)
