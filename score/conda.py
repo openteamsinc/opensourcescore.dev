@@ -21,17 +21,18 @@ def get_all_package_names(letter) -> list:
 
     """
     packages_name_list = list()
-    packages_name_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
+
+    packages_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
 
     try:
-        logger.info("Fetching all packages from URL: %s", packages_name_url)
-        response = requests.get(packages_name_url)
+        logger.info("Fetching all packages from URL: %s", packages_url)
+        response = requests.get(packages_url)
         if response.status_code == 200:
             packages_name_list = response.json().keys()
             logger.info("Total Packages : %s", len(packages_name_list))
         else:
             logger.error(
-                f"Failed to fetch URL: {packages_name_url} | status code: {response.status_code} | {response.text}"
+                f"Failed to fetch URL: {packages_url} | status code: {response.status_code} | {response.text}"
             )
             packages_name_list = []
     except Exception as e:
