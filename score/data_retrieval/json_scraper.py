@@ -11,7 +11,8 @@ from ..utils.common import get_all_package_names
 
 log = logging.getLogger(__name__)
 
-GITHUB_REPO_PATTERN = re.compile(r'https://github\.com/[^/]+/[^/]+/?')
+GITHUB_REPO_PATTERN = re.compile(r"https://github\.com/[^/]+/[^/]+/?")
+
 
 def get_package_data(package_name):
     """
@@ -50,10 +51,11 @@ def get_package_data(package_name):
         "requires_python": info.get("requires_python", None),
         "version": info.get("version", None),
         "yanked_reason": info.get("yanked_reason", None),
-        "source_url": extract_github_repo(info.get("project_urls", {}))
+        "source_url": extract_github_repo(info.get("project_urls", {})),
     }
 
     return filtered_data
+
 
 def extract_github_repo(project_urls):
     """
@@ -72,6 +74,7 @@ def extract_github_repo(project_urls):
             return url
     return None
 
+
 def scrape_json(output_dir: str, letters: List[str]):
     """
     Initiates the scraping process using the JSON API based on the given configuration.
@@ -88,6 +91,7 @@ def scrape_json(output_dir: str, letters: List[str]):
 
     for letter in letters:
         process_packages_by_letter(letter, package_names, output_dir)
+
 
 def process_packages_by_letter(letter, package_names, output_dir):
     """
@@ -111,4 +115,3 @@ def process_packages_by_letter(letter, package_names, output_dir):
 
     df = pd.DataFrame(all_package_data)
     df.to_parquet(output_dir, partition_cols=["first_letter"])
-
