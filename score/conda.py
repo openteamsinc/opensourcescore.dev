@@ -1,6 +1,7 @@
 import logging
 
 import requests
+
 from .common import json_to_parquet
 
 # Set up logger
@@ -21,20 +22,12 @@ def get_all_package_names(letter) -> list:
 
     """
     packages_name_list = list()
-
     packages_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
-
-    try:
-        logger.info("Fetching all packages from URL: %s", packages_url)
-        response = requests.get(packages_url)
-
-        response.raise_for_status()
-
-        packages_name_list = response.json().keys()
-        logger.info("Total Packages : %s", len(packages_name_list))
-
-    except Exception as e:
-        logger.error("Error fetching package names: %s", e)
+    logger.info("Fetching all packages names from URL: %s", packages_url)
+    response = requests.get(packages_url)
+    response.raise_for_status()
+    packages_name_list = response.json().keys()
+    logger.info("Total Packages : %s", len(packages_name_list))
 
     if letter:
         packages_name_list = {
