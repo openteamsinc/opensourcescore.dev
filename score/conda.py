@@ -27,14 +27,12 @@ def get_all_package_names(letter) -> list:
     try:
         logger.info("Fetching all packages from URL: %s", packages_url)
         response = requests.get(packages_url)
-        if response.status_code == 200:
-            packages_name_list = response.json().keys()
-            logger.info("Total Packages : %s", len(packages_name_list))
-        else:
-            logger.error(
-                f"Failed to fetch URL: {packages_url} | status code: {response.status_code} | {response.text}"
-            )
-            packages_name_list = []
+
+        response.raise_for_status()
+
+        packages_name_list = response.json().keys()
+        logger.info("Total Packages : %s", len(packages_name_list))
+
     except Exception as e:
         logger.error("Error fetching package names: %s", e)
 
@@ -109,15 +107,10 @@ def get_package_data(package_name: str) -> dict:
     logger.info("Package Name : %s", package_name)
     package_url = f"https://api.anaconda.org/package/conda-forge/{package_name}"
     response = requests.get(package_url)
-    if response.status_code == 200:
-        package_data_response = response.json()
-        required_json_data = get_required_json_data(package_data_response, package_url)
-        return required_json_data
-    else:
-        logger.error(
-            f"Failed to fetch URL: {package_url} with status code: {response.status_code} | {response.text}"
-        )
-        return None
+    response.raise_for_status()
+    package_data_response = response.json()
+    required_json_data = get_required_json_data(package_data_response, package_url)
+    return required_json_data
 
 
 def scrape_conda_packages(letter_to_scrape: str) -> None:
