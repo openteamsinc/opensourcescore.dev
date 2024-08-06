@@ -1,8 +1,7 @@
 import logging
 
+import pandas as pd
 import requests
-
-from .common import json_to_parquet
 
 # Set up logger
 logging.basicConfig(level=logging.INFO)
@@ -124,7 +123,8 @@ def scrape_conda_packages(letter_to_scrape: str) -> None:
         if package_data:
             package_data_list.append(package_data)
     if package_data_list:
-        json_to_parquet(package_data_list, f"conda_package_data_{letter_to_scrape}")
+        df = pd.DataFrame(package_data_list)
+        df.to_parquet(f"conda_package_data_{letter_to_scrape}", partition_cols=["initial_letter"])
         logger.info("Data saved for package : %s", len(package_data_list))
     else:
         logger.error("Failed to save data for package letter : %s", letter_to_scrape)
