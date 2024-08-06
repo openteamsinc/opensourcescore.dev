@@ -1,6 +1,5 @@
 import os
 import string
-import subprocess
 from pathlib import Path
 
 import click
@@ -96,16 +95,11 @@ def scrape_pypi_web(start, end, output):
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
 def conda(letter_to_scrape):
-    try:
-        subprocess.run(["python", "score/conda.py"], check=True)
-        click.echo(
-            f"Will process all packages starting with characters {letter_to_scrape}."
-        )
-        scrape_conda_packages(letter_to_scrape)
-        click.echo("Scraping completed.")
-    except Exception as e:
-        click.echo(f"Error: {e}")
-        raise
+    click.echo(
+        f"Will process all packages starting with characters {letter_to_scrape}."
+    )
+    scrape_conda_packages(letter_to_scrape)
+    click.echo("Scraping completed.")
 
 
 if __name__ == "__main__":
