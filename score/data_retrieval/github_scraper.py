@@ -75,44 +75,40 @@ def scrape_github_data(config):
     for letter in letters_to_scrape:
         directory = f"output/json/first_letter={letter}"
         if os.path.exists(directory):
-            for file_name in os.listdir(directory):
-                if file_name.endswith(".parquet"):
-                    file_path = os.path.join(directory, file_name)
-                    df = pq.read_table(file_path).to_pandas()
+            df = pd.read_parquet(directory, filters=[("first_letter", "in", letters_to_scrape)])
 
-                    # Reconstruct project_urls from flattened columns
-                    df["project_urls"] = df.filter(like="project_urls.").apply(
-                        lambda row: {
-                            col.split(".")[-1]: row[col]
-                            for col in row.index
-                            if pd.notna(row[col])
-                        },
-                        axis=1,
+            # Reconstruct project_urls from flattened columns
+            df["project_urls"] = df.filter(like="project_urls.").apply(
+                lambda row: {
+                    col.split(".")[-1]: row[col]
+                    for col in row.index
+                    if pd.notna(row[col])
+                },
+                axis=1,
+            )
+            for _, row in tqdm(
+                df.iterrows(), total=len(df), desc=f"Processing letter {letter}"
+            ):
+                package_name = row.get("name")
+
+                # Get the GitHub URL from project_urls or home_page
+                source_url = row.get("project_urls", {}).get("Some_identifier")
+                if not source_url or "github.com" not in source_url:
+                    source_url = row.get("home_page")
+
+                # Ensure the URL is in the correct format
+                if source_url and "github.com" in source_url:
+                    repo_match = re.match(
+                        r"https?://github\.com/[^/]+/[^/]+", source_url
                     )
-
-                    for _, row in tqdm(
-                        df.iterrows(), total=len(df), desc=f"Processing letter {letter}"
-                    ):
-                        package_name = row.get("name")
-
-                        # Get the GitHub URL from project_urls or home_page
-                        source_url = row.get("project_urls", {}).get("Some_identifier")
-                        if not source_url or "github.com" not in source_url:
-                            source_url = row.get("home_page")
-
-                        # Ensure the URL is in the correct format
-                        if source_url and "github.com" in source_url:
-                            repo_match = re.match(
-                                r"https?://github\.com/[^/]+/[^/]+", source_url
+                    if repo_match:
+                        data = fetch_github_data(repo_match.group())
+                        if data:
+                            data["first_letter"] = letter
+                            data["package_name"] = (
+                                package_name  # Add the package name
                             )
-                            if repo_match:
-                                data = fetch_github_data(repo_match.group())
-                                if data:
-                                    data["first_letter"] = letter
-                                    data["package_name"] = (
-                                        package_name  # Add the package name
-                                    )
-                                    all_data.append(data)
+                            all_data.append(data)
 
     # Save the scraped data to a parquet file
     if all_data:

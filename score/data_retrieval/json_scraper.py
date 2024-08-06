@@ -89,8 +89,8 @@ def process_packages_by_letter(letter, package_names, output_dir):
         letter_package_names, desc=f"Processing partition column {letter!r}"
     ):
         package_data = get_package_data(package_name)
-        df = pd.json_normalize(package_data)
         if package_data:
+            df = pd.json_normalize(package_data)
             all_package_data.append(package_data)
 
     df = pd.DataFrame(all_package_data)
