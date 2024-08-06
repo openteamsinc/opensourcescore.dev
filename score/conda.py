@@ -1,97 +1,105 @@
 import logging
 
-from common import get_requests_soup, json_to_parquet, requests_get
+import logging
+import requests
+from common import json_to_parquet
 
-# Set up logging
+# Set up logger
 logging.basicConfig(level=logging.INFO)
-
-packages_name_list = list()
-packages_data_json = dict()
-
-all_packages_name_json_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
-
-response = requests_get(all_packages_name_json_url)
-packages_name_list = response.json() if response else []
-logging.info("Total Packages : %s", len(packages_name_list.keys()))
+logger = logging.getLogger("conda")
+logger.addHandler(logging.FileHandler("conda.log"))
 
 
-for package_name in list(packages_name_list.keys())[:1]:
-    logging.info("Package Name : %s", package_name)
+def get_all_package_names(letter) -> list:
+    packages_name_list = list()
+    all_packages_name_json_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
 
-    package_url = f"https://anaconda.org/conda-forge/{package_name}"
+    try:
+        logger.info("Fetching all packages from URL: %s", all_packages_name_json_url)
+        response = requests.get(all_packages_name_json_url)
+        if response.status_code == 200:
+            packages_name_list = response.json().keys()
+            logger.info("Total Packages : %s", len(packages_name_list))
+        else:
+            logger.error(
+                f"Failed to fetch URL: {all_packages_name_json_url} with status code: {response.status_code} | {response.text}"
+            )
+            packages_name_list = []
+    except Exception as e:
+        logger.error("Error fetching package names: %s", e)
 
-    soup = get_requests_soup(package_url)
-
-    if soup:
-        license = (
-            str(soup.select_one('[title="License"]').text).split(":")[-1].strip()
-            if soup.select_one('[title="License"]')
-            else None
-        )
-        print(license)
-
-        homepage_element = soup.select_one('[title="Home Page"]')
-        homepage_url = (
-            homepage_element.attrs["href"]
-            if homepage_element and "href" in homepage_element.attrs
-            else None
-        )
-        print(homepage_url)
-
-        development_element = soup.select_one('[title="Development Url"]').select_one(
-            "a"
-        )
-        development_url = (
-            development_element.attrs["href"]
-            if development_element and "href" in development_element.attrs
-            else None
-        )
-        print(development_url)
-
-        documentation_element = soup.select_one(
-            '[title="Documentation Url"]'
-        ).select_one("a")
-        documentation_url = (
-            documentation_element.attrs["href"]
-            if documentation_element and "href" in documentation_element.attrs
-            else None
-        )
-        print(documentation_url)
-
-        download_count_element = soup.select_one('[title="Download Count"]')
-        download_count = (
-            int(str(download_count_element.select_one("span").text).strip())
-            if download_count_element.select_one("span")
-            else None
-        )
-        print(download_count)
-
-        last_upload = (
-            str(soup.select_one('[title="Last upload"]').text).split(":")[-1].strip()
-            if soup.select_one('[title="Last upload"]')
-            else None
-        )
-        print(last_upload)
-
-        packages_data_json[package_name] = {
-            "license": license,
-            "homepage_url": homepage_url,
-            "development_url": development_url,
-            "documentation_url": documentation_url,
-            "download_count": download_count,
-            "last_upload": last_upload,
+    if letter:
+        packages_name_list = {
+            i for i in packages_name_list if str(i).startswith(letter)
         }
-
-    soup = get_requests_soup(f"{package_url}/files")
-    if soup:
-        versions_list = [
-            str(i.text).strip()
-            for i in soup.select("#Version > li")
-            if str(i.text).strip() != "All"
-        ]
-        packages_data_json[package_name]["latest_version"] = versions_list[0]
-        packages_data_json[package_name]["first_version"] = versions_list[-1]
-        packages_data_json[package_name]["version_list"] = versions_list
+        logger.info(
+            "Total Packages with letter %s : %s", letter, len(packages_name_list)
+        )
+    return packages_name_list
 
 
-print(packages_data_json)
+def get_required_json_data(package_data_response, package_url):
+    required_json_data = dict()
+    required_json_data["name"] = package_data_response.get("name")
+    required_json_data["initial_letter"] = package_data_response.get("name")[0]
+    required_json_data["full_name"] = package_data_response.get("full_name", None)
+    required_json_data["home_page"] = package_data_response.get("home", None)
+    required_json_data["api_url"] = package_data_response.get("api_url", None)
+    required_json_data["html_url"] = package_data_response.get("html_url", None)
+    required_json_data["created_at"] = package_data_response.get("created_at", None)
+    required_json_data["modified_at"] = package_data_response.get("modified_at", None)
+    required_json_data["public"] = package_data_response.get("public", None)
+    required_json_data["owner"] = package_data_response.get("owner", {}).get(
+        "name", None
+    )
+    required_json_data["versions"] = package_data_response.get("versions", [])
+    required_json_data["latest_version"] = package_data_response.get(
+        "latest_version", None
+    )
+    required_json_data["revision"] = package_data_response.get("revision", None)
+    required_json_data["license"] = package_data_response.get("license", None)
+    required_json_data["license_url"] = package_data_response.get("license_url", None)
+    required_json_data["dev_url"] = package_data_response.get("dev_url", None)
+    required_json_data["doc_url"] = package_data_response.get("doc_url", None)
+    required_json_data["source_git_url"] = package_data_response.get(
+        "source_git_url", None
+    )
+    required_json_data["source_git_tag"] = package_data_response.get(
+        "source_git_tag", None
+    )
+    required_json_data["watchers"] = package_data_response.get("watchers", None)
+    required_json_data["upvoted"] = package_data_response.get("upvoted", None)
+    required_json_data["downloads"] = sum(
+        [i.get("ndownloads", 0) for i in package_data_response.get("files", [])]
+    )
+    required_json_data["package_url"] = package_url
+    return required_json_data
+
+
+def get_package_data(package_name: str):
+    logger.info("Package Name : %s", package_name)
+    package_url = f"https://api.anaconda.org/package/conda-forge/{package_name}"
+    response = requests.get(package_url)
+    if response.status_code == 200:
+        package_data_response = response.json()
+        required_json_data = get_required_json_data(package_data_response, package_url)
+        return required_json_data
+    else:
+        logger.error(
+            f"Failed to fetch URL: {package_url} with status code: {response.status_code} | {response.text}"
+        )
+        return None
+
+
+def scrape_conda_packages(letter_to_scrape):
+    package_data_list = list()
+    packages_name_list = get_all_package_names(letter_to_scrape)
+    for package_name in list(packages_name_list):
+        package_data = get_package_data(package_name)
+        if package_data:
+            package_data_list.append(package_data)
+    if package_data_list:
+        json_to_parquet(package_data_list, f"conda_package_data_{letter_to_scrape}")
+        logger.info("Data saved for package : %s", len(package_data_list))
+    else:
+        logger.error("Failed to save data for package letter : %s", letter_to_scrape)
