@@ -2,10 +2,10 @@ import subprocess
 import threading
 
 import click
+from conda import scrape_conda_packages
 from data_retrieval.json_scraper import scrape_json
 from data_retrieval.web_scraper import scrape_web
 from logger import setup_logger
-from conda import scrape_conda_packages
 
 
 def get_letter_range(start, end):
@@ -110,11 +110,10 @@ def scrape_pypi_both(start, end):
     help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
 )
 def conda(letter_to_scrape):
-    print("Scraping conda packages...", letter_to_scrape)
-    
     try:
         subprocess.run(["python", "score/conda.py"], check=True)
         scrape_conda_packages(letter_to_scrape)
+        click.echo("Scraping completed.")
     except subprocess.CalledProcessError as e:
         click.echo(f"Error: {e}")
 

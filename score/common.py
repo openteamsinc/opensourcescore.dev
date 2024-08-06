@@ -3,10 +3,11 @@ import pandas as pd
 
 def json_to_parquet(json_data: list, parquet_file_path: str) -> None:
     """
-    Convert the JSON data to Parquet file
+    Converts the JSON data to a DataFrame and writes it to a parquet file.
 
     Args:
-        parquet_file_path (str): Path to save the Parquet file
+        json_data (list): The JSON data to be converted.
+        parquet_file_path (str): The path to the parquet file.
 
     Returns:
         None
