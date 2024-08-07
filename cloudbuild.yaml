@@ -1,0 +1,65 @@
+images:
+  - "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest"
+  - "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID"
+logsBucket: "gs://openteams-score-build-logs"
+steps:
+  # Create the deployment
+  # - name: "gcr.io/cloud-builders/curl"
+  #   entrypoint: "bash"
+  #   env: ["REF_NAME=$REF_NAME", "COMMIT_SHA=$COMMIT_SHA", "BUILD_ID=$BUILD_ID"]
+  #   secretEnv: ["GITHUB_TOKEN"]
+  #   args: [buildscripts/github-deployment.sh]
+
+  - name: "docker"
+    args:
+      [
+        "build",
+        "--cache-from",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
+        "-t",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "-t",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
+        "--build-arg",
+        "REVISION_ID=$REVISION_ID",
+        "-f",
+        "Dockerfile",
+        ".",
+      ]
+  - name: "docker"
+    args:
+      [
+        "push",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+      ]
+  - name: "docker"
+    args:
+      ["push", "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest"]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
+        "scraper",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/dbt:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=1024Mi",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        # "--set-secrets=",
+        # "--env-vars-file=env.yml",
+      ]
+
+  # Mark the deployment as successful
+  # - name: "gcr.io/cloud-builders/curl"
+  #   entrypoint: "bash"
+  #   env:
+  #     ["SHORT_SHA=$SHORT_SHA", "BUILD_ID=$BUILD_ID", "PROJECT_ID=$PROJECT_ID"]
+  #   secretEnv: ["GITHUB_TOKEN"]
+  #   args: [buildscripts/github-deployment-status.sh]
+
+# availableSecrets:
+#   secretManager:
+#     - versionName: projects/$PROJECT_ID/secrets/GITHUB_TOKEN/versions/latest
+#       env: "GITHUB_TOKEN"
