@@ -66,7 +66,6 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
     for package_name in tqdm(packages, desc="Reading package data"):
         package_data = get_package_data(package_name)
         if package_data:
-            df = pd.json_normalize(package_data)
             all_package_data.append(package_data)
         else:
             failed_count += 1

@@ -112,74 +112,53 @@ def scrape_pypi_web(num_partitions, partition, output):
 
 @cli.command()
 @click.option(
-    "--output",
+    "-o" "--output",
     default=OUTPUT_ROOT / "output" / "github-urls",
     help="The output directory to save the aggregated data",
 )
 @click.option(
-    "--input",
+    "-i" "--input",
     default=OUTPUT_ROOT / "output" / "pypi-json",
     help="The input directory to read the data from",
 )
 @click.option(
-    "--start",
+    "-p",
+    "--partition",
     required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    type=int,
+    help="The partition number to scrape.",
 )
-@click.option(
-    "--end",
-    required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
-)
-def github_aggregate(start, end, input, output):
-    all_chars = string.digits + string.ascii_lowercase
-    start_index = all_chars.index(start)
-    end_index = all_chars.index(end)
+def github_aggregate(partition, input, output):
+    click.echo(f"Aggregating data for partition {partition}.")
 
-    letters_to_scrape = get_letter_range(start_index, end_index)
-
-    click.echo(f"Aggregating all data starting with characters {letters_to_scrape}.")
-
-    aggregate(input, output, letters_to_scrape)
+    aggregate(input, output, partition)
     click.echo("Aggregation completed.")
 
 
 @cli.command()
 @click.option(
-    "--start",
+    "-p",
+    "--partition",
     required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    type=int,
+    help="The partition number to scrape.",
 )
 @click.option(
-    "--end",
-    required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
-)
-@click.option(
+    "-o",
     "--output",
-    default=OUTPUT_ROOT / "output" / "github-detailed",
+    default=OUTPUT_ROOT / "output" / "github-details",
     help="The output directory to save the detailed GitHub data",
 )
-def scrape_github(start, end, output):
-    all_chars = string.digits + string.ascii_lowercase
-    start_index = all_chars.index(start)
-    end_index = all_chars.index(end)
-
-    letters_to_scrape = get_letter_range(start_index, end_index)
-
-    click.echo(f"Scraping GitHub data for characters {letters_to_scrape}.")
+def scrape_github(partition, output):
+    click.echo(f"Scraping GitHub data for partition {partition}.")
 
     input_dir = OUTPUT_ROOT / "output" / "github-urls"
-    scrape_github_data(input_dir, output, letters_to_scrape)
 
+    df = scrape_github_data(input_dir, partition)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
 
 

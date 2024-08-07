@@ -3,7 +3,6 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 import logging
-from typing import List
 
 log = logging.getLogger(__name__)
 
@@ -61,56 +60,36 @@ def fetch_github_data(repo_url):
     return extracted_data
 
 
-def scrape_github_data(input_dir: str, output_dir: str, letters: List[str]):
+def scrape_github_data(input_dir: str, partition: int):
     """
-    Initiates the scraping process using the GitHub API based on the given configuration.
+    Initiates the scraping process using the GitHub API based on the given partition.
 
     Args:
         input_dir (str): Directory to read the input files from.
-        output_dir (str): Directory to save the output files.
-        letters (List[str]): List of letters to process.
+        partition (int): The partition number to process.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the scraped data.
     """
-    # Create the output directory if it doesn't exist
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
-    for letter in letters:
-        process_repos_by_letter(input_dir, output_dir, letter)
-
-
-def process_repos_by_letter(input_dir: str, output_dir: str, letter: str):
-    """
-    Processes repositories by their first letter and saves the data to the specified output format.
-
-    Args:
-        input_dir (str): Directory to read the input files from.
-        output_dir (str): Directory to save the output files.
-        letter (str): The starting letter of the repositories to process.
-    """
-    input_path = os.path.join(input_dir, f"first_letter={letter}")
+    input_path = os.path.join(input_dir, f"partition={partition}.parquet")
     if not os.path.exists(input_path):
-        log.debug(f"No data for letter {letter}")
-        return
+        log.debug(f"No data for partition {partition}")
+        return pd.DataFrame()
 
     df = pd.read_parquet(input_path)
     all_repo_data = []
 
     for _, row in tqdm(
-        df.iterrows(), total=len(df), desc=f"Processing letter {letter}"
+        df.iterrows(), total=len(df), desc=f"Processing partition {partition}"
     ):
         package_name = row["name"]
         source_url = row["source_url"]
 
         data = fetch_github_data(source_url)
         if data:
-            data["first_letter"] = letter
+            data["partition"] = partition
             data["name"] = package_name
             all_repo_data.append(data)
 
-    if all_repo_data:
-        output_df = pd.DataFrame(all_repo_data)
-        output_path = os.path.join(output_dir, f"first_letter={letter}")
-        output_df.to_parquet(output_path, partition_cols=["first_letter"])
-        log.info(f"Data saved for letter {letter} to {output_path}")
-    else:
-        log.info(f"No valid GitHub data found for letter {letter}")
+    return pd.DataFrame(all_repo_data)
