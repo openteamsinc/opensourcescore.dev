@@ -129,9 +129,6 @@ def scrape_conda(output_dir: str, letter_to_scrape: str) -> None:
         package_data = get_package_data(package_name)
         if package_data:
             package_data_list.append(package_data)
-    if package_data_list:
-        df = pd.DataFrame(package_data_list)
-        df.to_parquet(output_dir, partition_cols=["initial_letter"])
-        logger.info("Data saved for package : %s", len(package_data_list))
-    else:
-        logger.error("Failed to save data for package letter : %s", letter_to_scrape)
+    df = pd.DataFrame(package_data_list)
+    df.to_parquet(output_dir, partition_cols=["initial_letter"])
+    logger.info("Data saved for package : %s", len(package_data_list))
