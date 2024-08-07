@@ -3,11 +3,9 @@ import os
 
 import pandas as pd
 import requests
+from tqdm import tqdm
 
-# Set up logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("conda")
-logger.addHandler(logging.FileHandler("conda.log"))
+log = logging.getLogger(__name__)
 
 
 def get_all_package_names(letter) -> list:
@@ -23,19 +21,16 @@ def get_all_package_names(letter) -> list:
     """
     packages_name_list = list()
     packages_url = "https://raw.githubusercontent.com/conda-forge/feedstock-outputs/single-file/feedstock-outputs.json"
-    logger.info("Fetching all packages names from URL: %s", packages_url)
     response = requests.get(packages_url)
     response.raise_for_status()
     packages_name_list = response.json().keys()
-    logger.info("Total Packages : %s", len(packages_name_list))
+    log.info("Total Packages : %s", len(packages_name_list))
 
     if letter:
         packages_name_list = {
             i for i in packages_name_list if str(i).startswith(letter)
         }
-        logger.info(
-            "Total Packages with letter %s : %s", letter, len(packages_name_list)
-        )
+        log.info("Total Packages with letter %s : %s", letter, len(packages_name_list))
     return packages_name_list
 
 
@@ -97,11 +92,10 @@ def get_package_data(package_name: str) -> dict:
     Returns:
         required_json_data (dict): The required JSON data.
     """
-    logger.info("Package Name : %s", package_name)
     package_url = f"https://api.anaconda.org/package/conda-forge/{package_name}"
     response = requests.get(package_url)
     if response.status_code != 200:
-        logger.error("Failed to fetch data for package : %s", package_name)
+        log.error("Failed to fetch data for package : %s", package_name)
         return None
     package_data_response = response.json()
     required_json_data = get_required_json_data(package_data_response, package_url)
@@ -125,10 +119,11 @@ def scrape_conda(output_dir: str, letter_to_scrape: str) -> None:
 
     package_data_list = list()
     packages_name_list = get_all_package_names(letter_to_scrape)
-    for package_name in list(packages_name_list):
+    for package_name in tqdm(
+        packages_name_list, desc=f"Processing partition column {letter_to_scrape!r}"
+    ):
         package_data = get_package_data(package_name)
         if package_data:
             package_data_list.append(package_data)
     df = pd.DataFrame(package_data_list)
     df.to_parquet(output_dir, partition_cols=["initial_letter"])
-    logger.info("Data saved for package : %s", len(package_data_list))
