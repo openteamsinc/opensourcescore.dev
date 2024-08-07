@@ -1,11 +1,11 @@
-import click
+import logging
 from typing import List
+
+import click
 import pandas as pd
 from tqdm import tqdm
-import logging
 
 from ..utils.request_session import get_session
-
 
 log = logging.getLogger(__name__)
 

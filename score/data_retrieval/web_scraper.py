@@ -1,11 +1,12 @@
+import logging
+import re
 from typing import List, Optional
-import requests
+
 import click
 import pandas as pd
-import re
+import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-import logging
 
 from ..utils.request_session import get_session
 

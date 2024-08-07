@@ -1,6 +1,7 @@
-import requests
 import re
 from hashlib import sha256
+
+import requests
 
 PYPI_URL = "https://pypi.org/simple/"
 
