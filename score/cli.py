@@ -7,7 +7,19 @@ from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
 from .utils.get_pypi_package_list import get_pypi_package_names
 
+# from .data_retrieval.github_scraper import scrape_github_data
+
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "."))
+
+
+def validate_input(ctx, param, value):
+    if not (
+        value.isdigit() or (len(value) == 1 and value.isalpha() and value.islower())
+    ):
+        raise click.BadParameter(
+            f"{value} is not a valid input. Please enter a single letter (a-z) or number (0-9)."
+        )
+    return value
 
 
 def get_letter_range(start: int, end: int):
@@ -22,7 +34,7 @@ def get_letter_range(start: int, end: int):
         list: A list of characters from start to end.
     """
     all_chars = string.digits + string.ascii_lowercase
-    return list(all_chars[start:end])
+    return list(all_chars[start : end + 1])
 
 
 @click.group()
