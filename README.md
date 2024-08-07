@@ -60,9 +60,35 @@ The end product of this repo is a score dataset
 
 ## Health & Risk Categories
 
-1. Healthy
-2. Caution Needed
-3. High Risk
+### 1. Healthy
+
+- **Definition**: This category signifies that the project or system is in an optimal state of operation. It is stable, actively maintained, and has minimal issues or vulnerabilities that affect its functionality or security.
+- **Characteristics**:
+  - **Stability and Reliability**: Demonstrates consistent performance and reliability under various conditions.
+  - **Active Development and Maintenance**: Regular updates and active development indicate ongoing improvements and timely bug fixes.
+  - **Low Security Risks**: Security measures are robust, with regular patches for vulnerabilities, ensuring a secure environment for users.
+  - **Broad Adoption**: Widely adopted by users, indicating trust and dependability in real-world applications.
+- **Use Case**: Ideal for critical applications where reliability and security are paramount. Suitable for both development and production environments.
+
+### 2. Caution Needed
+
+- **Definition**: This category indicates that while the project or system may be functional, there are known issues or potential vulnerabilities that require attention. Users should proceed with caution, especially in production environments.
+- **Characteristics**:
+  - **Moderate Stability**: Generally stable but may have known bugs or performance issues that could impact its reliability.
+  - **Irregular Updates**: Updates and maintenance may be less frequent, potentially leaving some issues unresolved for longer periods.
+  - **Potential Security Concerns**: Some security vulnerabilities may have been identified, and while they may not be critical, they necessitate vigilance and regular monitoring.
+  - **Selective Adoption**: Used by a community of users, but its adoption may be limited to specific scenarios or environments where its known issues do not pose significant risks.
+- **Use Case**: Suitable for non-critical applications or environments where users can manage or mitigate known risks. Caution and additional testing are advised before deployment in production.
+
+### 3. High Risk
+
+- **Definition**: This category is assigned to projects or systems that have significant issues or vulnerabilities that pose serious risks to stability, security, or performance. It may be in a state of neglect or facing challenges that critically impact its viability.
+- **Characteristics**:
+  - **Unstable and Unreliable**: Frequent crashes, data loss, or critical bugs significantly impair functionality and reliability.
+  - **Lack of Maintenance**: Little to no active development, with outstanding critical issues and vulnerabilities left unaddressed.
+  - **Critical Security Vulnerabilities**: Known security vulnerabilities are severe and may compromise user data or system integrity.
+  - **Limited to No Adoption**: Very few users, if any, due to the risks and issues associated with its use.
+- **Use Case**: Not recommended for any new projects or production environments. Existing users should seek alternatives or plan for significant mitigation measures if continued use is absolutely necessary.
 
 ## Datasets:
 
