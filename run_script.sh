@@ -16,5 +16,5 @@ echo "TOTAL_PARTITIONS=${TOTAL_PARTITIONS}"
 echo "CURRENT_PARTITION=${CURRENT_PARTITION}"
 echo "ARGUMENTS" $@
 
-# TODO: 
-# Call python -m "score.cli" $@
+# TODO: execute me!
+echo python -m score.cli $@

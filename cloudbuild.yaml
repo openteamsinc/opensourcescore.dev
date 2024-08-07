@@ -46,8 +46,10 @@ steps:
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
         "--memory=1024Mi",
+        "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
-        # "--set-secrets=",
+        # TODO: will need to add GITHUB_TOKEN HERE
+        # "--set-secrets=GITHUB_TOKEN=GITHUB_TOKEN:latest",
         "--env-vars-file=env.yml",
       ]
 
