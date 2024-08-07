@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import List
 
 import click
@@ -8,6 +9,8 @@ from tqdm import tqdm
 from ..utils.request_session import get_session
 
 log = logging.getLogger(__name__)
+
+GITHUB_REPO_PATTERN = re.compile(r"https://github\.com/[^/]+/[^/]+/?")
 
 
 def get_package_data(package_name):
@@ -44,14 +47,32 @@ def get_package_data(package_name):
         "keywords": info.get("keywords", None),
         "maintainer": info.get("maintainer", None),
         "maintainer_email": info.get("maintainer_email", None),
-        "project_urls": info.get("project_urls", None),
         "release_url": info.get("release_url", None),
         "requires_python": info.get("requires_python", None),
         "version": info.get("version", None),
         "yanked_reason": info.get("yanked_reason", None),
+        "source_url": extract_github_repo(info.get("project_urls", {})),
     }
 
     return filtered_data
+
+
+def extract_github_repo(project_urls):
+    """
+    Extracts the GitHub repository URL from the project_urls dictionary.
+
+    Args:
+        project_urls (dict): The project URLs dictionary.
+
+    Returns:
+        str: The GitHub repository URL if found, otherwise None.
+    """
+    if not project_urls:
+        return None
+    for url in project_urls.values():
+        if url and GITHUB_REPO_PATTERN.match(url):
+            return url
+    return None
 
 
 def scrape_json(packages: List[str]) -> pd.DataFrame:
