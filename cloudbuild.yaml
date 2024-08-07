@@ -43,7 +43,7 @@ steps:
         "deploy",
         "scraper",
         "--region=us-west1",
-        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/dbt:$REVISION_ID",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
         "--memory=1024Mi",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
