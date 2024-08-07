@@ -7,6 +7,7 @@ from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
 from .utils.github_aggregator import aggregate
 from .data_retrieval.github_scraper import scrape_github_data
+from .utils.get_pypi_package_list import get_pypi_package_names
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "."))
 
@@ -48,29 +49,30 @@ def cli():
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
-    "--start",
+    "-n",
+    "--num-partitions",
     required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    type=int,
+    help="The number of partitions in total.",
 )
 @click.option(
-    "--end",
+    "-p",
+    "--partition",
     required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+    type=int,
+    help="The partition number to process.",
 )
-def scrape_pypi(start, end, output):
-    all_chars = string.digits + string.ascii_lowercase
-    start_index = all_chars.index(start)
-    end_index = all_chars.index(end)
-
-    letters_to_scrape = get_letter_range(start_index, end_index)
+def scrape_pypi(num_partitions, partition, output):
+    packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
-        f"Will process all packages starting with characters {letters_to_scrape}."
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
-    scrape_json(output, letters_to_scrape)
+
+    df = scrape_json(packages)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
 
 
@@ -81,30 +83,30 @@ def scrape_pypi(start, end, output):
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
-    "--start",
+    "-n",
+    "--num-partitions",
     required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    type=int,
+    help="The number of partitions in total.",
 )
 @click.option(
-    "--end",
+    "-p",
+    "--partition",
     required=True,
-    type=str,
-    callback=validate_input,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+    type=int,
+    help="The partition number to process.",
 )
-def scrape_pypi_web(start, end, output):
-    all_chars = string.digits + string.ascii_lowercase
-    start_index = all_chars.index(start)
-    end_index = all_chars.index(end)
-
-    letters_to_scrape = get_letter_range(start_index, end_index)
+def scrape_pypi_web(num_partitions, partition, output):
+    packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
-        f"Will process all packages starting with characters {letters_to_scrape}."
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
 
-    scrape_web(output, letters_to_scrape)
+    df = scrape_web(packages)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
 
 
