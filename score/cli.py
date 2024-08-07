@@ -8,6 +8,7 @@ from .conda import scrape_conda
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
 from .logger import setup_logger
+from .utils.get_pypi_package_list import get_pypi_package_names
 
 # from .data_retrieval.github_scraper import scrape_github_data
 
@@ -51,23 +52,30 @@ def cli():
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
-    "--start",
+    "-n",
+    "--num-partitions",
     required=True,
     type=int,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    help="The number of partitions in total.",
 )
 @click.option(
-    "--end",
+    "-p",
+    "--partition",
     required=True,
     type=int,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+    help="The partition number to process.",
 )
-def scrape_pypi(start, end, output):
-    letters_to_scrape = get_letter_range(start, end)
+def scrape_pypi(num_partitions, partition, output):
+    packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
-        f"Will process all packages starting with characters {letters_to_scrape}."
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
-    scrape_json(output, letters_to_scrape)
+
+    df = scrape_json(packages)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
 
 
@@ -78,24 +86,30 @@ def scrape_pypi(start, end, output):
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
-    "--start",
+    "-n",
+    "--num-partitions",
     required=True,
     type=int,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    help="The number of partitions in total.",
 )
 @click.option(
-    "--end",
+    "-p",
+    "--partition",
     required=True,
     type=int,
-    help="Enter the ending letter or number to scrape (e.g., 'c' or '9').",
+    help="The partition number to process.",
 )
-def scrape_pypi_web(start, end, output):
-    letters_to_scrape = get_letter_range(start, end)
+def scrape_pypi_web(num_partitions, partition, output):
+    packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
-        f"Will process all packages starting with characters {letters_to_scrape}."
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
 
-    scrape_web(output, letters_to_scrape)
+    df = scrape_web(packages)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
 
 
@@ -109,7 +123,7 @@ def scrape_pypi_web(start, end, output):
     "--letter_to_scrape",
     "-l",
     required=True,
-    help="Enter the starting letter or number to scrape (e.g., 'a' or '0').",
+    help="Enter the letter or number to scrape the packages (e.g., 'a' or '0').",
 )
 def conda(output, letter_to_scrape):
     click.echo(
