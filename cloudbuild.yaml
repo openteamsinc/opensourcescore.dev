@@ -48,7 +48,7 @@ steps:
         "--memory=1024Mi",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         # "--set-secrets=",
-        # "--env-vars-file=env.yml",
+        "--env-vars-file=env.yml",
       ]
 
   # Mark the deployment as successful
