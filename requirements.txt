@@ -1,7 +1,5 @@
 beautifulsoup4~=4.12.3
-bs4~=0.0.2
 click~=8.1.7
-numpy~=2.0.1
 pandas~=2.2.2
 pyarrow~=17.0.0
 requests~=2.32.3
