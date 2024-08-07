@@ -24,10 +24,39 @@ The end product of this repo is a score dataset
 
 ## Maturity Categories
 
-1. Mature
-2. Developing
-3. Experimental
-4. Legacy
+### 1. Experimental
+
+- **Definition**: The project is in the initial phase of its development lifecycle. It is primarily aimed at early adopters and developers interested in the latest features or in contributing to the project's development.
+- **Characteristics**:
+  - **Frequent Breaking Changes**: The API or core functionality may change often, requiring adjustments in dependent code with each update.
+  - **Small User Base**: Typically has a smaller community of users and contributors, which can affect the speed of issue resolution and feature requests.
+- **Use Case**: Best suited for development and testing environments, or for research and exploration of new concepts.
+
+### 2. Developing
+
+- **Definition**: The project has progressed beyond the experimental stage and is in active development. It is becoming more stable but may still undergo significant changes.
+- **Characteristics**:
+  - **Moderate Stability**: The core API and features are more stable than in the experimental stage, but some changes and enhancements are still occurring.
+  - **Expanding User Base**: The community of users and contributors is growing, leading to more feedback, bug reports, and feature requests.
+- **Use Case**: Suitable for projects that can accommodate some changes and are not critically dependent on absolute stability.
+
+### 3. Mature
+
+- **Definition**: The project is stable and has reached a level of maturity where major changes are infrequent. It is suitable for production use.
+- **Characteristics**:
+  - **High Stability**: Core features and APIs are stable, with changes primarily focused on bug fixes, security improvements, and minor enhancements.
+  - **Large User Base**: Has a large and active community providing extensive support, which contributes to a robust ecosystem of plugins, integrations, and tools.
+- **Use Case**: Ideal for production environments where reliability and stability are paramount.
+
+### 4. Legacy
+
+- **Definition**: The project has reached the end of its active development lifecycle. It may still be in use but is no longer actively maintained or updated.
+- **Characteristics**:
+  - **Limited Updates**: Updates are rare and typically only address critical bugs or security vulnerabilities.
+  - **Stable but Outdated**: The project is stable but may not comply with current standards or best practices. New features and improvements are not being added.
+  - **Declining User Base**: The community and user base may be shrinking, and finding support or resources can be challenging.
+- **Use Case**: Suitable for systems that depend on it for legacy reasons but should be considered for replacement or upgrade in the near term.
+
 
 ## Health & Risk Categories
 
