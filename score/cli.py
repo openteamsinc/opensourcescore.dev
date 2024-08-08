@@ -183,12 +183,13 @@ def conda(num_partitions, partition, output, channel):
     help="The partition number to process.",
 )
 def vulnerabilities(num_partitions, partition, output, ecosystem):
-    packages = get_pypi_package_names(num_partitions, partition)
+    if ecosystem == "PyPI":
+        packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
         f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
 
-    df = scrape_vulnerabilities(packages, ecosystem)
+    df = scrape_vulnerabilities(ecosystem, packages)
     df["partition"] = partition
     df["ecosystem"] = ecosystem
 
