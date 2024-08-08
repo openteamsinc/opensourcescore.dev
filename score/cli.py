@@ -1,6 +1,5 @@
 import click
 import os
-from pathlib import Path
 from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
@@ -8,7 +7,7 @@ from .utils.get_pypi_package_list import get_pypi_package_names
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "./output"))
+OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
 
 partition_option = click.option(
@@ -38,7 +37,7 @@ def cli():
 @cli.command()
 @click.option(
     "--output",
-    default=OUTPUT_ROOT / "pypi-json",
+    default=os.path.join(OUTPUT_ROOT, "pypi-web"),
     help="The output directory to save the scraped data in hive partition",
 )
 @partition_option
@@ -60,7 +59,7 @@ def scrape_pypi(num_partitions, partition, output):
 @cli.command()
 @click.option(
     "--output",
-    default=OUTPUT_ROOT / "pypi-web",
+    default=os.path.join(OUTPUT_ROOT, "pypi-web"),
     help="The output directory to save the scraped data in hive partition",
 )
 @partition_option
@@ -82,7 +81,7 @@ def scrape_pypi_web(num_partitions, partition, output):
 @cli.command()
 @click.option(
     "--output",
-    default=OUTPUT_ROOT / "conda",
+    default=os.path.join(OUTPUT_ROOT, "pypi-web"),
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
