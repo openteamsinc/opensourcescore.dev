@@ -110,7 +110,7 @@ def scrape_web(packages: List[str]) -> pd.DataFrame:
 
     all_package_data = []
     failed_count = 0
-    for package_name in tqdm(packages):
+    for package_name in tqdm(packages, disable=None):
         package_data = get_package_data(package_name)
         if package_data:
             all_package_data.append(package_data)

@@ -98,7 +98,6 @@ def conda(num_partitions, partition, output, channel):
     click.echo(
         f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
-
     df = scrape_conda(channel, packages)
     df["partition"] = partition
     df["channel"] = channel
