@@ -111,7 +111,7 @@ def conda(num_partitions, partition, output, channel):
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "github-urls.parquet"),
+    default=os.path.join(OUTPUT_ROOT, "source-urls.parquet"),
     help="The output path to save the aggregated data",
 )
 @click.option(
@@ -129,7 +129,18 @@ def agg_source_urls(input, output):
 
     df = db.query(
         f"""
-    select distinct source_url from read_parquet('{input}/pypi-json/*/*.parquet');
+        WITH pypi_sources AS (
+        SELECT source_url FROM read_parquet('{input}/pypi-json/*/*.parquet')
+        ),
+        conda_sources AS (
+        SELECT source_url FROM read_parquet('{input}/conda/*/*/*.parquet')
+        )
+        SELECT DISTINCT source_url
+        FROM (
+            SELECT source_url FROM pypi_sources
+            UNION ALL
+            SELECT source_url FROM conda_sources
+        );
     """
     ).df()
     df.to_parquet(output)
