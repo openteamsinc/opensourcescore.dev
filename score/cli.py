@@ -6,6 +6,8 @@ from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
 from .utils.get_pypi_package_list import get_pypi_package_names
+from .conda.get_conda_package_names import get_conda_package_names
+from .conda.scrape_conda import scrape_conda
 
 # from .data_retrieval.github_scraper import scrape_github_data
 
@@ -107,6 +109,47 @@ def scrape_pypi_web(num_partitions, partition, output):
 
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["partition"])
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--output",
+    default=OUTPUT_ROOT / "output" / "conda",
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "-c",
+    "--channel",
+    default="conda-forge",
+    help="The conda channel to scrape packages from",
+)
+@click.option(
+    "-n",
+    "--num-partitions",
+    required=True,
+    type=int,
+    help="The number of partitions in total.",
+)
+@click.option(
+    "-p",
+    "--partition",
+    required=True,
+    type=int,
+    help="The partition number to process.",
+)
+def conda(num_partitions, partition, output, channel):
+    packages = get_conda_package_names(num_partitions, partition, channel)
+    click.echo(
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
+    )
+
+    df = scrape_conda(channel, packages)
+    df["partition"] = partition
+    df["channel"] = channel
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["channel", "partition"])
     click.echo("Scraping completed.")
 
 
