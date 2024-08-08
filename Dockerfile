@@ -20,5 +20,5 @@ RUN python -m compileall score
 
 COPY run_script.sh /usr/src/app/run_script.sh
 
-ENTRYPOINT [ "/usr/src/app/run_script.sh" ]
+CMD /usr/src/app/run_script.sh
 
