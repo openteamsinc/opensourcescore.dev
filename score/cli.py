@@ -6,6 +6,7 @@ from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
 from .utils.get_pypi_package_list import get_pypi_package_names
+from .utils.aggregators.source_url import get_source_urls
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 
@@ -110,6 +111,33 @@ def scrape_pypi_web(num_partitions, partition, output):
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "-o",
+    "--output",
+    default=OUTPUT_ROOT / "output" / "github-urls",
+    help="The output directory to save the aggregated data",
+)
+@click.option(
+    "-i",
+    "--input",
+    default=OUTPUT_ROOT / "output" / "pypi-json",
+    help="The input directory to read the data from",
+)
+@click.option(
+    "-p",
+    "--partition",
+    required=True,
+    type=int,
+    help="The partition number to scrape.",
+)
+def source_aggregate(partition, input, output):
+    click.echo(f"Aggregating data for partition {partition}.")
+
+    get_source_urls(input, output, partition)
+    click.echo("Aggregation completed.")
 
 
 @cli.command()
