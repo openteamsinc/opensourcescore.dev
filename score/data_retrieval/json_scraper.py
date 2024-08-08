@@ -1,5 +1,6 @@
 import click
-from typing import List
+from typing import List, Optional, Dict, Tuple
+from urllib.parse import urlparse
 import pandas as pd
 from tqdm import tqdm
 import logging
@@ -35,6 +36,8 @@ def get_package_data(package_name):
     # Extract the 'info' section
     info = package_data.get("info", {})
 
+    source_url_key, source_url = extract_source_url(info.get("project_urls", {}))
+
     # Extract desired fields
     filtered_data = {
         "name": info.get("name", None),
@@ -51,28 +54,41 @@ def get_package_data(package_name):
         "requires_python": info.get("requires_python", None),
         "version": info.get("version", None),
         "yanked_reason": info.get("yanked_reason", None),
-        "source_url": extract_github_repo(info.get("project_urls", {})),
+        "source_url": source_url,
+        "source_url_key": source_url_key,
     }
 
     return filtered_data
 
 
-def extract_github_repo(project_urls):
-    """
-    Extracts the GitHub repository URL from the project_urls dictionary.
+def normalize_source_url(url: str):
+    URL = urlparse(url)
+    if URL.hostname in ["github.com", "gitlab.com", "bitbucket.org"]:
+        path_components = URL.path.strip("/").split("/")
+        if len(path_components) < 2:
+            # Invalid git*.com/ URL
+            return None
+        return f"https://{URL.hostname}/{path_components[0]}/{path_components[1]}"
 
-    Args:
-        project_urls (dict): The project URLs dictionary.
+    return url
 
-    Returns:
-        str: The GitHub repository URL if found, otherwise None.
-    """
+
+def extract_source_url(
+    project_urls: Dict[str, str]
+) -> Tuple[Optional[str], Optional[str]]:
     if not project_urls:
-        return None
-    for url in project_urls.values():
-        if url and GITHUB_REPO_PATTERN.match(url):
-            return url
-    return None
+        return None, None
+
+    project_urls = {k.lower(): v for k, v in project_urls.items()}
+
+    for key in ["code", "repository", "source", "homepage"]:
+        if key not in project_urls:
+            continue
+        source_url = normalize_source_url(project_urls[key])
+        if source_url:
+            return key, source_url
+
+    return None, None
 
 
 def scrape_json(packages: List[str]) -> pd.DataFrame:
