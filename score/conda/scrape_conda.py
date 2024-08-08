@@ -10,7 +10,7 @@ CONDA_PACKAGE_URL_TEMPLATE = "https://api.anaconda.org/package/{channel}/{packag
 def scrape_conda(channel, package_names: List[str]) -> pd.DataFrame:
     s = get_session()
     all_packages = []
-    for package in tqdm(package_names):
+    for package in tqdm(package_names, disable=None):
         url = CONDA_PACKAGE_URL_TEMPLATE.format(channel=channel, package=package)
         res = s.get(url)
         res.raise_for_status()

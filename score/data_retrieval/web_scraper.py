@@ -110,7 +110,7 @@ def scrape_web(packages: List[str]) -> pd.DataFrame:
 
     all_package_data = []
     failed_count = 0
-    for package_name in tqdm(packages):
+    for package_name in tqdm(packages, disable=None):
         package_data = get_package_data(package_name)
         if package_data:
             all_package_data.append(package_data)
@@ -136,8 +136,10 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
     Returns:
         str: The extracted download number.
     """
-    s = get_session()
+    s = get_session(backoff_factor=1)
     response = s.get(svg_url, timeout=5)
+    if response.status_code == 404:
+        return ""
     response.raise_for_status()
     svg_content = response.text
     match = re.search(

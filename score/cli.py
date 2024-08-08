@@ -1,8 +1,6 @@
 import click
-import string
 import os
 import duckdb
-from pathlib import Path
 from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
@@ -12,34 +10,26 @@ from .utils.get_pypi_package_list import get_pypi_package_names
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 
-# from .data_retrieval.github_scraper import scrape_github_data
-
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "."))
+OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
 
-def validate_input(ctx, param, value):
-    if not (
-        value.isdigit() or (len(value) == 1 and value.isalpha() and value.islower())
-    ):
-        raise click.BadParameter(
-            f"{value} is not a valid input. Please enter a single letter (a-z) or number (0-9)."
-        )
-    return value
+partition_option = click.option(
+    "-p",
+    "--partition",
+    default=lambda: os.environ.get("SCORE_PARTITION"),
+    required=True,
+    type=int,
+    help="The partition number to process.",
+)
 
-
-def get_letter_range(start: int, end: int):
-    """
-    Generates a list of characters from start to end inclusive, supporting both numbers and letters.
-
-    Args:
-        start (str): The starting character (letter or number).
-        end (str): The ending character (letter or number).
-
-    Returns:
-        list: A list of characters from start to end.
-    """
-    all_chars = string.digits + string.ascii_lowercase
-    return list(all_chars[start : end + 1])
+num_partitions_option = click.option(
+    "-n",
+    "--num-partitions",
+    required=True,
+    default=lambda: os.environ.get("SCORE_NUM_PARTITIONS"),
+    type=int,
+    help="The number of partitions in total.",
+)
 
 
 @click.group()
@@ -50,23 +40,11 @@ def cli():
 @cli.command()
 @click.option(
     "--output",
-    default=OUTPUT_ROOT / "output" / "pypi-json",
+    default=os.path.join(OUTPUT_ROOT, "pypi-json"),
     help="The output directory to save the scraped data in hive partition",
 )
-@click.option(
-    "-n",
-    "--num-partitions",
-    required=True,
-    type=int,
-    help="The number of partitions in total.",
-)
-@click.option(
-    "-p",
-    "--partition",
-    required=True,
-    type=int,
-    help="The partition number to process.",
-)
+@partition_option
+@num_partitions_option
 def scrape_pypi(num_partitions, partition, output):
     packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
@@ -84,23 +62,11 @@ def scrape_pypi(num_partitions, partition, output):
 @cli.command()
 @click.option(
     "--output",
-    default=OUTPUT_ROOT / "output" / "pypi-web",
+    default=os.path.join(OUTPUT_ROOT, "pypi-web"),
     help="The output directory to save the scraped data in hive partition",
 )
-@click.option(
-    "-n",
-    "--num-partitions",
-    required=True,
-    type=int,
-    help="The number of partitions in total.",
-)
-@click.option(
-    "-p",
-    "--partition",
-    required=True,
-    type=int,
-    help="The partition number to process.",
-)
+@partition_option
+@num_partitions_option
 def scrape_pypi_web(num_partitions, partition, output):
     packages = get_pypi_package_names(num_partitions, partition)
     click.echo(
@@ -169,7 +135,7 @@ def scrape_github(partition, output):
 @cli.command()
 @click.option(
     "--output",
-    default=OUTPUT_ROOT / "output" / "conda",
+    default=os.path.join(OUTPUT_ROOT, "conda"),
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
@@ -178,26 +144,13 @@ def scrape_github(partition, output):
     default="conda-forge",
     help="The conda channel to scrape packages from",
 )
-@click.option(
-    "-n",
-    "--num-partitions",
-    required=True,
-    type=int,
-    help="The number of partitions in total.",
-)
-@click.option(
-    "-p",
-    "--partition",
-    required=True,
-    type=int,
-    help="The partition number to process.",
-)
+@partition_option
+@num_partitions_option
 def conda(num_partitions, partition, output, channel):
     packages = get_conda_package_names(num_partitions, partition, channel)
     click.echo(
         f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
-
     df = scrape_conda(channel, packages)
     df["partition"] = partition
     df["channel"] = channel
