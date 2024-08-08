@@ -30,14 +30,16 @@ def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
                     required_vuln.append(
                         {
                             "id": vuln.get("id"),
-                            "source": affected.get("database_specific").get("source"),
-                            "aliases": vuln.get("aliases"),
-                            "details": vuln.get("details"),
+                            "source": affected.get("database_specific", None).get(
+                                "source", None
+                            ),
+                            "aliases": vuln.get("aliases", None),
+                            "details": vuln.get("details", None),
                             "published": vuln.get("published"),
-                            "severity": vuln.get("severity"),
-                            "versions": affected.get("versions"),
-                            "references": vuln.get("references"),
-                            "ranges": affected.get("ranges"),
+                            "severity": vuln.get("severity", None),
+                            "versions": affected.get("versions", None),
+                            "references": vuln.get("references", None),
+                            "ranges": affected.get("ranges", None),
                         }
                     )
 
