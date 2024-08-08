@@ -138,6 +138,8 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
     """
     s = get_session()
     response = s.get(svg_url, timeout=5)
+    if response.status_code == 404:
+        return ""
     response.raise_for_status()
     svg_content = response.text
     match = re.search(

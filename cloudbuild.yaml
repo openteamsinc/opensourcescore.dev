@@ -81,7 +81,7 @@ steps:
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
         "--memory=1024Mi",
-        "--tasks=200",
+        "--tasks=400",
         "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=scrape-pypi-web",
