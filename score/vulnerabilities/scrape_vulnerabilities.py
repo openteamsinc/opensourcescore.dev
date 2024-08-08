@@ -33,3 +33,5 @@ def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
                 "versions": package_data.get("affected").get("versions"),
             }
         )
+
+    return pd.DataFrame(all_packages)
