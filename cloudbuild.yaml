@@ -82,7 +82,7 @@ steps:
         "--max-retries=1",
         "--memory=1024Mi",
         "--tasks=400",
-        "--parallelism=100",
+        "--parallelism=50",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=scrape-pypi-web",
       ]

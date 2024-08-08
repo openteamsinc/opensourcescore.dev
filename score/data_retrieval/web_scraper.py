@@ -136,7 +136,7 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
     Returns:
         str: The extracted download number.
     """
-    s = get_session()
+    s = get_session(backoff_factor=1)
     response = s.get(svg_url, timeout=5)
     if response.status_code == 404:
         return ""
