@@ -96,7 +96,7 @@ steps:
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
-        "--memory=1024Mi",
+        "--memory=4Gi",
         "--tasks=100",
         "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
