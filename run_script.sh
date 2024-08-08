@@ -17,4 +17,4 @@ echo "CURRENT_PARTITION=${CURRENT_PARTITION}"
 echo "ARGUMENTS" $@
 
 # TODO: execute me!
-python -m score.cli $@
+echo python -m score.cli $@
