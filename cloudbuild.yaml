@@ -47,6 +47,7 @@ steps:
         "--max-retries=1",
         "--memory=1024Mi",
         "--tasks=100",
+        
         "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         # TODO: will need to add GITHUB_TOKEN HERE
@@ -59,14 +60,16 @@ steps:
         "run",
         "jobs",
         "deploy",
-        "scraper-single",
+        "scrape-pypi",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
         "--memory=1024Mi",
         "--tasks=100",
+        "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--env-vars-file=env.yml",
+        "--set-env-vars=COMMAND=scrape-pypi",
       ]
 
   # Mark the deployment as successful

@@ -11,9 +11,9 @@ export SCORE_PARTITION="${CLOUD_RUN_TASK_INDEX}"
 
 
 echo "--- ENVIRONMENT ---"
+echo "COMMAND=${COMMAND}"
 echo "OUTPUT_ROOT=${OUTPUT_ROOT}"
 echo "SCORE_NUM_PARTITIONS=${SCORE_NUM_PARTITIONS}"
 echo "SCORE_PARTITION=${SCORE_PARTITION}"
-echo "ARGUMENTS" $@
 
-python -m score.cli $@
+python -m score.cli "${COMMAND}"
