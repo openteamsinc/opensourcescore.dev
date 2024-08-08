@@ -18,34 +18,36 @@ def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
         if response.status_code != 200:
             continue
         vulns_list = response.json().get("vulns")
-        required_vuln = list()
-        for vuln in vulns_list:
-            published_date = datetime.strptime(
-                vuln.get("published"), "%Y-%m-%dT%H:%M:%SZ"
-            )
-            current_date = datetime.now()
-            if current_date - published_date <= timedelta(days=365):
-                required_vuln.append(
-                    {
-                        "id": vuln.get("id"),
-                        "source": vuln.get("database_specific").get("source"),
-                        "aliases": vuln.get("aliases"),
-                        "details": vuln.get("details"),
-                        "published": published_date,
-                        "severity": vuln.get("severity"),
-                        "database_specific": vuln.get("database_specific"),
-                        "versions": vuln.get("versions"),
-                        "references": vuln.get("references"),
-                        "ranges": vuln.get("affected").get("ranges"),
-                    }
-                )
+        if vulns_list:
+            required_vuln = list()
+            for vuln in vulns_list:
+                if (
+                    datetime.now()
+                    - datetime.strptime(vuln.get("published"), "%Y-%m-%dT%H:%M:%SZ")
+                ) <= timedelta(days=365):
+                    print(vuln.get("published"))
+                    affected = vuln.get("affected")[0]
+                    required_vuln.append(
+                        {
+                            "id": vuln.get("id"),
+                            "source": affected.get("database_specific").get("source"),
+                            "aliases": vuln.get("aliases"),
+                            "details": vuln.get("details"),
+                            "published": vuln.get("published"),
+                            "severity": vuln.get("severity"),
+                            "versions": affected.get("versions"),
+                            "references": vuln.get("references"),
+                            "ranges": affected.get("ranges"),
+                        }
+                    )
 
-        all_packages.append(
-            {
-                "name": "requests",
-                "num_vulnerabilities": len(required_vuln),
-                "vulnerabilities": required_vuln,
-            }
-        )
+            all_packages.append(
+                {
+                    "name": package,
+                    "ecosystem": ecosystem,
+                    "num_vulnerabilities": len(required_vuln),
+                    "vulnerabilities": required_vuln,
+                }
+            )
 
     return pd.DataFrame(all_packages)
