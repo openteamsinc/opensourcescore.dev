@@ -1,6 +1,7 @@
 import click
 import string
 import os
+import duckdb
 from pathlib import Path
 from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
@@ -151,6 +152,35 @@ def conda(num_partitions, partition, output, channel):
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["channel", "partition"])
     click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "-o",
+    "--output",
+    default=os.path.join(OUTPUT_ROOT, "github-urls.parquet"),
+    help="The output path to save the aggregated data",
+)
+@click.option(
+    "-i",
+    "--input",
+    default=OUTPUT_ROOT,
+    help="The input directory to read the data from",
+)
+def agg_source_urls(input, output):
+    click.echo("Aggregating data")
+
+    db = duckdb.connect()
+    # Public dataset / empty secret
+    db.execute("CREATE SECRET (TYPE GCS);")
+
+    df = db.query(
+        f"""
+    select distinct source_url from read_parquet('{input}/pypi-json/*/*.parquet');
+    """
+    ).df()
+    df.to_parquet(output)
+    click.echo("Aggregation completed.")
 
 
 if __name__ == "__main__":
