@@ -16,5 +16,4 @@ echo "SCORE_NUM_PARTITIONS=${SCORE_NUM_PARTITIONS}"
 echo "SCORE_PARTITION=${SCORE_PARTITION}"
 echo "ARGUMENTS" $@
 
-# TODO: execute me!
-echo python -m score.cli $@
+python -m score.cli $@
