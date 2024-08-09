@@ -69,12 +69,8 @@ def fetch_github_data(repo_url):
     if contributors_url := data.get("contributors_url"):
         contributors_response = requests.get(contributors_url, headers=AUTH_HEADER)
         if contributors_response.status_code == 200:
-            extracted_data["contributors"] = (
-                contributors_response.json()
-            )
-            extracted_data["contributors_count"] = (
-                len(contributors_response.json())
-            )
+            extracted_data["contributors"] = contributors_response.json()
+            extracted_data["contributors_count"] = len(contributors_response.json())
         else:
             log.debug(f"Failed to fetch contributors for URL {repo_url}")
 
