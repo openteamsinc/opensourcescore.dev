@@ -2,11 +2,12 @@ import os
 
 import click
 import duckdb
+import pandas as pd
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
-from .data_retrieval.github_scraper import scrape_github_data
+from .github.github_scraper import scrape_github_data
 from .logger import setup_logger
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
@@ -98,10 +99,18 @@ def scrape_pypi_web(num_partitions, partition, output):
 def scrape_github(input, output):
     click.echo("Scraping GitHub data.")
 
-    df = scrape_github_data(input_file=input)
+    # Read the input Parquet file using pandas
+    df = pd.read_parquet(input)
+
+    if df.empty:
+        click.echo("No valid GitHub URLs found in the input file.")
+        return
+
+    # Call the scrape_github_data function to process the data
+    result_df = scrape_github_data(df)
 
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output)
+    result_df.to_parquet(output)
 
 
 @cli.command()
