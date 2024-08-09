@@ -10,6 +10,8 @@ from .data_retrieval.web_scraper import scrape_web
 from .logger import setup_logger
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
+from .git_vcs.get_git_urls import get_git_urls
+from .git_vcs.scrape import scrape_git
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -178,6 +180,34 @@ def agg_source_urls(input, output):
     ).df()
     df.to_parquet(output)
     click.echo("Aggregation completed.")
+
+
+@cli.command()
+@click.option(
+    "--output",
+    default=os.path.join(OUTPUT_ROOT, "git"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "-i",
+    "--input",
+    default=os.path.join(OUTPUT_ROOT, "source-urls.parquet"),
+    help="The output path to save the aggregated data",
+)
+@partition_option
+@num_partitions_option
+def git(input, num_partitions, partition, output):
+    urls = get_git_urls(input, num_partitions, partition)
+    click.echo(
+        f"Will process {len(urls)} source urls in partition {partition} of {num_partitions}"
+    )
+
+    df = scrape_git(urls)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
+    click.echo("Scraping completed.")
 
 
 if __name__ == "__main__":
