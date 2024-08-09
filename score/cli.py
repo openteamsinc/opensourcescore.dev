@@ -6,6 +6,7 @@ from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
+from .data_retrieval.github_scraper import scrape_github_data
 from .logger import setup_logger
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
@@ -85,7 +86,7 @@ def scrape_pypi_web(num_partitions, partition, output):
 @click.option(
     "-i",
     "--input",
-    default=os.path.join(OUTPUT_ROOT, "github-urls.parquet"),
+    default=os.path.join(OUTPUT_ROOT, "source-urls.parquet"),
     help="The input file containing the GitHub URLs",
 )
 @click.option(

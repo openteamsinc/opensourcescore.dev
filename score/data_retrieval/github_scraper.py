@@ -71,21 +71,12 @@ def fetch_github_data(repo_url):
         if contributors_response.status_code == 200:
             extracted_data["contributors"] = (
                 contributors_response.json()
-            )  # List of contributor details
+            )
+            extracted_data["contributors_count"] = (
+                len(contributors_response.json())
+            )
         else:
             log.debug(f"Failed to fetch contributors for URL {repo_url}")
-
-    # Fetch additional details for collaborators (requires authentication)
-    if collaborators_url := data.get("collaborators_url", "").replace(
-        "{/collaborator}", ""
-    ):
-        collaborators_response = requests.get(collaborators_url, headers=AUTH_HEADER)
-        if collaborators_response.status_code == 200:
-            extracted_data["collaborators"] = (
-                collaborators_response.json()
-            )  # List of collaborator details
-        else:
-            log.debug(f"Failed to fetch collaborators for URL {repo_url}")
 
     return extracted_data
 
