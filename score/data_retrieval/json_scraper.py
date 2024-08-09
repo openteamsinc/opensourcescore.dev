@@ -4,19 +4,17 @@ from urllib.parse import urlparse
 import pandas as pd
 from tqdm import tqdm
 import logging
-import re
+import requests
 
 from ..utils.request_session import get_session
 
-
 log = logging.getLogger(__name__)
-
-GITHUB_REPO_PATTERN = re.compile(r"https://github\.com/[^/]+/[^/]+/?")
 
 
 def get_package_data(package_name):
     """
     Fetches package data from the PyPI JSON API for a given package name and filters out specific fields.
+    Additionally fetches download counts from the PyPI Stats API.
 
     Args:
         package_name (str): The name of the package to fetch data for.
@@ -35,6 +33,9 @@ def get_package_data(package_name):
 
     # Extract the 'info' section
     info = package_data.get("info", {})
+
+    # Fetch detailed download counts
+    downloads = get_download_counts(package_name)
 
     source_url_key, source_url = extract_source_url(info.get("project_urls", {}))
 
@@ -56,9 +57,34 @@ def get_package_data(package_name):
         "yanked_reason": info.get("yanked_reason", None),
         "source_url": source_url,
         "source_url_key": source_url_key,
+        "downloads": downloads,  # Add download counts to the data
     }
 
     return filtered_data
+
+
+def get_download_counts(package_name: str) -> Optional[Dict[str, int]]:
+    """
+    Fetches download counts for a package from the PyPI Stats API.
+
+    Args:
+        package_name (str): The name of the package to fetch download counts for.
+
+    Returns:
+        dict: A dictionary containing the download counts.
+    """
+    # Fetch recent download counts (daily, weekly, monthly)
+    url = f"https://pypistats.org/api/packages/{package_name}/recent"
+    response = requests.get(url)
+    if response.status_code == 200:
+        recent_downloads = response.json()
+        if "data" in recent_downloads:
+            return recent_downloads[
+                "data"
+            ]  # Return the data directly as the downloads field
+    else:
+        log.debug(f"Failed to fetch recent downloads for package {package_name}")
+        return None
 
 
 def normalize_source_url(url: str):
@@ -96,7 +122,10 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
     Initiates the scraping process using the JSON API based on the given configuration.
 
     Args:
-        config (dict): Configuration dictionary containing scraping parameters.
+        packages (List[str]): List of package names to scrape data for.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the scraped data.
     """
     all_package_data = []
     failed_count = 0
