@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 import logging
-from ..utils.common import extract_and_map_fields
+from ..utils.collections import extract_and_map_fields
 
 log = logging.getLogger(__name__)
 

@@ -93,24 +93,38 @@ def scrape_pypi_web(num_partitions, partition, output):
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "github-details.parquet"),
-    help="The output file to save the detailed GitHub data",
+    default=os.path.join(OUTPUT_ROOT, "github-details"),
+    help="The output directory to save the detailed GitHub data in hive partition",
 )
-def scrape_github(input, output):
+@partition_option
+@num_partitions_option
+def scrape_github(input, output, num_partitions, partition):
     click.echo("Scraping GitHub data.")
 
-    # Read the input Parquet file using pandas
     df = pd.read_parquet(input)
 
     if df.empty:
         click.echo("No valid GitHub URLs found in the input file.")
         return
 
-    # Call the scrape_github_data function to process the data
-    result_df = scrape_github_data(df)
+    total_rows = len(df)
+    partition_size = total_rows // num_partitions
+    start_index = partition * partition_size
+    end_index = (
+        total_rows if partition == num_partitions - 1 else start_index + partition_size
+    )
 
-    click.echo(f"Saving data to {output}")
-    result_df.to_parquet(output)
+    df_partition = df.iloc[start_index:end_index]
+    click.echo(
+        f"Processing {len(df_partition)} URLs in partition {partition + 1} of {num_partitions}"
+    )
+
+    result_df = scrape_github_data(df_partition)
+    result_df["partition"] = partition
+
+    click.echo(f"Saving data to {output} in partition {partition}")
+    result_df.to_parquet(output, partition_cols=["partition"])
+    click.echo("Scraping completed.")
 
 
 @cli.command()
