@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 import logging
+import duckdb
 
 log = logging.getLogger(__name__)
 
@@ -31,65 +32,95 @@ FIELDS_TO_EXTRACT = {
 def fetch_github_data(repo_url):
     """
     Fetches data from the GitHub API for a given repository URL and extracts specified fields.
+    Additionally fetches details from 'collaborators_url' and 'contributors_url'.
 
     Args:
         repo_url (str): The GitHub repository URL.
 
     Returns:
-        dict: A dictionary containing the extracted data fields.
+        dict: A dictionary containing the extracted data fields and additional details.
     """
     repo_name = "/".join(repo_url.split("/")[-2:])
     response = requests.get(GITHUB_API_URL + repo_name, headers=AUTH_HEADER)
+
+    # Handle non-existent repositories gracefully
     if response.status_code == 404:
         log.debug(f"Skipping repository not found for URL {repo_url}")
         return None
+
     response.raise_for_status()  # Raise an error for bad status codes
     data = response.json()
 
+    # Extract required fields from the GitHub API response
     extracted_data = {}
     for key, field in FIELDS_TO_EXTRACT.items():
         if "." in key:
             top_level_key, nested_key = key.split(".")
             top_level_data = data.get(top_level_key, {})
-            if isinstance(top_level_data, dict):
-                extracted_data[field] = top_level_data.get(nested_key, None)
-            else:
-                extracted_data[field] = None
+            extracted_data[field] = (
+                top_level_data.get(nested_key)
+                if isinstance(top_level_data, dict)
+                else None
+            )
         else:
-            extracted_data[field] = data.get(key, None)
+            extracted_data[field] = data.get(key)
+
+    # Fetch additional details for contributors
+    if contributors_url := data.get("contributors_url"):
+        contributors_response = requests.get(contributors_url, headers=AUTH_HEADER)
+        if contributors_response.status_code == 200:
+            extracted_data["contributors"] = (
+                contributors_response.json()
+            )  # List of contributor details
+        else:
+            log.debug(f"Failed to fetch contributors for URL {repo_url}")
+
+    # Fetch additional details for collaborators (requires authentication)
+    if collaborators_url := data.get("collaborators_url", "").replace(
+        "{/collaborator}", ""
+    ):
+        collaborators_response = requests.get(collaborators_url, headers=AUTH_HEADER)
+        if collaborators_response.status_code == 200:
+            extracted_data["collaborators"] = (
+                collaborators_response.json()
+            )  # List of collaborator details
+        else:
+            log.debug(f"Failed to fetch collaborators for URL {repo_url}")
+
     return extracted_data
 
 
-def scrape_github_data(input_dir: str, partition: int):
+def scrape_github_data(input_file: str):
     """
-    Initiates the scraping process using the GitHub API based on the given partition.
+    Initiates the scraping process using the GitHub API for a given input file.
 
     Args:
-        input_dir (str): Directory to read the input files from.
-        partition (int): The partition number to process.
+        input_file (str): Path to the input file (github-urls.parquet).
 
     Returns:
         pd.DataFrame: A DataFrame containing the scraped data.
     """
 
-    input_path = os.path.join(input_dir, f"partition={partition}.parquet")
-    if not os.path.exists(input_path):
-        log.debug(f"No data for partition {partition}")
+    query = f"""
+        SELECT *
+        FROM read_parquet('{input_file}')
+        WHERE source_url IS NOT NULL
+        AND source_url LIKE '%github.com%'
+    """
+    df = duckdb.query(query).to_df()
+
+    if df.empty:
+        log.debug("No valid GitHub URLs found in the input file")
         return pd.DataFrame()
 
-    df = pd.read_parquet(input_path)
     all_repo_data = []
 
-    for _, row in tqdm(
-        df.iterrows(), total=len(df), desc=f"Processing partition {partition}"
-    ):
-        package_name = row["name"]
+    # Iterate over the DataFrame rows and fetch data from GitHub API
+    for _, row in tqdm(df.iterrows(), total=len(df), desc="Processing GitHub URLs"):
         source_url = row["source_url"]
-
         data = fetch_github_data(source_url)
         if data:
-            data["partition"] = partition
-            data["name"] = package_name
+            data["source_url"] = source_url  # Use source_url as the unique key
             all_repo_data.append(data)
 
     return pd.DataFrame(all_repo_data)

@@ -4,7 +4,6 @@ import duckdb
 from .logger import setup_logger
 from .data_retrieval.json_scraper import scrape_json
 from .data_retrieval.web_scraper import scrape_web
-from .utils.github_aggregator import aggregate
 from .data_retrieval.github_scraper import scrape_github_data
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .conda.get_conda_package_names import get_conda_package_names
@@ -83,53 +82,24 @@ def scrape_pypi_web(num_partitions, partition, output):
 
 @cli.command()
 @click.option(
-    "-o" "--output",
-    default=OUTPUT_ROOT / "output" / "github-urls",
-    help="The output directory to save the aggregated data",
-)
-@click.option(
-    "-i" "--input",
-    default=OUTPUT_ROOT / "output" / "pypi-json",
-    help="The input directory to read the data from",
-)
-@click.option(
-    "-p",
-    "--partition",
-    required=True,
-    type=int,
-    help="The partition number to scrape.",
-)
-def github_aggregate(partition, input, output):
-    click.echo(f"Aggregating data for partition {partition}.")
-
-    aggregate(input, output, partition)
-    click.echo("Aggregation completed.")
-
-
-@cli.command()
-@click.option(
-    "-p",
-    "--partition",
-    required=True,
-    type=int,
-    help="The partition number to scrape.",
+    "-i",
+    "--input",
+    default=os.path.join(OUTPUT_ROOT, "github-urls.parquet"),
+    help="The input file containing the GitHub URLs",
 )
 @click.option(
     "-o",
     "--output",
-    default=OUTPUT_ROOT / "output" / "github-details",
-    help="The output directory to save the detailed GitHub data",
+    default=os.path.join(OUTPUT_ROOT, "github-details.parquet"),
+    help="The output file to save the detailed GitHub data",
 )
-def scrape_github(partition, output):
-    click.echo(f"Scraping GitHub data for partition {partition}.")
+def scrape_github(input, output):
+    click.echo("Scraping GitHub data.")
 
-    input_dir = OUTPUT_ROOT / "output" / "github-urls"
-
-    df = scrape_github_data(input_dir, partition)
-    df["partition"] = partition
+    df = scrape_github_data(input_file=input)
 
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output, partition_cols=["partition"])
+    df.to_parquet(output)
 
 
 @cli.command()
