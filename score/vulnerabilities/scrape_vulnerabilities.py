@@ -76,9 +76,9 @@ def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
                 "name": package,
                 "ecosystem": ecosystem,
                 "total_vuln": len(required_vuln),
-                "high": len([v for v in required_vuln if v == "HIGH"]),
-                "moderate": len([v for v in required_vuln if v == "MODERATE"]),
-                "low": len([v for v in required_vuln if v == "LOW"]),
+                "count_high": len([v for v in required_vuln if v == "HIGH"]),
+                "count_moderate": len([v for v in required_vuln if v == "MODERATE"]),
+                "count_low": len([v for v in required_vuln if v == "LOW"]),
             }
         )
 
