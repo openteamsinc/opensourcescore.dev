@@ -140,6 +140,13 @@ def extract_downloads_from_svg(svg_url, retries=3, delay=2):
     response = s.get(svg_url, timeout=5)
     if response.status_code == 404:
         return ""
+    if response.status_code == 502:
+        log.error(
+            f"502 - Failed to fetch SVG image: {svg_url}. "
+            "This has a high probability to fail for at least one "
+            "of the 30K pypi packages *even with 10 retries!*"
+        )
+        return ""
     response.raise_for_status()
     svg_content = response.text
     match = re.search(
