@@ -1,12 +1,15 @@
-import click
 import os
+
+import click
 import duckdb
-from .logger import setup_logger
-from .data_retrieval.json_scraper import scrape_json
-from .data_retrieval.web_scraper import scrape_web
-from .utils.get_pypi_package_list import get_pypi_package_names
+
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
+from .data_retrieval.json_scraper import scrape_json
+from .data_retrieval.web_scraper import scrape_web
+from .logger import setup_logger
+from .utils.get_pypi_package_list import get_pypi_package_names
+from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -104,6 +107,36 @@ def conda(num_partitions, partition, output, channel):
 
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["channel", "partition"])
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--output",
+    default=os.path.join(OUTPUT_ROOT, "vulnerabilities"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "-e",
+    "--ecosystem",
+    default="PyPI",
+    help="The ecosystem to scrape vulnerabilities for",
+)
+@partition_option
+@num_partitions_option
+def vulnerabilities(num_partitions, partition, output, ecosystem):
+    if ecosystem == "PyPI":
+        packages = get_pypi_package_names(num_partitions, partition)
+    click.echo(
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
+    )
+
+    df = scrape_vulnerabilities(ecosystem, packages)
+    df["partition"] = partition
+    df["ecosystem"] = ecosystem
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["ecosystem", "partition"])
     click.echo("Scraping completed.")
 
 

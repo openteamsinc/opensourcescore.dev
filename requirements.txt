@@ -7,3 +7,4 @@ pyarrow~=17.0.0
 fsspec==2024.6.1
 gcsfs==2024.6.1
 duckdb~=1.0.0
+cvss==3.1
