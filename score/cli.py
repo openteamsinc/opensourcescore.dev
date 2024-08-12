@@ -11,6 +11,7 @@ from .logger import setup_logger
 from .npm.get_npm_package_names import get_npm_package_names
 from .npm.scrape_npm import scrape_npm
 from .utils.get_pypi_package_list import get_pypi_package_names
+from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
