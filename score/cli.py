@@ -114,6 +114,36 @@ def conda(num_partitions, partition, output, channel):
 @cli.command()
 @click.option(
     "--output",
+    default=os.path.join(OUTPUT_ROOT, "vulnerabilities"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "-e",
+    "--ecosystem",
+    default="PyPI",
+    help="The ecosystem to scrape vulnerabilities for",
+)
+@partition_option
+@num_partitions_option
+def vulnerabilities(num_partitions, partition, output, ecosystem):
+    if ecosystem == "PyPI":
+        packages = get_pypi_package_names(num_partitions, partition)
+    click.echo(
+        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
+    )
+
+    df = scrape_vulnerabilities(ecosystem, packages)
+    df["partition"] = partition
+    df["ecosystem"] = ecosystem
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["ecosystem", "partition"])
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--output",
     default=os.path.join(OUTPUT_ROOT, "npm"),
     help="The output directory to save the scraped data in hive partition",
 )
@@ -136,7 +166,7 @@ def npm(num_partitions, partition, output):
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "github-urls.parquet"),
+    default=os.path.join(OUTPUT_ROOT, "source-urls.parquet"),
     help="The output path to save the aggregated data",
 )
 @click.option(
@@ -154,7 +184,18 @@ def agg_source_urls(input, output):
 
     df = db.query(
         f"""
-    select distinct source_url from read_parquet('{input}/pypi-json/*/*.parquet');
+        WITH pypi_sources AS (
+        SELECT source_url FROM read_parquet('{input}/pypi-json/*/*.parquet')
+        ),
+        conda_sources AS (
+        SELECT source_url FROM read_parquet('{input}/conda/*/*/*.parquet')
+        )
+        SELECT DISTINCT source_url
+        FROM (
+            SELECT source_url FROM pypi_sources
+            UNION ALL
+            SELECT source_url FROM conda_sources
+        );
     """
     ).df()
     df.to_parquet(output)
