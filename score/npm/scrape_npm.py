@@ -31,6 +31,11 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
         downloads_data = downloads_res.json()
         total_downloads = sum(day["downloads"] for day in downloads_data["downloads"])
         ndownloads = total_downloads if total_downloads else 0
+        maintainers_count = (
+            len(package_data.get("maintainers"))
+            if package_data.get("maintainers")
+            else 0
+        )
         all_packages.append(
             {
                 "name": package,
@@ -42,7 +47,7 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
                 ),
                 "latest_version": package_data.get("dist-tags").get("latest"),
                 "ndownloads": ndownloads,
-                "maintainers_count": len(package_data.get("maintainers")),
+                "maintainers_count": maintainers_count,
             }
         )
 
