@@ -11,6 +11,18 @@ OSV_API_URL = "https://api.osv.dev/v1/query"
 
 
 def categorize_severity(score):
+    """
+    Categorize the severity based on the CVSS (Common Vulnerability Scoring System) score.
+
+    CVSS Score Ranges:
+    - LOW: 0.0 - 3.9
+    - MODERATE: 4.0 - 6.9
+    - HIGH: 7.0 - 10.0
+    
+    Reference : 
+        1. https://ossf.github.io/osv-schema/#severitytype-field
+        2. https://www.first.org/cvss/specification-document (Look into 6. Qualitative Severity Rating Scale )
+    """
     if score >= 7.0:
         return "HIGH"
     elif score >= 4.0:
