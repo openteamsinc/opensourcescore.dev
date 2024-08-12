@@ -11,8 +11,27 @@ from .github.github_scraper import scrape_github_data
 from .logger import setup_logger
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
+from google.cloud import storage
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
+
+
+def read_parquet_from_gcs(gcs_url):
+    # Parse the GCS URL
+    bucket_name, blob_name = gcs_url.replace("gs://", "").split("/", 1)
+
+    # Initialize a GCS client
+    client = storage.Client()
+
+    # Get the bucket and blob
+    bucket = client.get_bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+
+    # Download the content of the blob as a string
+    content = blob.download_as_bytes()
+
+    # Read the parquet file from the bytes
+    return pd.read_parquet(pd.io.common.BytesIO(content))
 
 
 partition_option = click.option(
@@ -101,7 +120,12 @@ def scrape_pypi_web(num_partitions, partition, output):
 def scrape_github(input, output, num_partitions, partition):
     click.echo("Scraping GitHub data.")
 
-    df = pd.read_parquet(input)
+    if input.startswith("gs://"):
+        # Read from GCS
+        df = read_parquet_from_gcs(input)
+    else:
+        # Read from local file
+        df = pd.read_parquet(input)
 
     if df.empty:
         click.echo("No valid GitHub URLs found in the input file.")
