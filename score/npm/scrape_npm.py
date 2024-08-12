@@ -8,10 +8,10 @@ from ..utils.request_session import get_session
 
 NPM_PACKAGE_TEMPLATE_URL = "https://registry.npmjs.org/{package_name}"
 NPM_PACKAGE_DOWNLOAD_URL = (
-    "https://api.npmjs.org/downloads/range/2000-01-01:{courrent_date}/{package_name}"
+    "https://api.npmjs.org/downloads/range/2000-01-01:{current_date}/{package_name}"
 )
 
-courrent_date = datetime.now().strftime("%Y-%m-%d")
+current_date = datetime.now().strftime("%Y-%m-%d")
 
 
 def scrape_npm(package_names: List[str]) -> pd.DataFrame:
@@ -27,7 +27,7 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
 
         # Get download statistics
         downloads_url = NPM_PACKAGE_DOWNLOAD_URL.format(
-            courrent_date=courrent_date, package_name=package
+            current_date=current_date, package_name=package
         )
         downloads_res = s.get(downloads_url)
         downloads_res.raise_for_status()
