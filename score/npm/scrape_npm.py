@@ -42,7 +42,7 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
                 ),
                 "latest_version": package_data.get("dist-tags").get("latest"),
                 "ndownloads": ndownloads,
-                "maintainers": len(package_data.get("maintainers")),
+                "maintainers_count": len(package_data.get("maintainers")),
             }
         )
 
