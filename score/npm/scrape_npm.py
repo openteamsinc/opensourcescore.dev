@@ -22,9 +22,6 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
         res = s.get(url)
         res.raise_for_status()
         package_data = res.json()
-        if not package_data:
-            continue
-
         # Get download statistics
         downloads_url = NPM_PACKAGE_DOWNLOAD_URL.format(
             current_date=current_date, package_name=package
