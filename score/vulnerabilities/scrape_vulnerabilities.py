@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from typing import List
 
 import pandas as pd
-from tqdm import tqdm
 from cvss import CVSS2, CVSS3, CVSS4
+from tqdm import tqdm
 
 from ..utils.request_session import get_session
 
@@ -18,8 +18,8 @@ def categorize_severity(score):
     - LOW: 0.0 - 3.9
     - MODERATE: 4.0 - 6.9
     - HIGH: 7.0 - 10.0
-    
-    Reference : 
+
+    Reference :
         1. https://ossf.github.io/osv-schema/#severitytype-field
         2. https://www.first.org/cvss/specification-document (Look into 6. Qualitative Severity Rating Scale )
     """
