@@ -1,6 +1,6 @@
 import pandas as pd
 from git import Repo
-from git.exc import GitCommandError
+from git.exc import GitCommandError, UnsafeProtocolError
 import tempfile
 from tqdm import tqdm
 from datetime import datetime, timedelta
@@ -26,18 +26,24 @@ def get_info_from_git_repo(url) -> dict:
     ) as tmpdir:
         try:
             repo = Repo.clone_from(url, tmpdir, no_checkout=True, filter="tree:0")
+        except UnsafeProtocolError:
+            return {"error": "Unsafe Git Protocol: protocol looks suspicious"}
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr:
                 return {"error": "Repo not found"}
             log.error(f"{url}: {err.stderr}")
             return {"error": "Could not clone repo"}
 
-        commits = pd.DataFrame(
-            [
-                {"email": c.author.email, "when": c.authored_date}
-                for c in repo.iter_commits()
-            ]
-        )
+        try:
+            commits = pd.DataFrame(
+                [
+                    {"email": c.author.email, "when": c.authored_date}
+                    for c in repo.iter_commits()
+                ]
+            )
+        except ValueError as err:
+            log.error(f"{url}: {err}")
+            return {"error": "Repository is empty"}
         commits = commits[~commits.email.str.endswith("github.com")]
         commits["when"] = pd.to_datetime(commits.when, unit="s")
 
