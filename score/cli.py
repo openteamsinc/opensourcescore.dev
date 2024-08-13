@@ -1,5 +1,5 @@
 import os
-
+import pandas as pd
 import click
 import duckdb
 
@@ -12,6 +12,7 @@ from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
 from .git_vcs.scrape import scrape_git
+from .score.maturity import build_maturity_score
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -203,6 +204,77 @@ def git(input, num_partitions, partition, output):
     )
 
     df = scrape_git(urls)
+    df["partition"] = partition
+
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--git-input",
+    default=os.path.join(OUTPUT_ROOT, "git"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--pypi-input",
+    default=os.path.join(OUTPUT_ROOT, "pypi-json"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "-o",
+    "--output",
+    default=os.path.join(OUTPUT_ROOT, "score"),
+    help="The output path to save the aggregated data",
+)
+@partition_option
+@num_partitions_option
+def score(git_input, pypi_input, num_partitions, partition, output):
+
+    db = duckdb.connect()
+    click.echo(f"Reading data from pypi {pypi_input} into memory")
+    db.execute(
+        f"""
+    CREATE TABLE pypi AS
+    SELECT * FROM read_parquet('{pypi_input}/*/*.parquet')
+    """
+    )
+
+    # This has better handling than panadas read_parquet
+    click.echo(f"Reading data from git {git_input} into memory")
+    df = db.query(
+        f"""
+    select * from read_parquet('{git_input}/*/*.parquet')
+    where partition={partition}
+    """
+    ).df()
+
+    df = df[~df.source_url.isna()]
+    df.set_index("source_url", inplace=True)
+
+    scores = []
+    for source_url, row in df.iterrows():
+        score: dict = {"source_url": source_url, "packages": []}
+        scores.append(score)
+        score["maturity"] = build_maturity_score(source_url, row)
+        pypi_packages = (
+            db.query(f"select * from pypi where source_url = '{source_url}'")
+            .df()
+            .set_index("name")
+        )
+        score["packages"].extend(
+            [
+                {
+                    "name": package_name,
+                    "ecosystem": "PyPI",
+                    "version": package_data.version,
+                }
+                for package_name, package_data in pypi_packages.iterrows()
+            ]
+        )
+
+    df = pd.DataFrame(scores)
     df["partition"] = partition
 
     click.echo(f"Saving data to {output}")
