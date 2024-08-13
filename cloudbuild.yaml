@@ -114,7 +114,8 @@ steps:
         "--max-retries=1",
         "--memory=4Gi",
         "--tasks=1000",
-        "--parallelism=100",
+        "--parallelism=200",
+        "--task-timeout=30m",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=git",
       ]
