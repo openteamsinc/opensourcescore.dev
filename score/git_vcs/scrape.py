@@ -15,6 +15,7 @@ def scrape_git(urls: list) -> pd.DataFrame:
     all_data = []
     for url in tqdm(urls, disable=None):
         info = get_info_from_git_repo(url)
+        info["source_url"] = url
         all_data.append(info)
 
     return pd.DataFrame(all_data)
@@ -62,7 +63,6 @@ def get_info_from_git_repo(url) -> dict:
         max_monthly_authors_count = rolling_authors.max()
 
         return {
-            "source_url": url,
             "recent_authors_count": recent_authors_count,
             "max_monthly_authors_count": max_monthly_authors_count,
             "first_commit": commits.when.min(),
