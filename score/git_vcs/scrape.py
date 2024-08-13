@@ -32,12 +32,16 @@ def get_info_from_git_repo(url) -> dict:
             log.error(f"{url}: {err.stderr}")
             return {"error": "Could not clone repo"}
 
-        commits = pd.DataFrame(
-            [
-                {"email": c.author.email, "when": c.authored_date}
-                for c in repo.iter_commits()
-            ]
-        )
+        try:
+            commits = pd.DataFrame(
+                [
+                    {"email": c.author.email, "when": c.authored_date}
+                    for c in repo.iter_commits()
+                ]
+            )
+        except ValueError as err:
+            log.error(f"{url}: {err}")
+            return {"error": "Repository is empty"}
         commits = commits[~commits.email.str.endswith("github.com")]
         commits["when"] = pd.to_datetime(commits.when, unit="s")
 
