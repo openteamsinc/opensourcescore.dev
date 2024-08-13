@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from typing import List
 
 import pandas as pd
-from tqdm import tqdm
 from cvss import CVSS2, CVSS3, CVSS4
+from tqdm import tqdm
 
 from ..utils.request_session import get_session
 
@@ -11,7 +11,22 @@ OSV_API_URL = "https://api.osv.dev/v1/query"
 
 
 def categorize_severity(score):
-    if score >= 7.0:
+    """
+    Categorize the severity based on the CVSS (Common Vulnerability Scoring System) score.
+
+    CVSS Score Ranges:
+    - LOW: 0.0 - 3.9
+    - MODERATE: 4.0 - 6.9
+    - HIGH: 7.0 - 8.9
+    - CRITICAL: 9.0 - 10.0
+
+    Reference :
+        1. https://ossf.github.io/osv-schema/#severitytype-field
+        2. https://www.first.org/cvss/specification-document (Look into 6. Qualitative Severity Rating Scale )
+    """
+    if score >= 9.0:
+        return "CRITICAL"
+    elif score >= 7.0:
         return "HIGH"
     elif score >= 4.0:
         return "MODERATE"
