@@ -65,6 +65,6 @@ def get_info_from_git_repo(url) -> dict:
             "source_url": url,
             "recent_authors_count": recent_authors_count,
             "max_monthly_authors_count": max_monthly_authors_count,
-            "first_commit": commits.when.min().isoformat(),
-            "latest_commit": commits.when.max().isoformat(),
+            "first_commit": commits.when.min(),
+            "latest_commit": commits.when.max(),
         }
