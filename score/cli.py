@@ -129,6 +129,8 @@ def conda(num_partitions, partition, output, channel):
 def vulnerabilities(num_partitions, partition, output, ecosystem):
     if ecosystem == "PyPI":
         packages = get_pypi_package_names(num_partitions, partition)
+    elif ecosystem == "npm":
+        packages = get_npm_package_names(num_partitions, partition)
     click.echo(
         f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )
