@@ -36,7 +36,7 @@ def get_all_npm_package_names() -> List[str]:
             break
         all_package_names.extend(package_names)
         print(f"\rFound {len(set(all_package_names))} package names", end="")
-    return set(all_package_names)
+    return list(set(all_package_names))
 
 
 def get_npm_package_names(num_partitions: int, partition: int) -> List[str]:
