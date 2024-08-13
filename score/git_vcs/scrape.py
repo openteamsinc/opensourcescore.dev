@@ -1,6 +1,6 @@
 import pandas as pd
 from git import Repo
-from git.exc import GitCommandError
+from git.exc import GitCommandError, UnsafeProtocolError
 import tempfile
 from tqdm import tqdm
 from datetime import datetime, timedelta
@@ -26,6 +26,8 @@ def get_info_from_git_repo(url) -> dict:
     ) as tmpdir:
         try:
             repo = Repo.clone_from(url, tmpdir, no_checkout=True, filter="tree:0")
+        except UnsafeProtocolError:
+            return {"error": "Unsafe Git Protocol: protocol looks suspicious"}
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr:
                 return {"error": "Repo not found"}
