@@ -11,6 +11,7 @@ one_year_ago = datetime.now() - timedelta(days=365)
 
 log = logging.getLogger(__name__)
 
+
 def scrape_git(urls: list) -> pd.DataFrame:
     all_data = []
     for url in tqdm(urls, disable=None):
@@ -21,8 +22,11 @@ def scrape_git(urls: list) -> pd.DataFrame:
         all_data.append(metadata)
     return pd.DataFrame(all_data)
 
+
 def get_commit_metadata(url) -> dict:
-    with tempfile.TemporaryDirectory(prefix="score", suffix=".git", ignore_cleanup_errors=True) as tmpdir:
+    with tempfile.TemporaryDirectory(
+        prefix="score", suffix=".git", ignore_cleanup_errors=True
+    ) as tmpdir:
         try:
             repo = Repo.clone_from(url, tmpdir, no_checkout=True, filter="tree:0")
         except (UnsafeProtocolError, GitCommandError) as err:
@@ -31,7 +35,10 @@ def get_commit_metadata(url) -> dict:
 
         try:
             commits = pd.DataFrame(
-                [{"email": c.author.email, "when": c.authored_date} for c in repo.iter_commits()]
+                [
+                    {"email": c.author.email, "when": c.authored_date}
+                    for c in repo.iter_commits()
+                ]
             )
         except ValueError as err:
             log.error(f"{url}: {err}")
@@ -53,8 +60,11 @@ def get_commit_metadata(url) -> dict:
             "latest_commit": commits.when.max(),
         }
 
+
 def get_license_type(url) -> str:
-    with tempfile.TemporaryDirectory(prefix="score", suffix=".git", ignore_cleanup_errors=True) as tmpdir:
+    with tempfile.TemporaryDirectory(
+        prefix="score", suffix=".git", ignore_cleanup_errors=True
+    ) as tmpdir:
         try:
             # Perform a shallow clone with depth=1 to fetch the LICENSE file
             repo = Repo.clone_from(url, tmpdir, depth=1)
@@ -68,9 +78,13 @@ def get_license_type(url) -> str:
         for blob in root_files:
             if "LICENSE" in blob.name.upper():
                 try:
-                    license_content = blob.data_stream.read().decode('utf-8')
+                    license_content = blob.data_stream.read().decode("utf-8")
                     break
                 except Exception as e:
                     log.error(f"Error reading license file {blob.name}: {str(e)}")
 
-        return "No License Found" if not license_content else identify_license(license_content)
+        return (
+            "No License Found"
+            if not license_content
+            else identify_license(license_content)
+        )
