@@ -13,6 +13,8 @@ from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
 from .git_vcs.scrape import scrape_git
 from .score.maturity import build_maturity_score
+from .score.health_risk import build_health_risk_score
+from .score.packages import get_pypi_packages, get_conda_packages
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -215,12 +217,17 @@ def git(input, num_partitions, partition, output):
 @click.option(
     "--git-input",
     default=os.path.join(OUTPUT_ROOT, "git"),
-    help="The output directory to save the scraped data in hive partition",
+    help="The git input path to read the data from",
 )
 @click.option(
     "--pypi-input",
     default=os.path.join(OUTPUT_ROOT, "pypi-json"),
-    help="The output directory to save the scraped data in hive partition",
+    help="The pypi input path to read the data from",
+)
+@click.option(
+    "--conda-input",
+    default=os.path.join(OUTPUT_ROOT, "conda"),
+    help="The conda input path to read the data from",
 )
 @click.option(
     "-o",
@@ -230,14 +237,22 @@ def git(input, num_partitions, partition, output):
 )
 @partition_option
 @num_partitions_option
-def score(git_input, pypi_input, num_partitions, partition, output):
+def score(git_input, pypi_input, conda_input, num_partitions, partition, output):
 
     db = duckdb.connect()
+    db.execute("CREATE SECRET (TYPE GCS);")
     click.echo(f"Reading data from pypi {pypi_input} into memory")
     db.execute(
         f"""
     CREATE TABLE pypi AS
     SELECT * FROM read_parquet('{pypi_input}/*/*.parquet')
+    """
+    )
+    click.echo(f"Reading data from conda {conda_input} into memory")
+    db.execute(
+        f"""
+    CREATE TABLE conda AS
+    SELECT * FROM read_parquet('{conda_input}/*/*/*.parquet')
     """
     )
 
@@ -257,22 +272,11 @@ def score(git_input, pypi_input, num_partitions, partition, output):
     for source_url, row in df.iterrows():
         score: dict = {"source_url": source_url, "packages": []}
         scores.append(score)
+        score["packages"].extend(get_pypi_packages(db, source_url))
+        score["packages"].extend(get_conda_packages(db, source_url))
+
         score["maturity"] = build_maturity_score(source_url, row)
-        pypi_packages = (
-            db.query(f"select * from pypi where source_url = '{source_url}'")
-            .df()
-            .set_index("name")
-        )
-        score["packages"].extend(
-            [
-                {
-                    "name": package_name,
-                    "ecosystem": "PyPI",
-                    "version": package_data.version,
-                }
-                for package_name, package_data in pypi_packages.iterrows()
-            ]
-        )
+        score["health_risk"] = build_health_risk_score(source_url, row)
 
     df = pd.DataFrame(scores)
     df["partition"] = partition
