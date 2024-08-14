@@ -63,9 +63,9 @@ steps:
         "scrape-pypi",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
-        "--max-retries=1",
+        "--max-retries=3",
         "--memory=1024Mi",
-        "--tasks=100",
+        "--tasks=400",
         "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=scrape-pypi",
@@ -101,6 +101,39 @@ steps:
         "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=conda",
+      ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
+        "scrape-git",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=4Gi",
+        "--tasks=2000",
+        "--parallelism=200",
+        "--task-timeout=30m",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=git",
+      ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
+        "agg-source-urls",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=4Gi",
+        "--tasks=1",
+        "--parallelism=1",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=agg-source-urls",
       ]
 
   # Mark the deployment as successful
