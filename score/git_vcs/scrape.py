@@ -49,8 +49,8 @@ def get_commit_metadata(url) -> dict:
         return {
             "recent_authors_count": recent_authors_count,
             "max_monthly_authors_count": max_monthly_authors_count,
-            "first_commit": commits.when.min().isoformat(),
-            "latest_commit": commits.when.max().isoformat(),
+            "first_commit": commits.when.min(),
+            "latest_commit": commits.when.max(),
         }
 
 def get_license_type(url) -> str:
