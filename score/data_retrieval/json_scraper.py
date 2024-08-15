@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 import pandas as pd
 from tqdm import tqdm
 import logging
-import requests
 from requests.exceptions import RequestException
 
 from ..utils.request_session import get_session
@@ -81,7 +80,9 @@ def get_download_counts(package_name: str) -> Optional[Dict[str, int]]:
         response = s.get(url)
         response.raise_for_status()
         recent_downloads = response.json()
-        return recent_downloads["data"]  # Return the data directly as the downloads field
+        return recent_downloads[
+            "data"
+        ]  # Return the data directly as the downloads field
     except RequestException as e:
         log.error(f"Failed to fetch recent downloads for package {package_name}: {e}")
         return None
