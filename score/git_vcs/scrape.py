@@ -5,6 +5,7 @@ import tempfile
 from tqdm import tqdm
 from datetime import datetime, timedelta
 import logging
+import os
 from .license_detection import identify_license
 
 one_year_ago = datetime.now() - timedelta(days=365)
@@ -93,24 +94,25 @@ def get_license_type(url) -> str:
             log.error(f"{url}: {err.stderr}")
             return "No License Found"
 
-        # Check for a LICENSE file in the root directory
-        license_content = None
         try:
-            root_files = repo.tree().blobs  # List blobs (files) in the repository root
-            for blob in root_files:
-                if "LICENSE" in blob.name.upper():
-                    try:
-                        license_content = blob.data_stream.read().decode("utf-8")
-                        break
-                    except Exception as e:
-                        log.error(f"Error reading license file {blob.name}: {str(e)}")
-                        return "No License Found"
+            # Check out the LICENSE file(s)
+            repo.git.checkout(repo.active_branch, "--", "LICENSE*")
+
+            # Check if LICENSE or LICENSE.txt exists in the root directory
+            license_file_path = None
+            if os.path.exists(os.path.join(tmpdir, "LICENSE")):
+                license_file_path = os.path.join(tmpdir, "LICENSE")
+            elif os.path.exists(os.path.join(tmpdir, "LICENSE.txt")):
+                license_file_path = os.path.join(tmpdir, "LICENSE.txt")
+
+            if not license_file_path:
+                return "No License Found"
+
+            # Read and return the license type
+            with open(license_file_path, "r", encoding="utf-8") as license_file:
+                license_content = license_file.read()
+                return identify_license(license_content)
+
         except Exception as e:
             log.error(f"{url}: Error accessing the repository files: {str(e)}")
             return "No License Found"
-
-        return (
-            "No License Found"
-            if not license_content
-            else identify_license(license_content)
-        )
