@@ -16,21 +16,31 @@ def scrape_git(urls: list) -> pd.DataFrame:
     all_data = []
     for url in tqdm(urls, disable=None):
         metadata = get_commit_metadata(url)
-        license_type = get_license_type(url)
-        metadata["license_type"] = license_type
+        if "error" in metadata:
+            # Skip the license check if commit metadata retrieval failed
+            metadata["license_type"] = "Skipped due to commit metadata error"
+        else:
+            license_type = get_license_type(url)
+            metadata["license_type"] = license_type
         metadata["source_url"] = url
         all_data.append(metadata)
     return pd.DataFrame(all_data)
 
 
 def get_commit_metadata(url) -> dict:
+    one_year_ago = datetime.now() - timedelta(days=365)
+
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:
         try:
             repo = Repo.clone_from(url, tmpdir, no_checkout=True, filter="tree:0")
-        except (UnsafeProtocolError, GitCommandError) as err:
-            log.error(f"{url}: {err}")
+        except UnsafeProtocolError:
+            return {"error": "Unsafe Git Protocol: protocol looks suspicious"}
+        except GitCommandError as err:
+            if err.status == 128 and "not found" in err.stderr.lower():
+                return {"error": "Repo not found"}
+            log.error(f"{url}: {err.stderr}")
             return {"error": "Could not clone repo"}
 
         try:
@@ -44,15 +54,20 @@ def get_commit_metadata(url) -> dict:
             log.error(f"{url}: {err}")
             return {"error": "Repository is empty"}
 
+        # Filter out commits from GitHub's email domain
         commits = commits[~commits.email.str.endswith("github.com")]
         commits["when"] = pd.to_datetime(commits.when, unit="s")
 
+        # Calculate recent authors count
         recent_authors_count = commits[commits.when > one_year_ago].email.nunique()
+
+        # Calculate max monthly authors count
         commits_by_when = commits.sort_values("when").set_index("when")
         daily_authors = commits_by_when.resample("D")["email"].nunique()
         rolling_authors = daily_authors.rolling(window="30D").sum()
         max_monthly_authors_count = rolling_authors.max()
 
+        # Return the required metadata
         return {
             "recent_authors_count": recent_authors_count,
             "max_monthly_authors_count": max_monthly_authors_count,
@@ -68,20 +83,31 @@ def get_license_type(url) -> str:
         try:
             # Perform a shallow clone with depth=1 to fetch the LICENSE file
             repo = Repo.clone_from(url, tmpdir, depth=1)
-        except (UnsafeProtocolError, GitCommandError) as err:
-            log.error(f"{url}: {err}")
+        except UnsafeProtocolError:
+            log.error(f"{url}: Unsafe Git Protocol: protocol looks suspicious")
+            return "No License Found"
+        except GitCommandError as err:
+            if err.status == 128 and "not found" in err.stderr.lower():
+                log.error(f"{url}: Repo not found")
+                return "No License Found"
+            log.error(f"{url}: {err.stderr}")
             return "No License Found"
 
         # Check for a LICENSE file in the root directory
         license_content = None
-        root_files = repo.tree().blobs  # List blobs (files) in the repository root
-        for blob in root_files:
-            if "LICENSE" in blob.name.upper():
-                try:
-                    license_content = blob.data_stream.read().decode("utf-8")
-                    break
-                except Exception as e:
-                    log.error(f"Error reading license file {blob.name}: {str(e)}")
+        try:
+            root_files = repo.tree().blobs  # List blobs (files) in the repository root
+            for blob in root_files:
+                if "LICENSE" in blob.name.upper():
+                    try:
+                        license_content = blob.data_stream.read().decode("utf-8")
+                        break
+                    except Exception as e:
+                        log.error(f"Error reading license file {blob.name}: {str(e)}")
+                        return "No License Found"
+        except Exception as e:
+            log.error(f"{url}: Error accessing the repository files: {str(e)}")
+            return "No License Found"
 
         return (
             "No License Found"
