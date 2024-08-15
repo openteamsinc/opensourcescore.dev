@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 import logging
 import requests
+from requests.exceptions import RequestException
 
 from ..utils.request_session import get_session
 
@@ -73,17 +74,16 @@ def get_download_counts(package_name: str) -> Optional[Dict[str, int]]:
     Returns:
         dict: A dictionary containing the download counts.
     """
-    # Fetch recent download counts (daily, weekly, monthly)
     url = f"https://pypistats.org/api/packages/{package_name}/recent"
-    response = requests.get(url)
-    if response.status_code == 200:
+    s = get_session()
+
+    try:
+        response = s.get(url)
+        response.raise_for_status()
         recent_downloads = response.json()
-        if "data" in recent_downloads:
-            return recent_downloads[
-                "data"
-            ]  # Return the data directly as the downloads field
-    else:
-        log.debug(f"Failed to fetch recent downloads for package {package_name}")
+        return recent_downloads["data"]  # Return the data directly as the downloads field
+    except RequestException as e:
+        log.error(f"Failed to fetch recent downloads for package {package_name}: {e}")
         return None
 
 
