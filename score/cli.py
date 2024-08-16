@@ -70,10 +70,10 @@ def scrape_pypi(num_partitions, partition, output):
     "-o",
     "--output",
     default=os.path.join(OUTPUT_ROOT, "pypi-downloads.parquet"),
-    help="The output directory to save the download data in hive partition",
+    help="The output path",
 )
 def scrape_pypi_downloads(output):
-    click.echo(f"Fetching download data from BigQuery and partitioning into {output}")
+    click.echo(f"Fetching download data from BigQuery and saving into {output}")
 
     # Fetch the download data
     df = get_bulk_download_counts()
