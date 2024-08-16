@@ -22,7 +22,9 @@ def clone_repo(url):
         os.chdir(tmpdir)
 
         try:
-            repo = Repo.clone_from(url, tmpdir, no_checkout=True, filter="tree:0")
+            repo = Repo.clone_from(
+                url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
+            )
             yield repo, {"source_url": url}
         except UnsafeProtocolError:
             yield None, {
