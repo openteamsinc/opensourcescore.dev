@@ -5,7 +5,6 @@ from strsimpy import SorensenDice
 
 
 KIND_MAP = {
-    "0BSD": "0BSD",
     "AAL": "AAL",
     "AFL-3.0": "AFL",
     "AGPL-3.0": "AGPL",
@@ -15,11 +14,12 @@ KIND_MAP = {
     "Apache-2.0": "Apache",
     "Artistic-1.0": "Artistic",
     "Artistic-2.0": "Artistic",
+    "0BSD": "BSD",
     "BSD-1-Clause": "BSD",
     "BSD-2": "BSD",
     "BSD-3": "BSD",
     "BSD-3-Clause-LBNL": "BSD",
-    "BSDplusPatent": "BSDplusPatent",
+    "BSDplusPatent": "BSD",
     "BSL-1.0": "BSL",
     "CAL-1.0": "CAL",
     "CATOSL-1.1": "CATOSL",
