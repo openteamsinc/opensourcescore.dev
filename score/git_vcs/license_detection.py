@@ -110,6 +110,9 @@ KIND_MAP = {
     "jabberpl": "jabberpl",
 }
 
+CLOSE_ENOUGH = 0.95
+PROBABLY_NOT = 0.9
+
 
 def identify_license(license_content: str) -> str:
 
@@ -125,12 +128,17 @@ def identify_license(license_content: str) -> str:
     similarities = pd.DataFrame(similarities).set_index("name")
     best_match = similarities.idxmax()
     similarity = similarities.loc[best_match].similarity
-    if similarity < 0.9:
-        return {"license": "Unknown", "kind": "Unknown"}
+    if similarity < PROBABLY_NOT:
+        return {
+            "license": "Unknown",
+            "kind": "Unknown",
+            "similarity": similarity,
+            "best_match": best_match,
+        }
 
     kind = KIND_MAP.get(best_match, best_match)
 
-    if similarity < 0.95:
+    if similarity < CLOSE_ENOUGH:
         best_match = f"Modified {best_match}"
         kind = f"Modified {kind}"
 
