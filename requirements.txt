@@ -9,3 +9,4 @@ gcsfs==2024.6.1
 duckdb~=1.0.0
 cvss==3.1
 GitPython~=3.1.43
+strsimpy~=0.2.1
