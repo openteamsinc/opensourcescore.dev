@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 import pandas as pd
 from tqdm import tqdm
 import logging
-from requests.exceptions import RequestException
 
 from ..utils.request_session import get_session
 
@@ -34,9 +33,6 @@ def get_package_data(package_name):
     # Extract the 'info' section
     info = package_data.get("info", {})
 
-    # Fetch detailed download counts
-    downloads = get_download_counts(package_name)
-
     source_url_key, source_url = extract_source_url(info.get("project_urls", {}))
 
     # Extract desired fields
@@ -57,35 +53,9 @@ def get_package_data(package_name):
         "yanked_reason": info.get("yanked_reason", None),
         "source_url": source_url,
         "source_url_key": source_url_key,
-        "downloads": downloads,  # Add download counts to the data
     }
 
     return filtered_data
-
-
-def get_download_counts(package_name: str) -> Optional[Dict[str, int]]:
-    """
-    Fetches download counts for a package from the PyPI Stats API.
-
-    Args:
-        package_name (str): The name of the package to fetch download counts for.
-
-    Returns:
-        dict: A dictionary containing the download counts.
-    """
-    url = f"https://pypistats.org/api/packages/{package_name}/recent"
-    s = get_session()
-
-    try:
-        response = s.get(url)
-        response.raise_for_status()
-        recent_downloads = response.json()
-        return recent_downloads[
-            "data"
-        ]  # Return the data directly as the downloads field
-    except RequestException as e:
-        log.error(f"Failed to fetch recent downloads for package {package_name}: {e}")
-        return None
 
 
 def normalize_source_url(url: str):

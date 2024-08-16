@@ -6,6 +6,7 @@ import duckdb
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 from .data_retrieval.json_scraper import scrape_json
+from .data_retrieval.pypi_downloads import get_bulk_download_counts
 from .logger import setup_logger
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
@@ -62,6 +63,32 @@ def scrape_pypi(num_partitions, partition, output):
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["partition"])
     click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--output",
+    default=os.path.join(OUTPUT_ROOT, "pypi-downloads"),
+    help="The output directory to save the download data in hive partition",
+)
+@num_partitions_option
+def scrape_pypi_downloads(num_partitions, output):
+    click.echo(
+        f"Fetching download data from BigQuery and partitioning into {num_partitions} partitions..."
+    )
+
+    # Fetch the download data
+    df = get_bulk_download_counts()
+
+    # Determine partition assignments
+    df["partition"] = (df.index.to_series().rank(method="first") - 1) % num_partitions
+
+    # Save the DataFrame to the specified output with partitioning
+    click.echo(f"Saving data to {output}")
+    df.to_parquet(output, partition_cols=["partition"])
+    click.echo(
+        f"Download data fetching and saving into {num_partitions} partitions completed."
+    )
 
 
 @cli.command()
