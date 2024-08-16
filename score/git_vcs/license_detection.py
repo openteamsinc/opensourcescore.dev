@@ -1,7 +1,7 @@
 import re
 
 
-def identify_license(license_content: str) -> str:
+def identify_license(license_content: str) -> dict:
     # Normalize the license content
     normalized_content = (
         license_content.lower().replace("\n", " ").replace("*", "").strip()
