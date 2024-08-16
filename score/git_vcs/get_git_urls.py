@@ -11,6 +11,4 @@ def get_git_urls(input: str, num_partitions: int, partition: int) -> list:
 
     filtered_df = df[df.source_url.apply(is_in_partition)]
 
-    print(filtered_df)
-    print(filtered_df.index.size)
     return filtered_df.source_url.to_list()

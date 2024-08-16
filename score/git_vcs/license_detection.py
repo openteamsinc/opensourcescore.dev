@@ -12,17 +12,17 @@ def identify_license(license_content: str) -> str:
 
     # Quick checks for explicit license tags
     if "mit license" in normalized_content:
-        return "MIT License"
+        return {"license": "MIT License", "kind": "MIT"}
     elif "apache license, version 2.0" in normalized_content:
-        return "Apache License 2.0"
+        return {"license": "Apache License 2.0", "kind": "Apache"}
     elif "gnu general public license" in normalized_content:
-        return "GNU General Public License (GPL)"
+        return {"license": "GNU General Public License (GPL)", "kind": "GPL"}
     elif "gnu lesser general public license" in normalized_content:
-        return "GNU Lesser General Public License (LGPL)"
+        return {"license": "GNU Lesser General Public License (LGPL)", "kind": "LGPL"}
     elif "mozilla public license, v. 2.0" in normalized_content:
-        return "Mozilla Public License 2.0"
+        return {"license": "Mozilla Public License 2.0", "kind": "MPL"}
     elif "bsd 3-clause license" in normalized_content:
-        return "BSD 3-Clause License"
+        return {"license": "BSD 3-Clause License", "kind": "BSD"}
 
     # Regular expression pattern matching for BSD 3-Clause License
     bsd_pattern = (
@@ -32,14 +32,14 @@ def identify_license(license_content: str) -> str:
     )
 
     if re.search(bsd_pattern, normalized_content, re.DOTALL):
-        return "BSD 3-Clause License"
+        return {"license": "BSD 3-Clause License", "kind": "BSD"}
 
     # If "All Rights Reserved" is present but no specific license pattern is detected, it might be proprietary
     if (
         "all rights reserved" in normalized_content
         and "redistribution and use" not in normalized_content
     ):
-        return "Proprietary License (All Rights Reserved)"
+        return {"license": "Proprietary", "kind": "Unknown"}
 
     # If no match, return unknown
-    return "Unknown License"
+    return {"license": "Unknown", "kind": "Unknown"}
