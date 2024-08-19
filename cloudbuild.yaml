@@ -92,15 +92,15 @@ steps:
         "run",
         "jobs",
         "deploy",
-        "scrape-pypi-web",
+        "scrape-pypi-downloads",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
         "--memory=1024Mi",
-        "--tasks=400",
-        "--parallelism=50",
+        "--tasks=1",
+        "--parallelism=1",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
-        "--set-env-vars=COMMAND=scrape-pypi-web",
+        "--set-env-vars=COMMAND=scrape-pypi-downloads",
       ]
   - name: "gcr.io/cloud-builders/gcloud"
     args:
