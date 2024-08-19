@@ -1,45 +1,160 @@
-import re
+import pandas as pd
+from pathlib import Path
+from functools import lru_cache
+from strsimpy import SorensenDice
+
+
+KIND_MAP = {
+    "AAL": "AAL",
+    "AFL-3.0": "AFL",
+    "AGPL-3.0": "AGPL",
+    "APL-1.0": "APL",
+    "APSL-2.0": "APSL",
+    "Apache-1.1": "Apache",
+    "Apache-2.0": "Apache",
+    "Artistic-1.0": "Artistic",
+    "Artistic-2.0": "Artistic",
+    "0BSD": "BSD",
+    "BSD-1-Clause": "BSD",
+    "BSD-2": "BSD",
+    "BSD-3": "BSD",
+    "BSD-3-Clause-LBNL": "BSD",
+    "BSDplusPatent": "BSD",
+    "BSL-1.0": "BSL",
+    "CAL-1.0": "CAL",
+    "CATOSL-1.1": "CATOSL",
+    "CDDL-1.0": "CDDL",
+    "CECILL-2.1": "CECILL",
+    "CNRI-Python": "CNRI-Python",
+    "CPAL-1.0": "CPAL",
+    "CPL-1.0": "CPL",
+    "CUA-OPL-1.0": "CUA-OPL",
+    "CVW": "CVW",
+    "ECL-1.0": "ECL",
+    "ECL-2.0": "ECL",
+    "EFL-1.0": "EFL",
+    "EFL-2.0": "EFL",
+    "EPL-1.0": "EPL",
+    "EPL-2.0": "EPL",
+    "EUDatagrid": "EUDatagrid",
+    "EUPL-1.1": "EUPL",
+    "EUPL-1.2": "EUPL",
+    "Entessa": "Entessa",
+    "Fair": "Fair",
+    "Frameworx-1.0": "Frameworx",
+    "GFDL-1.2": "GFDL",
+    "GFDL-1.3": "GFDL",
+    "GPL-1.0": "GPL",
+    "GPL-2.0": "GPL",
+    "GPL-3.0": "GPL",
+    "HPND": "HPND",
+    "IPA": "IPA",
+    "IPL-1.0": "IPL",
+    "ISC": "ISC",
+    "Intel": "Intel",
+    "LGPL-2.0": "LGPL",
+    "LGPL-2.1": "LGPL",
+    "LGPL-3.0": "LGPL",
+    "LPL-1.0": "LPL",
+    "LPL-1.02": "LPL",
+    "LPPL-1.3c": "LPPL",
+    "LiLiQ-P-1.1": "LiLi",
+    "LiLiQ-R+": "LiLi",
+    "LiLiQ-R-1.1": "LiLi",
+    "MIT": "MIT",
+    "MIT-0": "MIT",
+    "MPL-1.0": "MPL",
+    "MPL-1.1": "MPL",
+    "MPL-2.0": "MPL",
+    "MS-PL": "MS-PL",
+    "MS-RL": "MS-RL",
+    "MirOS": "MirOS",
+    "Motosoto": "Motosoto",
+    "Multics": "Multics",
+    "NASA-1.3": "NASA",
+    "NCSA": "NCSA",
+    "NGPL": "NGPL",
+    "NPOSL-3.0": "NPOSL",
+    "NTP": "NTP",
+    "Naumen": "Naumen",
+    "Nokia": "Nokia",
+    "OCLC-2.0": "OCLC",
+    "OFL-1.1": "OFL",
+    "OGTSL": "OGTSL",
+    "OLDAP-2.8": "OLDAP",
+    "OPL-2.1": "OPL",
+    "OSL-1.0": "OSL",
+    "OSL-2.1": "OSL",
+    "OSL-3.0": "OSL",
+    "PHP-3.0": "PHP",
+    "PHP-3.01": "PHP",
+    "PostgreSQL": "PostgreSQL",
+    "Python-2.0": "Python",
+    "QPL-1.0": "QPL",
+    "RPL-1.1": "RPL",
+    "RPL-1.5": "RPL",
+    "RPSL-1.0": "RPSL",
+    "RSCPL": "RSCPL",
+    "SISSL": "SISSL",
+    "SPL-1.0": "SPL",
+    "Simple-2.0": "Simple",
+    "Sleepycat": "Sleepycat",
+    "UPL": "UPL",
+    "VSL-1.0": "VSL",
+    "W3C": "W3C",
+    "WXwindows": "WXwindows",
+    "Watcom-1.0": "Watcom",
+    "Xnet": "Xnet",
+    "ZPL-2.0": "ZPL",
+    "Zlib": "Zlib",
+    "jabberpl": "jabberpl",
+}
+
+CLOSE_ENOUGH = 0.95
+PROBABLY_NOT = 0.9
 
 
 def identify_license(license_content: str) -> str:
-    # Normalize the license content
-    normalized_content = (
-        license_content.lower().replace("\n", " ").replace("*", "").strip()
-    )
 
-    # Remove excessive whitespace
-    normalized_content = re.sub(r"\s+", " ", normalized_content)
+    sd = SorensenDice()
+    similarities = []
+    for license_name, ref_license in get_all_licenses().items():
+        similarities.append(
+            {
+                "name": license_name,
+                "similarity": sd.similarity(license_content.strip(), ref_license),
+            }
+        )
+    similarities = pd.DataFrame(similarities).set_index("name")
+    best_match = similarities.idxmax()
+    similarity = similarities.loc[best_match].similarity
+    if similarity < PROBABLY_NOT:
+        return {
+            "license": "Unknown",
+            "kind": "Unknown",
+            "similarity": similarity,
+            "best_match": best_match,
+        }
 
-    # Quick checks for explicit license tags
-    if "mit license" in normalized_content:
-        return {"license": "MIT License", "kind": "MIT"}
-    elif "apache license, version 2.0" in normalized_content:
-        return {"license": "Apache License 2.0", "kind": "Apache"}
-    elif "gnu general public license" in normalized_content:
-        return {"license": "GNU General Public License (GPL)", "kind": "GPL"}
-    elif "gnu lesser general public license" in normalized_content:
-        return {"license": "GNU Lesser General Public License (LGPL)", "kind": "LGPL"}
-    elif "mozilla public license, v. 2.0" in normalized_content:
-        return {"license": "Mozilla Public License 2.0", "kind": "MPL"}
-    elif "bsd 3-clause license" in normalized_content:
-        return {"license": "BSD 3-Clause License", "kind": "BSD"}
+    kind = KIND_MAP.get(best_match, best_match)
 
-    # Regular expression pattern matching for BSD 3-Clause License
-    bsd_pattern = (
-        r"redistribution and use .* (source|binary) forms"
-        r".* retain .* copyright notice, .* conditions .* disclaimer"
-        r".* neither the name of"
-    )
+    if similarity < CLOSE_ENOUGH:
+        best_match = f"Modified {best_match}"
+        kind = f"Modified {kind}"
 
-    if re.search(bsd_pattern, normalized_content, re.DOTALL):
-        return {"license": "BSD 3-Clause License", "kind": "BSD"}
+    return {"license": best_match, "kind": kind, "similarity": similarity}
 
-    # If "All Rights Reserved" is present but no specific license pattern is detected, it might be proprietary
-    if (
-        "all rights reserved" in normalized_content
-        and "redistribution and use" not in normalized_content
-    ):
-        return {"license": "Proprietary", "kind": "Unknown"}
 
-    # If no match, return unknown
-    return {"license": "Unknown", "kind": "Unknown"}
+license_dir = Path(__file__).parent / "licenses"
+
+
+@lru_cache
+def get_all_licenses():
+    print("license_dir", license_dir)
+    licenses = {}
+    for license_file in license_dir.glob("*"):
+        with open(license_file, "rb") as f:
+            data = f.read()
+        data = data.decode(errors="ignore")
+        licenses[license_file.name] = data.strip()
+    return licenses
