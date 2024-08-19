@@ -4,19 +4,16 @@ from urllib.parse import urlparse
 import pandas as pd
 from tqdm import tqdm
 import logging
-import re
 
 from ..utils.request_session import get_session
 
-
 log = logging.getLogger(__name__)
-
-GITHUB_REPO_PATTERN = re.compile(r"https://github\.com/[^/]+/[^/]+/?")
 
 
 def get_package_data(package_name):
     """
     Fetches package data from the PyPI JSON API for a given package name and filters out specific fields.
+    Additionally fetches download counts from the PyPI Stats API.
 
     Args:
         package_name (str): The name of the package to fetch data for.
@@ -96,7 +93,10 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
     Initiates the scraping process using the JSON API based on the given configuration.
 
     Args:
-        config (dict): Configuration dictionary containing scraping parameters.
+        packages (List[str]): List of package names to scrape data for.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the scraped data.
     """
     all_package_data = []
     failed_count = 0
