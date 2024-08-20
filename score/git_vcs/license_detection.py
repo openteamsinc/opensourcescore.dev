@@ -126,8 +126,8 @@ def identify_license(license_content: str) -> str:
             }
         )
     similarities = pd.DataFrame(similarities).set_index("name")
-    best_match = similarities.idxmax()
-    similarity = similarities.loc[best_match].similarity
+    best_match = similarities.idxmax().item()
+    similarity = similarities.loc[best_match, "similarity"]
     if similarity < PROBABLY_NOT:
         return {
             "license": "Unknown",
