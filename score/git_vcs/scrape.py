@@ -16,6 +16,9 @@ log = logging.getLogger(__name__)
 
 @contextmanager
 def clone_repo(url):
+    # Set the environment variable to disable terminal prompts for Git
+    os.environ["GIT_TERMINAL_PROMPT"] = "0"
+
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:

@@ -178,6 +178,10 @@ def agg_source_urls(input, output):
         );
     """
     ).df()
+
+    # Normalize the source URLs by removing the trailing ".git" if it exists
+    df["source_url"] = df["source_url"].str.rstrip(".git")
+
     df.to_parquet(output)
     click.echo("Aggregation completed.")
 
