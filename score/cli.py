@@ -6,7 +6,7 @@ import duckdb
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
 from .data_retrieval.json_scraper import scrape_json
-from .data_retrieval.web_scraper import scrape_web
+from .data_retrieval.pypi_downloads import get_bulk_download_counts
 from .logger import setup_logger
 from .utils.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
@@ -67,24 +67,21 @@ def scrape_pypi(num_partitions, partition, output):
 
 @cli.command()
 @click.option(
+    "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "pypi-web"),
-    help="The output directory to save the scraped data in hive partition",
+    default=os.path.join(OUTPUT_ROOT, "pypi-downloads.parquet"),
+    help="The output path",
 )
-@partition_option
-@num_partitions_option
-def scrape_pypi_web(num_partitions, partition, output):
-    packages = get_pypi_package_names(num_partitions, partition)
-    click.echo(
-        f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
-    )
+def scrape_pypi_downloads(output):
+    click.echo(f"Fetching download data from BigQuery and saving into {output}")
 
-    df = scrape_web(packages)
-    df["partition"] = partition
+    # Fetch the download data
+    df = get_bulk_download_counts()
 
+    # Save the DataFrame to the specified output with partitioning
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output, partition_cols=["partition"])
-    click.echo("Scraping completed.")
+    df.to_parquet(output)
+    click.echo("Download data fetching and saving completed.")
 
 
 @cli.command()

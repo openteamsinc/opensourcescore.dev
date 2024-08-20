@@ -5,7 +5,6 @@ from strsimpy import SorensenDice
 
 
 KIND_MAP = {
-    "0BSD": "0BSD",
     "AAL": "AAL",
     "AFL-3.0": "AFL",
     "AGPL-3.0": "AGPL",
@@ -15,11 +14,12 @@ KIND_MAP = {
     "Apache-2.0": "Apache",
     "Artistic-1.0": "Artistic",
     "Artistic-2.0": "Artistic",
+    "0BSD": "BSD",
     "BSD-1-Clause": "BSD",
     "BSD-2": "BSD",
     "BSD-3": "BSD",
     "BSD-3-Clause-LBNL": "BSD",
-    "BSDplusPatent": "BSDplusPatent",
+    "BSDplusPatent": "BSD",
     "BSL-1.0": "BSL",
     "CAL-1.0": "CAL",
     "CATOSL-1.1": "CATOSL",
@@ -110,6 +110,9 @@ KIND_MAP = {
     "jabberpl": "jabberpl",
 }
 
+CLOSE_ENOUGH = 0.95
+PROBABLY_NOT = 0.9
+
 
 def identify_license(license_content: str) -> str:
 
@@ -125,12 +128,17 @@ def identify_license(license_content: str) -> str:
     similarities = pd.DataFrame(similarities).set_index("name")
     best_match = similarities.idxmax()
     similarity = similarities.loc[best_match].similarity
-    if similarity < 0.9:
-        return {"license": "Unknown", "kind": "Unknown"}
+    if similarity < PROBABLY_NOT:
+        return {
+            "license": "Unknown",
+            "kind": "Unknown",
+            "similarity": similarity,
+            "best_match": best_match,
+        }
 
     kind = KIND_MAP.get(best_match, best_match)
 
-    if similarity < 0.95:
+    if similarity < CLOSE_ENOUGH:
         best_match = f"Modified {best_match}"
         kind = f"Modified {kind}"
 
