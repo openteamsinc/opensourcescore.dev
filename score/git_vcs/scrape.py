@@ -115,7 +115,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
         return {"error": "No License Found"}
 
     # Read and return the license type
-    with open(license_file_path) as license_file:
+    with open(license_file_path, encoding="utf8", errors="ignore") as license_file:
         license_content = license_file.read().strip()
 
     return identify_license(license_content)
