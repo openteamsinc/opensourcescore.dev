@@ -40,14 +40,17 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
         maintainers_count = (
             len(package_data.get("maintainers", [])) if package_data else 0
         )
+        source_url = (
+            package_data.get("repository", None).get("url").lstrip("git+")
+            if package_data.get("repository", None)
+            else None
+        )
 
         all_packages.append(
             {
                 "name": package,
                 "full_name": package_data.get("package"),
-                "source_url": package_data.get("repository", None)
-                .get("url")
-                .lstrip("git+"),
+                "source_url": source_url,
                 "latest_version": package_data.get("dist-tags", {}).get("latest"),
                 "ndownloads": ndownloads,
                 "maintainers_count": maintainers_count,
