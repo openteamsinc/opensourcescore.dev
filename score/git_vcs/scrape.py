@@ -96,7 +96,7 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
     }
 
 
-def get_license_type(repo: Repo, url: str) -> str:
+def get_license_type(repo: Repo, url: str) -> dict:
     try:
         # Check out the LICENSE file(s)
         repo.git.checkout(repo.active_branch, "--", "LICENSE*")
