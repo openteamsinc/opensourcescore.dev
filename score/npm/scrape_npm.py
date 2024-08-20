@@ -43,7 +43,7 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
         res = s.get(url)
         if res.status_code == 404:
             log.debug(f"Skipping package not found for package {package}")
-            return {}
+            continue
         res.raise_for_status()
         package_data = res.json()
 
