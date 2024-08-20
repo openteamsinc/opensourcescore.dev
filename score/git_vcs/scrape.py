@@ -107,7 +107,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
     paths = ["LICENSE", "LICENSE.txt", "LICENSE.md"]
     license_file_path = None
     for path in paths:
-        if os.path.exists(path):
+        if os.path.isfile(path):
             license_file_path = path
             break
 
