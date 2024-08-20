@@ -9,10 +9,12 @@ logging.basicConfig(
 )
 
 # Set PROJECT_ROOT to the root of your project (Score directory)
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # Define the paths using the project root
-BASE_DIR = os.path.join(PROJECT_ROOT, "output", "conda", "channel=conda-forge", "partition=0")
+BASE_DIR = os.path.join(
+    PROJECT_ROOT, "output", "conda", "channel=conda-forge", "partition=0"
+)
 OUTPUT_FILE_NAME = "conda_schema.json"
 SCHEMA_OUTPUT_DIR = os.path.join(PROJECT_ROOT, "schemas")
 
