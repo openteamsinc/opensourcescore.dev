@@ -6,7 +6,7 @@ one_year_ago = pd.Timestamp.now() - pd.DateOffset(years=1)
 def build_maturity_score(source_url, git_info):
     score = {"value": "Mature", "notes": []}
     if git_info.error:
-        score["value"] = "Unkonwn"
+        score["value"] = "Unknown"
         score["notes"].append(git_info.error)
         return score
 

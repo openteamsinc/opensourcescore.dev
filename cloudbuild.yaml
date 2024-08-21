@@ -123,6 +123,22 @@ steps:
         "run",
         "jobs",
         "deploy",
+        "agg-source-urls",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=4Gi",
+        "--tasks=1",
+        "--parallelism=1",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=agg-source-urls",
+      ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
         "scrape-git",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
@@ -140,15 +156,15 @@ steps:
         "run",
         "jobs",
         "deploy",
-        "agg-source-urls",
+        "score",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
         "--max-retries=1",
         "--memory=4Gi",
-        "--tasks=1",
-        "--parallelism=1",
+        "--tasks=16",
+        "--parallelism=16",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
-        "--set-env-vars=COMMAND=agg-source-urls",
+        "--set-env-vars=COMMAND=score",
       ]
 
   # Mark the deployment as successful
