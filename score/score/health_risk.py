@@ -2,7 +2,7 @@ SCORE_ORDER = ["Healthy", "Caution Needed", "Moderate Risk", "High Risk"]
 
 HEALTHY = SCORE_ORDER.index("Healthy")
 CAUTION_NEEDED = SCORE_ORDER.index("Caution Needed")
-HIGH_RISK = SCORE_ORDER.index("Moderate Risk")
+MODERATE_RISK = SCORE_ORDER.index("Moderate Risk")
 HIGH_RISK = SCORE_ORDER.index("High Risk")
 
 
