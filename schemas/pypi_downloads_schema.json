@@ -1,0 +1,20 @@
+{
+    "fields": [
+        {
+            "name": "last_day",
+            "type": "int64"
+        },
+        {
+            "name": "last_week",
+            "type": "int64"
+        },
+        {
+            "name": "last_month",
+            "type": "int64"
+        },
+        {
+            "name": "__index_level_0__",
+            "type": "string"
+        }
+    ]
+}
