@@ -10,7 +10,7 @@ def build_health_risk_score(source_url, git_info):
     score = {"value": "Healthy", "notes": []}
 
     if git_info.error:
-        score["value"] = "Unkonwn"
+        score["value"] = "Unknown"
         score["notes"].append(git_info.error)
         return score
 
