@@ -1,0 +1,24 @@
+{
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "full_name",
+            "type": "string"
+        },
+        {
+            "name": "source_url",
+            "type": "string"
+        },
+        {
+            "name": "latest_version",
+            "type": "string"
+        },
+        {
+            "name": "ndownloads",
+            "type": "int64"
+        }
+    ]
+}

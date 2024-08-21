@@ -1,0 +1,60 @@
+{
+    "fields": [
+        {
+            "name": "source_url",
+            "type": "string"
+        },
+        {
+            "name": "broken_url",
+            "type": "bool"
+        },
+        {
+            "name": "error",
+            "type": "string"
+        },
+        {
+            "name": "created_at",
+            "type": "string"
+        },
+        {
+            "name": "updated_at",
+            "type": "string"
+        },
+        {
+            "name": "pushed_at",
+            "type": "string"
+        },
+        {
+            "name": "stargazers_count",
+            "type": "double"
+        },
+        {
+            "name": "forks_count",
+            "type": "double"
+        },
+        {
+            "name": "open_issues_count",
+            "type": "double"
+        },
+        {
+            "name": "subscribers_count",
+            "type": "double"
+        },
+        {
+            "name": "watchers_count",
+            "type": "double"
+        },
+        {
+            "name": "license",
+            "type": "string"
+        },
+        {
+            "name": "contributors",
+            "type": "list<element: struct<avatar_url: string, contributions: int64, events_url: string, followers_url: string, following_url: string, gists_url: string, gravatar_id: string, html_url: string, id: int64, login: string, node_id: string, organizations_url: string, received_events_url: string, repos_url: string, site_admin: bool, starred_url: string, subscriptions_url: string, type: string, url: string>>"
+        },
+        {
+            "name": "contributors_count",
+            "type": "double"
+        }
+    ]
+}
