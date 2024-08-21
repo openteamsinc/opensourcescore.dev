@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta
 from typing import List
-
+from dateutil.parser import parse as parse_date
 import pandas as pd
 from cvss import CVSS2, CVSS3, CVSS4
 from tqdm import tqdm
@@ -77,24 +76,20 @@ def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
         if response.status_code != 200:
             continue
         vulns_list = response.json().get("vulns")
-        required_vuln = list()
         if vulns_list:
             for vuln in vulns_list:
-                if (
-                    datetime.now()
-                    - datetime.strptime(vuln.get("published"), "%Y-%m-%dT%H:%M:%SZ")
-                ) <= timedelta(days=365):
-                    required_vuln.append(get_vulnerability_severity(vuln))
-
-        all_packages.append(
-            {
-                "name": package,
-                "ecosystem": ecosystem,
-                "total_vuln": len(required_vuln),
-                "count_high": len([v for v in required_vuln if v == "HIGH"]),
-                "count_moderate": len([v for v in required_vuln if v == "MODERATE"]),
-                "count_low": len([v for v in required_vuln if v == "LOW"]),
-            }
-        )
-
+                published = parse_date(vuln.get("published"))
+                severity = get_vulnerability_severity(vuln)
+                if severity is None:
+                    continue
+                all_packages.append(
+                    {
+                        "name": package,
+                        "ecosystem": ecosystem,
+                        "published": published,
+                        "id": vuln["id"],
+                        "severity": get_vulnerability_severity(vuln),
+                        "summary": vuln.get("summary"),
+                    }
+                )
     return pd.DataFrame(all_packages)
