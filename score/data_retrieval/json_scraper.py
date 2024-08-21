@@ -96,7 +96,24 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
         packages (List[str]): List of package names to scrape data for.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the scraped data.
+        pd.DataFrame: A DataFrame containing the scraped data. The DataFrame includes the following fields:
+        
+        - `name` (str): The name of the package.
+        - `first_letter` (str): The first letter of the package name. (Used for partitioning)
+        - `bugtrack_url` (Optional[str]): URL for the package's bug tracker, if available.
+        - `classifiers` (List[str]): A list of classifiers associated with the package, typically indicating its license, supported operating systems, and programming languages.
+        - `docs_url` (Optional[str]): URL for the package's documentation, if available.
+        - `download_url` (Optional[str]): URL where the package can be downloaded, if available.
+        - `home_page` (Optional[str]): The home page URL for the package, if available.
+        - `keywords` (Optional[str]): A comma-separated string of keywords related to the package.
+        - `maintainer` (Optional[str]): The name of the maintainer of the package.
+        - `maintainer_email` (Optional[str]): The email address of the maintainer of the package.
+        - `release_url` (Optional[str]): URL of the release page for the package on PyPI.
+        - `requires_python` (Optional[str]): The Python version requirements for the package.
+        - `version` (Optional[str]): The current version of the package.
+        - `yanked_reason` (Optional[str]): The reason why the package version was yanked, if applicable.
+        - `source_url` (Optional[str]): The normalized URL for the source code repository, if identified.
+        - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was identified as the source URL (e.g., "code", "repository", "source", "homepage").
     """
     all_package_data = []
     failed_count = 0
@@ -110,5 +127,4 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
     click.echo(
         f"OK, Failed to fetch data for {failed_count} of {len(packages)} packages."
     )
-
     return pd.DataFrame(all_package_data)

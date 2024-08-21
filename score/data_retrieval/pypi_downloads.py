@@ -10,7 +10,12 @@ def get_bulk_download_counts() -> pd.DataFrame:
     Fetches download counts for all packages over the last month from BigQuery and returns it as a DataFrame.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the download counts.
+        pd.DataFrame: A DataFrame containing the download counts. The DataFrame includes the following fields:
+        
+        - `name` (str): The name of the package.
+        - `last_day` (int): The number of downloads for the package on the last day.
+        - `last_week` (int): The number of downloads for the package over the last 7 days (excluding today).
+        - `last_month` (int): The number of downloads for the package over the last 30 days (excluding today).
     """
     client = bigquery.Client(project="openteams-score")
 
@@ -42,6 +47,10 @@ def get_bulk_download_counts() -> pd.DataFrame:
         for row in results
     }
 
-    # Convert the dictionary to a DataFrame and return it
-    df = pd.DataFrame.from_dict(download_data, orient="index")
+    # Convert the dictionary to a DataFrame
+    df = pd.DataFrame.from_dict(download_data, orient="index").reset_index()
+
+    # Rename the index column to "name"
+    df.rename(columns={"index": "name"}, inplace=True)
+
     return df
