@@ -20,7 +20,8 @@ def scrape_conda(channel, package_names: List[str]) -> pd.DataFrame:
 
         - `name` (str): The name of the package.
         - `full_name` (str): The full name of the package, typically including the channel and package name.
-        - `source_url` (Optional[str]): The URL to the source code repository, if available. This is taken from either `dev_url` or `source_git_url`.
+        - `source_url` (Optional[str]): The URL to the source code repository, if available.
+                This is taken from either `dev_url` or `source_git_url`.
         - `latest_version` (str): The latest version of the package available on the specified Anaconda channel.
         - `ndownloads` (int): The total number of downloads for all versions of the package.
     """

@@ -97,11 +97,12 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: A DataFrame containing the scraped data. The DataFrame includes the following fields:
-        
+
         - `name` (str): The name of the package.
         - `first_letter` (str): The first letter of the package name. (Used for partitioning)
         - `bugtrack_url` (Optional[str]): URL for the package's bug tracker, if available.
-        - `classifiers` (List[str]): A list of classifiers associated with the package, typically indicating its license, supported operating systems, and programming languages.
+        - `classifiers` (List[str]): A list of classifiers associated with the package,
+                typically indicating its license, supported operating systems, and programming languages.
         - `docs_url` (Optional[str]): URL for the package's documentation, if available.
         - `download_url` (Optional[str]): URL where the package can be downloaded, if available.
         - `home_page` (Optional[str]): The home page URL for the package, if available.
@@ -113,7 +114,8 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
         - `version` (Optional[str]): The current version of the package.
         - `yanked_reason` (Optional[str]): The reason why the package version was yanked, if applicable.
         - `source_url` (Optional[str]): The normalized URL for the source code repository, if identified.
-        - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was identified as the source URL (e.g., "code", "repository", "source", "homepage").
+        - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was
+            identified as the source URL (e.g., "code", "repository", "source", "homepage").
     """
     all_package_data = []
     failed_count = 0

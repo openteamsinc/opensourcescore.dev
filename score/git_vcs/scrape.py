@@ -43,7 +43,7 @@ def clone_repo(url):
 
 def scrape_git(urls: list) -> pd.DataFrame:
     """
-    Clones a list of Git repositories, collects metadata about their commits and license types, 
+    Clones a list of Git repositories, collects metadata about their commits and license types,
     and returns the data as a DataFrame.
 
     Args:
@@ -55,17 +55,20 @@ def scrape_git(urls: list) -> pd.DataFrame:
         - `source_url` (str): The URL of the repository.
         - `error` (Optional[str]): An error message if the repository could not be cloned or processed.
         - `recent_authors_count` (Optional[int]): The number of unique authors who have made commits in the last year.
-        - `max_monthly_authors_count` (Optional[float]): The maximum number of unique authors contributing in any rolling 30-day window over the history of the repository.
+        - `max_monthly_authors_count` (Optional[float]): The maximum number of unique authors
+            contributing in any rolling 30-day window over the history of the repository.
         - `first_commit` (Optional[pd.Timestamp]): The timestamp of the first commit in the repository.
         - `latest_commit` (Optional[pd.Timestamp]): The timestamp of the most recent commit in the repository.
-        - `license` (Optional[dict]): A dictionary containing the detected license information or an error message if the license could not be determined.
+        - `license` (Optional[dict]): A dictionary containing the detected license information
+            or an error message if the license could not be determined.
 
             The `license` field includes:
             - `best_match` (Optional[str]): The best license match identified, if available.
             - `error` (Optional[str]): An error message if the license detection process encountered an issue.
             - `kind` (Optional[str]): The kind of license detected (e.g., MIT, GPL).
             - `license` (Optional[str]): The specific license name detected.
-            - `similarity` (Optional[float]): A similarity score indicating how closely the detected license matches the best-known license text (value between 0 and 1).
+            - `similarity` (Optional[float]): A similarity score indicating
+                how closely the detected license matches the best-known license text (value between 0 and 1).
     """
 
     all_data = []

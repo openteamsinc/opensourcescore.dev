@@ -11,7 +11,7 @@ def get_bulk_download_counts() -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: A DataFrame containing the download counts. The DataFrame includes the following fields:
-        
+
         - `name` (str): The name of the package.
         - `last_day` (int): The number of downloads for the package on the last day.
         - `last_week` (int): The number of downloads for the package over the last 7 days (excluding today).
