@@ -1,6 +1,7 @@
 import pandas as pd
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
+from tqdm import tqdm
 import tempfile
 from datetime import datetime, timedelta
 import logging
@@ -81,7 +82,7 @@ def scrape_git(urls: list) -> pd.DataFrame:
     """
 
     exec = ThreadPoolExecutor(16)
-    all_data = exec.map(create_git_metadata, urls)
+    all_data = list(tqdm(exec.map(create_git_metadata, urls), total=len(urls)))
     # all_data = []
     # for url in tqdm(urls, disable=None):
     #     metadata = create_git_metadata(url)
