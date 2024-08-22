@@ -2,7 +2,6 @@ import pandas as pd
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
 import tempfile
-from tqdm import tqdm
 from datetime import datetime, timedelta
 import logging
 import os
