@@ -8,10 +8,20 @@ import logging
 import os
 from contextlib import contextmanager
 from .license_detection import identify_license
+from concurrent.futures import ThreadPoolExecutor
 
 one_year_ago = datetime.now() - timedelta(days=365)
 
 log = logging.getLogger(__name__)
+
+# Default values
+LICENSE_DEFAULTS = {
+    "best_match": None,
+    "error": None,
+    "kind": None,
+    "license": None,
+    "similarity": 0.0,
+}
 
 
 @contextmanager
@@ -71,11 +81,25 @@ def scrape_git(urls: list) -> pd.DataFrame:
                 how closely the detected license matches the best-known license text (value between 0 and 1).
     """
 
-    all_data = []
-    for url in tqdm(urls, disable=None):
-        metadata = create_git_metadata(url)
-        all_data.append(metadata)
-    return pd.DataFrame(all_data)
+    exec = ThreadPoolExecutor(16)
+    all_data = exec.map(create_git_metadata, urls)
+    # all_data = []
+    # for url in tqdm(urls, disable=None):
+    #     metadata = create_git_metadata(url)
+    #     all_data.append(metadata)
+
+    df = pd.DataFrame(all_data)
+    for i, row in df.iterrows():
+        print(row["license"])
+
+    def setdefaults(x):
+        if pd.isna(x):
+            return {**LICENSE_DEFAULTS}
+        return {**LICENSE_DEFAULTS, **x}
+
+    df["license"] = df["license"].apply(setdefaults)
+
+    return df
 
 
 def create_git_metadata(url: str) -> dict:

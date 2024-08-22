@@ -41,6 +41,7 @@ num_partitions_option = click.option(
 @click.group()
 def cli():
     setup_logger()
+    os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")
 
 
 @cli.command()
@@ -232,12 +233,10 @@ def git(input, num_partitions, partition, output):
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "score"),
+    default=os.path.join(OUTPUT_ROOT, "score.parquet"),
     help="The output path to save the aggregated data",
 )
-@partition_option
-@num_partitions_option
-def score(git_input, pypi_input, conda_input, num_partitions, partition, output):
+def score(git_input, pypi_input, conda_input, output):
 
     db = duckdb.connect()
     db.execute("CREATE SECRET (TYPE GCS);")
@@ -258,12 +257,14 @@ def score(git_input, pypi_input, conda_input, num_partitions, partition, output)
 
     # This has better handling than panadas read_parquet
     click.echo(f"Reading data from git {git_input} into memory")
-    df = db.query(
+    db.execute(
         f"""
+    CREATE TABLE git AS
     select * from read_parquet('{git_input}/*/*.parquet')
-    where partition={partition}
     """
-    ).df()
+    )
+
+    df = db.query("select * from git where source_url is not null").df()
 
     df = df[~df.source_url.isna()]
     df.set_index("source_url", inplace=True)
@@ -279,10 +280,9 @@ def score(git_input, pypi_input, conda_input, num_partitions, partition, output)
         score["health_risk"] = build_health_risk_score(source_url, row)
 
     df = pd.DataFrame(scores)
-    df["partition"] = partition
 
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output, partition_cols=["partition"])
+    df.to_parquet(output)
     click.echo("Scraping completed.")
 
 
