@@ -82,15 +82,11 @@ def scrape_git(urls: list) -> pd.DataFrame:
     """
 
     exec = ThreadPoolExecutor(16)
-    all_data = list(tqdm(exec.map(create_git_metadata, urls), total=len(urls)))
-    # all_data = []
-    # for url in tqdm(urls, disable=None):
-    #     metadata = create_git_metadata(url)
-    #     all_data.append(metadata)
+    all_data = list(
+        tqdm(exec.map(create_git_metadata, urls), total=len(urls), disable=None)
+    )
 
     df = pd.DataFrame(all_data)
-    for i, row in df.iterrows():
-        print(row["license"])
 
     def setdefaults(x):
         if pd.isna(x):
