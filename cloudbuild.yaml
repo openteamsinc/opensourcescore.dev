@@ -36,8 +36,7 @@ steps:
     args:
       ["push", "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest"]
   - name: "gcr.io/cloud-builders/gcloud"
-    args:
-      [
+    args: [
         "run",
         "jobs",
         "deploy",
@@ -47,12 +46,28 @@ steps:
         "--max-retries=1",
         "--memory=1024Mi",
         "--tasks=100",
-        
+
         "--parallelism=100",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         # TODO: will need to add GITHUB_TOKEN HERE
         # "--set-secrets=GITHUB_TOKEN=GITHUB_TOKEN:latest",
         "--env-vars-file=env.yml",
+      ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
+        "pypi-vulnerabilities",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=3",
+        "--memory=1024Mi",
+        "--tasks=400",
+        "--parallelism=100",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=vulnerabilities,SCORE_ECOSYSTEM=PyPI",
       ]
   - name: "gcr.io/cloud-builders/gcloud"
     args:
@@ -108,23 +123,6 @@ steps:
         "run",
         "jobs",
         "deploy",
-        "scrape-git",
-        "--region=us-west1",
-        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
-        "--max-retries=1",
-        "--memory=4Gi",
-        "--tasks=2000",
-        "--parallelism=200",
-        "--task-timeout=30m",
-        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
-        "--set-env-vars=COMMAND=git",
-      ]
-  - name: "gcr.io/cloud-builders/gcloud"
-    args:
-      [
-        "run",
-        "jobs",
-        "deploy",
         "agg-source-urls",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
@@ -135,6 +133,39 @@ steps:
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=agg-source-urls",
       ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
+        "scrape-git",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=4Gi",
+        "--tasks=2000",
+        "--parallelism=400",
+        "--task-timeout=30m",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=git",
+      ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
+        "score",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=4Gi",
+        "--tasks=16",
+        "--parallelism=16",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=score",
+      ]
 
   # Mark the deployment as successful
   # - name: "gcr.io/cloud-builders/curl"
@@ -143,7 +174,6 @@ steps:
   #     ["SHORT_SHA=$SHORT_SHA", "BUILD_ID=$BUILD_ID", "PROJECT_ID=$PROJECT_ID"]
   #   secretEnv: ["GITHUB_TOKEN"]
   #   args: [buildscripts/github-deployment-status.sh]
-
 # availableSecrets:
 #   secretManager:
 #     - versionName: projects/$PROJECT_ID/secrets/GITHUB_TOKEN/versions/latest

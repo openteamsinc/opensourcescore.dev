@@ -123,7 +123,7 @@ def conda(num_partitions, partition, output, channel):
 @click.option(
     "-e",
     "--ecosystem",
-    default="PyPI",
+    default=os.environ.get("SCORE_ECOSYSTEM", "PyPI"),
     help="The ecosystem to scrape vulnerabilities for",
 )
 @partition_option
@@ -133,6 +133,8 @@ def vulnerabilities(num_partitions, partition, output, ecosystem):
         packages = get_pypi_package_names(num_partitions, partition)
     elif ecosystem == "npm":
         packages = get_npm_package_names(num_partitions, partition)
+    else:
+        raise ValueError(f"Unsupported ecosystem: {ecosystem}")
     click.echo(
         f"Will process {len(packages)} packages in partition {partition} of {num_partitions}"
     )

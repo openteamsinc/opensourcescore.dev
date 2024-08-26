@@ -1,0 +1,85 @@
+main:
+  params: [params]
+  steps:
+    - init:
+        assign:
+          - project_id: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - output_root: ${params.output_root}
+          - job_location: us-west1
+    - scrapers:
+        parallel:
+          branches:
+            - scrape_conda_branch:
+                steps:
+                  - scrape_conda:
+                      call: googleapis.run.v1.namespaces.jobs.run
+                      args:
+                        name: ${"namespaces/" + project_id + "/jobs/scrape-conda" }
+                        location: ${job_location}
+                        body:
+                          overrides:
+                            containerOverrides:
+                              env:
+                                - name: OUTPUT_ROOT
+                                  value: ${output_root}
+            - scrape_pypi_branch:
+                steps:
+                  - scrape_pypi:
+                      call: googleapis.run.v1.namespaces.jobs.run
+                      args:
+                        name: ${"namespaces/" + project_id + "/jobs/scrape-pypi" }
+                        location: ${job_location}
+                        body:
+                          overrides:
+                            containerOverrides:
+                              env:
+                                - name: OUTPUT_ROOT
+                                  value: ${output_root}
+            - scrape_pypi_downloads_branch:
+                steps:
+                  - scrape_downloads:
+                      call: googleapis.run.v1.namespaces.jobs.run
+                      args:
+                        name: ${"namespaces/" + project_id + "/jobs/scrape-pypi-downloads" }
+                        location: ${job_location}
+                        body:
+                          overrides:
+                            containerOverrides:
+                              env:
+                                - name: OUTPUT_ROOT
+                                  value: ${output_root}
+            - pypi_vulnerabilities_branch:
+                steps:
+                  - pypi_vulnerabilities:
+                      call: googleapis.run.v1.namespaces.jobs.run
+                      args:
+                        name: ${"namespaces/" + project_id + "/jobs/pypi-vulnerabilities" }
+                        location: ${job_location}
+                        body:
+                          overrides:
+                            containerOverrides:
+                              env:
+                                - name: OUTPUT_ROOT
+                                  value: ${output_root}
+    - agg_source_urls:
+        call: googleapis.run.v1.namespaces.jobs.run
+        args:
+          name: ${"namespaces/" + project_id + "/jobs/pypi-vulnerabilities" }
+          location: ${job_location}
+          body:
+            overrides:
+              containerOverrides:
+                env:
+                  - name: OUTPUT_ROOT
+                    value: ${output_root}
+    - scrape_git:
+        call: googleapis.run.v1.namespaces.jobs.run
+        args:
+          name: ${"namespaces/" + project_id + "/jobs/scrape-git" }
+          location: ${job_location}
+          body:
+            overrides:
+              containerOverrides:
+                env:
+                  - name: OUTPUT_ROOT
+                    value: ${output_root}
