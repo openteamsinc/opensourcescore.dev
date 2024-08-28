@@ -35,7 +35,45 @@ def get_npm_package_downloads(package_name: str) -> int:
     return ndownloads
 
 
+def normalize_repository_url(url: str) -> str:
+    if not url:
+        return None
+
+    # Handle different URL schemes
+    if url.startswith("git+https://"):
+        url = url.replace("git+https://", "https://")
+    elif url.startswith("git:"):
+        url = url.replace("git:", "https:")
+    elif url.startswith("git+ssh://git@"):
+        url = url.replace("git+ssh://git@", "https://")
+    elif url.startswith("git@"):
+        url = url.replace("git@", "https://")
+    elif url.startswith("git://"):
+        url = url.replace("git://", "https://")
+
+    if url.startswith("https://") and ":" in url:
+        url = url.replace(":", "/", 2).replace("https///", "https://")
+
+    return url
+
+
 def scrape_npm(package_names: List[str]) -> pd.DataFrame:
+    """
+    Scrape NPM package data for a list of package names.
+
+    Args:
+        package_names (List[str]): A list of package names to scrape data for.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing metadata for each package. The DataFrame includes the following fields:
+
+        - `name` (str): The name of the package.
+        - `full_name` (str): The full name of the package.
+        - `source_url` (Optional[str]): The URL to the source code repository, if available.
+        - `latest_version` (str): The latest version of the package.
+        - `ndownloads` (int): The total number of downloads for the package.
+        - `maintainers_count` (int): The number of maintainers for the package.
+    """
     s = get_session()
     all_packages = []
     for package in tqdm(package_names, disable=None):
@@ -47,13 +85,20 @@ def scrape_npm(package_names: List[str]) -> pd.DataFrame:
         res.raise_for_status()
         package_data = res.json()
 
+        repository = package_data.get("repository", None)
+        source_url = (
+            normalize_repository_url(repository.get("url"))
+            if isinstance(repository, dict)
+            else None
+        )
+
+        if source_url is None:
+            continue
+
         ndownloads = get_npm_package_downloads(package)
         maintainers_count = (
             len(package_data.get("maintainers", [])) if package_data else 0
         )
-        repository = package_data.get("repository", None)
-        source_url = repository.get("url") if isinstance(repository, dict) else None
-
         all_packages.append(
             {
                 "name": package,
