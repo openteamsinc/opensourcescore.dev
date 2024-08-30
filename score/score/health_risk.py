@@ -18,12 +18,12 @@ def build_health_risk_score(source_url, git_info):
         score["value"] = "Placeholder"
         score["notes"].append("There are no human commits in this repository")
         return score
-          
+
     if git_info.license.get("error") or git_info.license["license"] == "Unknown":
         score["value"] = "Moderate Risk"
         score["notes"].append("License could not be determined")
         return score
-    
+
     numeric_score = HEALTHY
 
     def LIMIT_SCORE(value):
