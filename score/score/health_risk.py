@@ -5,6 +5,8 @@ CAUTION_NEEDED = SCORE_ORDER.index("Caution Needed")
 MODERATE_RISK = SCORE_ORDER.index("Moderate Risk")
 HIGH_RISK = SCORE_ORDER.index("High Risk")
 
+LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "SSPL", "CDDL", "MPL", "EPL"]
+
 
 def build_health_risk_score(source_url, git_info):
     score = {"value": "Healthy", "notes": []}
@@ -19,10 +21,15 @@ def build_health_risk_score(source_url, git_info):
         score["notes"].append("There are no human commits in this repository")
         return score
 
-    if git_info.license.get("error") or git_info.license["license"] == "Unknown":
+    license_type = git_info.license.get("license")
+    if not license_type or license_type == "Unknown" or git_info.license.get("error"):
         score["value"] = "Moderate Risk"
-        score["notes"].append("License could not be determined")
-        return score
+        score["notes"].append("No license specified.")
+    elif any(license in license_type for license in LESS_PERMISSIVE_LICENSES):
+        score["value"] = "Caution Needed"
+        score["notes"].append(
+            "Less permissive license. Further investigation needed for proprietary projects."
+        )
 
     numeric_score = HEALTHY
 
