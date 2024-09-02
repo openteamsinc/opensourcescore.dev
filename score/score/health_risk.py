@@ -1,9 +1,15 @@
+import pandas as pd
+
 SCORE_ORDER = ["Healthy", "Caution Needed", "Moderate Risk", "High Risk"]
 
 HEALTHY = SCORE_ORDER.index("Healthy")
 CAUTION_NEEDED = SCORE_ORDER.index("Caution Needed")
 MODERATE_RISK = SCORE_ORDER.index("Moderate Risk")
 HIGH_RISK = SCORE_ORDER.index("High Risk")
+
+one_year_ago = pd.Timestamp.now() - pd.DateOffset(years=1)
+three_years_ago = pd.Timestamp.now() - pd.DateOffset(years=3)
+five_years_ago = pd.Timestamp.now() - pd.DateOffset(years=5)
 
 
 def build_health_risk_score(source_url, git_info):
@@ -37,13 +43,28 @@ def build_health_risk_score(source_url, git_info):
     if recent_count < 1:
         LIMIT_SCORE(CAUTION_NEEDED)
         score["notes"].append(
-            "Noone has contributed to this repository in the last year"
+            "No one has contributed to this repository in the last year"
         )
     elif recent_count < 2:
         LIMIT_SCORE(CAUTION_NEEDED)
         score["notes"].append(
             "Only one author has contributed to this repository in the last year"
         )
+
+    latest_commit_age = (pd.Timestamp.now() - git_info.latest_commit).days / 365.25
+
+    if latest_commit_age < one_year_ago:
+        LIMIT_SCORE(HEALTHY)
+        score["notes"].append("Last commit was within the last year")
+    elif one_year_ago <= latest_commit_age < three_years_ago:
+        LIMIT_SCORE(CAUTION_NEEDED)
+        score["notes"].append("Last commit was between 1 and 3 years ago")
+    elif three_years_ago <= latest_commit_age < five_years_ago:
+        LIMIT_SCORE(MODERATE_RISK)
+        score["notes"].append("Last commit was between 3 and 5 years ago")
+    else:
+        LIMIT_SCORE(HIGH_RISK)
+        score["notes"].append("Last commit was over 5 years ago")
 
     score["value"] = SCORE_ORDER[numeric_score]
 
