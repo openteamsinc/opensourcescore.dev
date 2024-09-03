@@ -138,11 +138,14 @@ def identify_license(license_content: str) -> str:
 
     kind = KIND_MAP.get(best_match, best_match)
 
-    if similarity < CLOSE_ENOUGH:
-        best_match = f"Modified {best_match}"
-        kind = f"Modified {kind}"
+    modified = similarity < CLOSE_ENOUGH
 
-    return {"license": best_match, "kind": kind, "similarity": similarity}
+    return {
+        "license": best_match,
+        "kind": kind,
+        "similarity": similarity,
+        "modified": modified,
+    }
 
 
 license_dir = Path(__file__).parent / "licenses"

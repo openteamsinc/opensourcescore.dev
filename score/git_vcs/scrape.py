@@ -21,6 +21,7 @@ LICENSE_DEFAULTS = {
     "kind": None,
     "license": None,
     "similarity": 0.0,
+    "modified": None,
 }
 
 
