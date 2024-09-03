@@ -11,6 +11,8 @@ one_year_ago = pd.Timestamp.now() - pd.DateOffset(years=1)
 three_years_ago = pd.Timestamp.now() - pd.DateOffset(years=3)
 five_years_ago = pd.Timestamp.now() - pd.DateOffset(years=5)
 
+LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
+
 
 def build_health_risk_score(source_url, git_info):
     score = {"value": "Healthy", "notes": []}
@@ -30,6 +32,29 @@ def build_health_risk_score(source_url, git_info):
     def LIMIT_SCORE(value):
         nonlocal numeric_score
         numeric_score = max(numeric_score, value)
+
+    license_kind = git_info.license.get("kind")
+    modified = git_info.license.get("modified")
+
+    if git_info.license.get("error"):
+        score["value"] = LIMIT_SCORE(MODERATE_RISK)
+        note = git_info.license.get("error", "Could not retrieve licence information")
+        score["notes"].append(note)
+
+    elif not license_kind or license_kind == "Unknown":
+        score["value"] = LIMIT_SCORE(MODERATE_RISK)
+        note = git_info.license.get("error", "Could not detect open source license")
+        score["notes"].append(note)
+
+    if license_kind in LESS_PERMISSIVE_LICENSES:
+        score["value"] = LIMIT_SCORE(CAUTION_NEEDED)
+        score["notes"].append(
+            "License may have usage restrictions. Review terms before implementation"
+        )
+
+    if modified:
+        score["value"] = LIMIT_SCORE(CAUTION_NEEDED)
+        score["notes"].append("License may have been modified from the original")
 
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
