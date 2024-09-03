@@ -23,12 +23,13 @@ def build_health_risk_score(source_url, git_info):
 
     license_type = git_info.license.get("license")
     if not license_type or license_type == "Unknown" or git_info.license.get("error"):
-        score["value"] = "Moderate Risk"
-        score["notes"].append("No license specified.")
+        score["value"] = LIMIT_SCORE(MODERATE_RISK)
+        note = git_info.license.get("error", "Could not retrieve licence information")
+        score["notes"].append(note)
     elif any(license in license_type for license in LESS_PERMISSIVE_LICENSES):
-        score["value"] = "Caution Needed"
+        score["value"] = LIMIT_SCORE(CAUTION_NEEDED)
         score["notes"].append(
-            "Less permissive license. Further investigation needed for proprietary projects."
+            "License may have usage restrictions. Review terms before implementation"
         )
 
     numeric_score = HEALTHY
