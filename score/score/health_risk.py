@@ -21,6 +21,12 @@ def build_health_risk_score(source_url, git_info):
         score["notes"].append("There are no human commits in this repository")
         return score
 
+    numeric_score = HEALTHY
+
+    def LIMIT_SCORE(value):
+        nonlocal numeric_score
+        numeric_score = max(numeric_score, value)
+
     license_type = git_info.license.get("license")
     if not license_type or license_type == "Unknown" or git_info.license.get("error"):
         score["value"] = LIMIT_SCORE(MODERATE_RISK)
@@ -31,12 +37,6 @@ def build_health_risk_score(source_url, git_info):
         score["notes"].append(
             "License may have usage restrictions. Review terms before implementation"
         )
-
-    numeric_score = HEALTHY
-
-    def LIMIT_SCORE(value):
-        nonlocal numeric_score
-        numeric_score = max(numeric_score, value)
 
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
