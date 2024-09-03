@@ -5,7 +5,7 @@ CAUTION_NEEDED = SCORE_ORDER.index("Caution Needed")
 MODERATE_RISK = SCORE_ORDER.index("Moderate Risk")
 HIGH_RISK = SCORE_ORDER.index("High Risk")
 
-LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "SSPL", "CDDL", "MPL", "EPL"]
+LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 
 
 def build_health_risk_score(source_url, git_info):
@@ -27,16 +27,28 @@ def build_health_risk_score(source_url, git_info):
         nonlocal numeric_score
         numeric_score = max(numeric_score, value)
 
-    license_type = git_info.license.get("license")
-    if not license_type or license_type == "Unknown" or git_info.license.get("error"):
+    license_kind = git_info.license.get("kind")
+    modified = git_info.license.get("modified")
+
+    if git_info.license.get("error"):
         score["value"] = LIMIT_SCORE(MODERATE_RISK)
         note = git_info.license.get("error", "Could not retrieve licence information")
         score["notes"].append(note)
-    elif any(license in license_type for license in LESS_PERMISSIVE_LICENSES):
+
+    elif not license_kind or license_kind == "Unknown":
+        score["value"] = LIMIT_SCORE(MODERATE_RISK)
+        note = git_info.license.get("error", "Could not detect open source license")
+        score["notes"].append(note)
+
+    if license_kind in LESS_PERMISSIVE_LICENSES:
         score["value"] = LIMIT_SCORE(CAUTION_NEEDED)
         score["notes"].append(
             "License may have usage restrictions. Review terms before implementation"
         )
+
+    if modified:
+        score["value"] = LIMIT_SCORE(CAUTION_NEEDED)
+        score["notes"].append("License may have been modified from the original")
 
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
@@ -50,7 +62,7 @@ def build_health_risk_score(source_url, git_info):
     if recent_count < 1:
         LIMIT_SCORE(CAUTION_NEEDED)
         score["notes"].append(
-            "Noone has contributed to this repository in the last year"
+            "No one has contributed to this repository in the last year"
         )
     elif recent_count < 2:
         LIMIT_SCORE(CAUTION_NEEDED)
