@@ -1,9 +1,15 @@
+import pandas as pd
+
 SCORE_ORDER = ["Healthy", "Caution Needed", "Moderate Risk", "High Risk"]
 
 HEALTHY = SCORE_ORDER.index("Healthy")
 CAUTION_NEEDED = SCORE_ORDER.index("Caution Needed")
 MODERATE_RISK = SCORE_ORDER.index("Moderate Risk")
 HIGH_RISK = SCORE_ORDER.index("High Risk")
+
+ONE_YEAR_AGO = pd.Timestamp.now() - pd.DateOffset(years=1)
+THREE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=3)
+FIVE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=5)
 
 LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 
@@ -52,11 +58,13 @@ def build_health_risk_score(source_url, git_info):
 
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
+    latest_commit = git_info.latest_commit
 
     if mma_count < 3:
         LIMIT_SCORE(CAUTION_NEEDED)
         score["notes"].append(
-            f"Only {mma_count} author(s) have contributed to this repository in a single month"
+            f"Only {mma_count:.0f} author{'s have' if mma_count > 1 else ' has'} "
+            "contributed to this repository in a single month"
         )
 
     if recent_count < 1:
@@ -69,6 +77,10 @@ def build_health_risk_score(source_url, git_info):
         score["notes"].append(
             "Only one author has contributed to this repository in the last year"
         )
+
+    if latest_commit < FIVE_YEARS_AGO:
+        LIMIT_SCORE(HIGH_RISK)
+        score["notes"].append("The last commit to source control was over 5 years ago")
 
     score["value"] = SCORE_ORDER[numeric_score]
 
