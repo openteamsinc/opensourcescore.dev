@@ -1,6 +1,6 @@
 def get_pypi_packages(db, source_url):
     pypi_packages = (
-        db.query(f"select * from pypi where source_url = '{source_url}'")
+        db.execute("select * from pypi where source_url = ?", [source_url])
         .df()
         .set_index("name")
     )
@@ -15,12 +15,8 @@ def get_pypi_packages(db, source_url):
     return packages
 
 
-def get_conda_packages(db, source_url):
-    conda_packages = (
-        db.query(f"select * from conda where source_url = '{source_url}'")
-        .df()
-        .set_index("full_name")
-    )
+def get_conda_packages(conda_packages):
+
     packages = [
         {
             "name": package_name,

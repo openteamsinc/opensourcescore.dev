@@ -19,4 +19,7 @@ echo "DATA has been set to:"
 echo "$DATA"
 
 # Run the gcloud command with the DATA variable
-gcloud workflows run score-workflow --data="$DATA"
+gcloud --project openteams-score workflows run \
+  score-workflow \
+  --location=us-west1 \
+  --data="$DATA"

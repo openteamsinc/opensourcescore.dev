@@ -64,7 +64,7 @@ main:
     - agg_source_urls:
         call: googleapis.run.v1.namespaces.jobs.run
         args:
-          name: ${"namespaces/" + project_id + "/jobs/pypi-vulnerabilities" }
+          name: ${"namespaces/" + project_id + "/jobs/agg-source-urls" }
           location: ${job_location}
           body:
             overrides:
@@ -76,6 +76,17 @@ main:
         call: googleapis.run.v1.namespaces.jobs.run
         args:
           name: ${"namespaces/" + project_id + "/jobs/scrape-git" }
+          location: ${job_location}
+          body:
+            overrides:
+              containerOverrides:
+                env:
+                  - name: OUTPUT_ROOT
+                    value: ${output_root}
+    - score:
+        call: googleapis.run.v1.namespaces.jobs.run
+        args:
+          name: ${"namespaces/" + project_id + "/jobs/score" }
           location: ${job_location}
           body:
             overrides:

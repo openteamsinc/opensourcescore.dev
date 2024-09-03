@@ -3,7 +3,7 @@ from dateutil.parser import parse as parse_date
 import pandas as pd
 from cvss import CVSS2, CVSS3, CVSS4
 from tqdm import tqdm
-
+from concurrent.futures import ThreadPoolExecutor
 from ..utils.request_session import get_session
 
 OSV_API_URL = "https://api.osv.dev/v1/query"
@@ -67,29 +67,45 @@ def get_vulnerability_severity(vuln):
     return extract_affected_severity(vuln)
 
 
-def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
+def scrape_vulnerability(ecosystem, package: str) -> pd.DataFrame:
     session = get_session()
-    all_packages = []
-    for package in tqdm(package_names):
-        payload = {"package": {"name": package, "ecosystem": ecosystem}}
-        response = session.post(OSV_API_URL, json=payload)
-        if response.status_code != 200:
+    payload = {"package": {"name": package, "ecosystem": ecosystem}}
+    response = session.post(OSV_API_URL, json=payload)
+    if response.status_code != 200:
+        return []
+    vulns_list = response.json().get("vulns")
+    if not vulns_list:
+        return []
+    vulns = []
+    for vuln in vulns_list:
+        published = parse_date(vuln.get("published"))
+        severity = get_vulnerability_severity(vuln)
+        if severity is None:
             continue
-        vulns_list = response.json().get("vulns")
-        if vulns_list:
-            for vuln in vulns_list:
-                published = parse_date(vuln.get("published"))
-                severity = get_vulnerability_severity(vuln)
-                if severity is None:
-                    continue
-                all_packages.append(
-                    {
-                        "name": package,
-                        "ecosystem": ecosystem,
-                        "published": published,
-                        "id": vuln["id"],
-                        "severity": get_vulnerability_severity(vuln),
-                        "summary": vuln.get("summary"),
-                    }
-                )
+        vulns.append(
+            {
+                "name": package,
+                "ecosystem": ecosystem,
+                "published": published,
+                "id": vuln["id"],
+                "severity": get_vulnerability_severity(vuln),
+                "summary": vuln.get("summary"),
+            }
+        )
+    return vulns
+
+
+def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
+
+    # all_packages = []
+    # for package in tqdm(package_names):
+    #     vulns = scrape_vulnerability(ecosystem, package)
+    #     all_packages.extend(vulns)
+
+    exec = ThreadPoolExecutor(16)
+    mapped = exec.map(lambda x: scrape_vulnerability(ecosystem, x), package_names)
+    all_packages = [
+        item for sublist in tqdm(mapped, total=len(package_names)) for item in sublist
+    ]
+
     return pd.DataFrame(all_packages)

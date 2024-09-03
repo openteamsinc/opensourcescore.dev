@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import pandas as pd
 from tqdm import tqdm
 import logging
-
+from concurrent.futures import ThreadPoolExecutor
 from ..utils.request_session import get_session
 
 log = logging.getLogger(__name__)
@@ -117,14 +117,12 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
         - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was
             identified as the source URL (e.g., "code", "repository", "source", "homepage").
     """
-    all_package_data = []
-    failed_count = 0
-    for package_name in tqdm(packages, desc="Reading package data", disable=None):
-        package_data = get_package_data(package_name)
-        if package_data:
-            all_package_data.append(package_data)
-        else:
-            failed_count += 1
+    exec = ThreadPoolExecutor(16)
+    all_package_data = list(
+        tqdm(exec.map(get_package_data, packages), total=len(packages), disable=None)
+    )
+    failed_count = len([x for x in all_package_data if x is None])
+    all_package_data = [x for x in all_package_data if x is not None]
 
     click.echo(
         f"OK, Failed to fetch data for {failed_count} of {len(packages)} packages."
