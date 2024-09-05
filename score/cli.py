@@ -6,10 +6,10 @@ from tqdm import tqdm
 
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
-from .data_retrieval.json_scraper import scrape_json
-from .data_retrieval.pypi_downloads import get_bulk_download_counts
+from .pypi.json_scraper import scrape_json
+from .pypi.pypi_downloads import get_bulk_download_counts
 from .logger import setup_logger
-from .utils.get_pypi_package_list import get_pypi_package_names
+from .pypi.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
 from .git_vcs.scrape import scrape_git
