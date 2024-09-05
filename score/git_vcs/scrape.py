@@ -1,4 +1,6 @@
 import pandas as pd
+import toml
+from typing import Optional
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
 from tqdm import tqdm
@@ -106,6 +108,7 @@ def create_git_metadata(url: str) -> dict:
         metadata.update(get_commit_metadata(repo, url))
         license_data = get_license_type(repo, url)
         metadata["license"] = license_data
+        metadata["py_package"] = get_pypackage_name(repo)
 
         return metadata
 
@@ -169,3 +172,17 @@ def get_license_type(repo: Repo, url: str) -> dict:
         license_content = license_file.read().strip()
 
     return identify_license(license_content)
+
+
+def get_pypackage_name(repo: Repo) -> Optional[str]:
+    try:
+        # Check out the LICENSE file(s)
+        repo.git.checkout(repo.active_branch, "--", "pyproject.toml")
+    except GitCommandError:
+        return None
+
+    # Read and return the license type
+    with open("pyproject.toml", encoding="utf8", errors="ignore") as fd:
+        data = toml.load(fd)
+
+    return data.get("project", {}).get("name")

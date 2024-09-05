@@ -28,4 +28,4 @@ def get_pypi_package_names(num_partitions: int, partition: int):
         package_hash = sha256(name.encode()).hexdigest()
         return (int(package_hash, base=16) % num_partitions) == partition
 
-    return [p for p in all_packages if is_in_partition(p)]
+    return [p.lower() for p in all_packages if is_in_partition(p)]
