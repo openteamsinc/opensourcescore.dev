@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import click
 import duckdb
+from tqdm import tqdm
 
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
@@ -16,7 +17,6 @@ from .git_vcs.get_git_urls import get_git_urls
 from .git_vcs.scrape import scrape_git
 from .score.maturity import build_maturity_score
 from .score.health_risk import build_health_risk_score
-from .score.packages import get_pypi_packages, get_conda_packages
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -43,6 +43,7 @@ num_partitions_option = click.option(
 @click.group()
 def cli():
     setup_logger()
+    os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")
 
 
 @cli.command()
@@ -237,6 +238,22 @@ def git(input, num_partitions, partition, output):
     click.echo("Scraping completed.")
 
 
+def fmt_pypi(p):
+    return {
+        "name": p["name"],
+        "version": p["version"],
+        "ecosystem": "PyPI",
+    }
+
+
+def fmt_conda(p):
+    return {
+        "name": p["full_name"],
+        "version": p["latest_version"],
+        "ecosystem": "conda",
+    }
+
+
 @cli.command()
 @click.option(
     "--git-input",
@@ -256,12 +273,10 @@ def git(input, num_partitions, partition, output):
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "score"),
+    default=os.path.join(OUTPUT_ROOT, "score.parquet"),
     help="The output path to save the aggregated data",
 )
-@partition_option
-@num_partitions_option
-def score(git_input, pypi_input, conda_input, num_partitions, partition, output):
+def score(git_input, pypi_input, conda_input, output):
 
     db = duckdb.connect()
     db.execute("CREATE SECRET (TYPE GCS);")
@@ -269,44 +284,56 @@ def score(git_input, pypi_input, conda_input, num_partitions, partition, output)
     db.execute(
         f"""
     CREATE TABLE pypi AS
-    SELECT * FROM read_parquet('{pypi_input}/*/*.parquet')
+    SELECT name, version, source_url FROM read_parquet('{pypi_input}/*/*.parquet')
     """
     )
     click.echo(f"Reading data from conda {conda_input} into memory")
     db.execute(
         f"""
     CREATE TABLE conda AS
-    SELECT * FROM read_parquet('{conda_input}/*/*/*.parquet')
+    SELECT full_name, latest_version, source_url FROM read_parquet('{conda_input}/*/*/*.parquet')
     """
     )
 
     # This has better handling than panadas read_parquet
     click.echo(f"Reading data from git {git_input} into memory")
-    df = db.query(
+    db.execute(
         f"""
+    CREATE TABLE git AS
     select * from read_parquet('{git_input}/*/*.parquet')
-    where partition={partition}
+    """
+    )
+
+    click.echo("Processing score")
+    df = db.query(
+        """
+SELECT
+    g.*,
+    array(SELECT p FROM pypi as p WHERE p.source_url = g.source_url) AS pypi_packages,
+    array(SELECT c FROM conda as c WHERE c.source_url = g.source_url) AS conda_packages
+FROM
+    git as g
+WHERE
+    g.source_url IS NOT NULL
     """
     ).df()
-
     df = df[~df.source_url.isna()]
     df.set_index("source_url", inplace=True)
 
     scores = []
-    for source_url, row in df.iterrows():
+    for source_url, row in tqdm(df.iterrows(), total=df.index.size):
         score: dict = {"source_url": source_url, "packages": []}
         scores.append(score)
-        score["packages"].extend(get_pypi_packages(db, source_url))
-        score["packages"].extend(get_conda_packages(db, source_url))
 
+        score["packages"].extend([fmt_pypi(p) for p in row.pypi_packages])
+        score["packages"].extend([fmt_conda(c) for c in row.conda_packages])
         score["maturity"] = build_maturity_score(source_url, row)
         score["health_risk"] = build_health_risk_score(source_url, row)
 
     df = pd.DataFrame(scores)
-    df["partition"] = partition
 
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output, partition_cols=["partition"])
+    df.to_parquet(output)
     click.echo("Scraping completed.")
 
 
