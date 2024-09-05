@@ -10,7 +10,7 @@ from ..utils.request_session import get_session
 log = logging.getLogger(__name__)
 
 
-def get_package_data(package_name):
+def get_package_data(package_name: str):
     """
     Fetches package data from the PyPI JSON API for a given package name and filters out specific fields.
     Additionally fetches download counts from the PyPI Stats API.
@@ -38,19 +38,14 @@ def get_package_data(package_name):
     # Extract desired fields
     filtered_data = {
         "name": info.get("name", None),
-        "first_letter": package_name[0],
-        "bugtrack_url": info.get("bugtrack_url", None),
-        "classifiers": info.get("classifiers", []),
         "docs_url": info.get("docs_url", None),
         "download_url": info.get("download_url", None),
         "home_page": info.get("home_page", None),
-        "keywords": info.get("keywords", None),
         "maintainer": info.get("maintainer", None),
         "maintainer_email": info.get("maintainer_email", None),
         "release_url": info.get("release_url", None),
         "requires_python": info.get("requires_python", None),
         "version": info.get("version", None),
-        "yanked_reason": info.get("yanked_reason", None),
         "source_url": source_url,
         "source_url_key": source_url_key,
     }
