@@ -299,7 +299,12 @@ WHERE
 
     scores = []
     for source_url, row in tqdm(df.iterrows(), total=df.index.size, disable=None):
-        score: dict = {"source_url": source_url, "packages": []}
+        print(row)
+        score: dict = {
+            "source_url": source_url,
+            "packages": [],
+            "package": {"PyPI": row.py_package},
+        }
         scores.append(score)
 
         score["packages"].extend([fmt_pypi(p) for p in row.pypi_packages])

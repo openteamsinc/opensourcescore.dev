@@ -62,6 +62,7 @@ git_schema = pa.schema(
         ("max_monthly_authors_count", pa.float32()),
         ("first_commit", pa.timestamp("ns")),
         ("latest_commit", pa.timestamp("ns")),
+        ("py_package", pa.string()),
         (
             "license",
             pa.struct(
