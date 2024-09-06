@@ -134,6 +134,7 @@ def identify_license(license_content: str) -> dict:
             "kind": "Unknown",
             "similarity": similarity,
             "best_match": best_match,
+            "modified": False,
         }
 
     kind = KIND_MAP.get(best_match, best_match)

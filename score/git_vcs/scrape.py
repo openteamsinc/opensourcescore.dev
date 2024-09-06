@@ -33,8 +33,6 @@ def clone_repo(url):
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:
-        os.chdir(tmpdir)
-
         try:
             repo = Repo.clone_from(
                 url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
@@ -73,6 +71,7 @@ git_schema = pa.schema(
                     ("kind", pa.string()),
                     ("license", pa.string()),
                     ("similarity", pa.float32()),
+                    ("modified", pa.bool_()),
                 ]
             ),
         ),
@@ -171,15 +170,17 @@ def get_license_type(repo: Repo, url: str) -> dict:
     try:
         # Check out the LICENSE file(s)
         repo.git.checkout(repo.active_branch, "--", "LICENSE*")
-    except GitCommandError:
+    except GitCommandError as e:
+        log.error(f"{url}: Could not checkout license file: {e.stderr}")
         return {"error": "Could not checkout license"}
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
     paths = ["LICENSE", "LICENSE.txt", "LICENSE.md"]
     license_file_path = None
     for path in paths:
-        if os.path.isfile(path):
-            license_file_path = path
+        full_path = os.path.join(repo.working_dir, path)
+        if os.path.isfile(full_path):
+            license_file_path = full_path
             break
 
     if not license_file_path:
@@ -199,9 +200,10 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
     except GitCommandError:
         return None
 
+    full_path = os.path.join(repo.working_dir, "pyproject.toml")
     try:
         # Read and return the license type
-        with open("pyproject.toml", encoding="utf8", errors="ignore") as fd:
+        with open(full_path, encoding="utf8", errors="ignore") as fd:
             data = toml.load(fd)
     except FileNotFoundError:
         return None
