@@ -163,6 +163,7 @@ steps:
         "--memory=4Gi",
         "--tasks=1",
         "--parallelism=1",
+        "--task-timeout=30m",
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--set-env-vars=COMMAND=score",
       ]
