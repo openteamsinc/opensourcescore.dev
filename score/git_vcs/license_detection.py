@@ -114,7 +114,7 @@ CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9
 
 
-def identify_license(license_content: str) -> str:
+def identify_license(license_content: str) -> dict:
 
     sd = SorensenDice()
     similarities = []
@@ -128,7 +128,7 @@ def identify_license(license_content: str) -> str:
     similarities = pd.DataFrame(similarities).set_index("name")
     best_match = similarities.idxmax().item()
     similarity = similarities.loc[best_match, "similarity"]
-    if similarity < PROBABLY_NOT:
+    if similarity < PROBABLY_NOT:  # type: ignore
         return {
             "license": "Unknown",
             "kind": "Unknown",
@@ -138,7 +138,7 @@ def identify_license(license_content: str) -> str:
 
     kind = KIND_MAP.get(best_match, best_match)
 
-    modified = similarity < CLOSE_ENOUGH
+    modified = similarity < CLOSE_ENOUGH  # type: ignore
 
     return {
         "license": best_match,
