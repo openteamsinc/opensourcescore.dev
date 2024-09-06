@@ -181,8 +181,11 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
     except GitCommandError:
         return None
 
-    # Read and return the license type
-    with open("pyproject.toml", encoding="utf8", errors="ignore") as fd:
-        data = toml.load(fd)
+    try:
+        # Read and return the license type
+        with open("pyproject.toml", encoding="utf8", errors="ignore") as fd:
+            data = toml.load(fd)
+    except FileNotFoundError:
+        return None
 
     return data.get("project", {}).get("name")
