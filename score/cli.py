@@ -1,8 +1,6 @@
 import os
-import pandas as pd
 import click
 import duckdb
-from tqdm import tqdm
 
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
@@ -13,8 +11,7 @@ from .pypi.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
 from .git_vcs.scrape import scrape_git, git_schema
-from .score.maturity import build_maturity_score
-from .score.health_risk import build_health_risk_score
+from .score.score import create_scores, score_schema
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -282,40 +279,9 @@ def score(git_input, pypi_input, conda_input, output):
     )
 
     click.echo("Processing score")
-    df = db.query(
-        """
-SELECT
-    g.*,
-    array(SELECT p FROM pypi as p WHERE p.source_url = g.source_url) AS pypi_packages,
-    array(SELECT c FROM conda as c WHERE c.source_url = g.source_url) AS conda_packages
-FROM
-    git as g
-WHERE
-    g.source_url IS NOT NULL
-    """
-    ).df()
-    df = df[~df.source_url.isna()]
-    df.set_index("source_url", inplace=True)
-
-    scores = []
-    for source_url, row in tqdm(df.iterrows(), total=df.index.size, disable=None):
-        print(row)
-        score: dict = {
-            "source_url": source_url,
-            "packages": [],
-            "package": {"PyPI": row.py_package},
-        }
-        scores.append(score)
-
-        score["packages"].extend([fmt_pypi(p) for p in row.pypi_packages])
-        score["packages"].extend([fmt_conda(c) for c in row.conda_packages])
-        score["maturity"] = build_maturity_score(source_url, row)
-        score["health_risk"] = build_health_risk_score(row).dict()
-
-    df = pd.DataFrame(scores)
-
+    df = create_scores(db)
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output)
+    df.to_parquet(output, schema=score_schema)
     click.echo("Scraping completed.")
 
 

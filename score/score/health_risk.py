@@ -82,20 +82,24 @@ def score_license(git_info, score: Score):
 
 
 def score_python(git_info, score: Score):
-    if len(git_info.pypi_packages) == 0:
+
+    packages = git_info.pypi_packages
+    expected_name = git_info.py_package
+
+    if len(packages) == 0:
         return
 
-    if git_info.py_package is None:
+    if not expected_name:
         score.limit(CAUTION_NEEDED)
         score.notes.append(
             "Could not determine the Python package name from pyproject.toml in the source code"
         )
 
-    have_package_names = [p["name"].lower() for p in git_info.pypi_packages]
-    if git_info.py_package.lower() not in have_package_names:
+    have_package_names = [p["name"].lower() for p in packages]
+    if expected_name.lower() not in have_package_names:
         score.limit(CAUTION_NEEDED)
         score.notes.append(
-            f"The Python package '{git_info.py_package}' from pyproject.toml is not listed on PyPI"
+            f"The Python package '{expected_name}' from pyproject.toml is not listed on PyPI"
         )
 
     return
