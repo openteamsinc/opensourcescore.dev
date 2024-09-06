@@ -187,5 +187,8 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
             data = toml.load(fd)
     except FileNotFoundError:
         return None
+    except (toml.TomlDecodeError, IndexError, IOError) as err:
+        log.error(f"Error reading pyproject.toml: {err}")
+        return None
 
     return data.get("project", {}).get("name")
