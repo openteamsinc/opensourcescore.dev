@@ -285,17 +285,17 @@ def coalesce(
 @cli.command()
 @click.option(
     "--git-input",
-    default=os.path.join(OUTPUT_ROOT, "git"),
+    default=os.path.join(OUTPUT_ROOT, "final/git"),
     help="The git input path to read the data from",
 )
 @click.option(
     "--pypi-input",
-    default=os.path.join(OUTPUT_ROOT, "pypi-json"),
+    default=os.path.join(OUTPUT_ROOT, "final/pypi"),
     help="The pypi input path to read the data from",
 )
 @click.option(
     "--conda-input",
-    default=os.path.join(OUTPUT_ROOT, "conda"),
+    default=os.path.join(OUTPUT_ROOT, "final/conda"),
     help="The conda input path to read the data from",
 )
 @click.option(
@@ -313,15 +313,13 @@ def score(git_input, pypi_input, conda_input, output):
         f"""
     CREATE TABLE pypi AS
     SELECT name, version, source_url FROM read_parquet('{pypi_input}/*/*.parquet')
-    where partition = 0
     """
     )
     click.echo(f"Reading data from conda {conda_input} into memory")
     db.execute(
         f"""
     CREATE TABLE conda AS
-    SELECT full_name, latest_version, source_url FROM read_parquet('{conda_input}/*/*/*.parquet')
-    where partition = 0
+    SELECT full_name, latest_version, source_url FROM read_parquet('{conda_input}/**/*.parquet')
     """
     )
 
@@ -331,7 +329,6 @@ def score(git_input, pypi_input, conda_input, output):
         f"""
     CREATE TABLE git AS
     select * from read_parquet('{git_input}/*/*.parquet')
-    where partition = 0
     """
     )
 
