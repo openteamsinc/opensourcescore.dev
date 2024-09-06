@@ -298,14 +298,14 @@ WHERE
     df.set_index("source_url", inplace=True)
 
     scores = []
-    for source_url, row in tqdm(df.iterrows(), total=df.index.size):
+    for source_url, row in tqdm(df.iterrows(), total=df.index.size, disable=None):
         score: dict = {"source_url": source_url, "packages": []}
         scores.append(score)
 
         score["packages"].extend([fmt_pypi(p) for p in row.pypi_packages])
         score["packages"].extend([fmt_conda(c) for c in row.conda_packages])
         score["maturity"] = build_maturity_score(source_url, row)
-        score["health_risk"] = build_health_risk_score(source_url, row)
+        score["health_risk"] = build_health_risk_score(row).dict()
 
     df = pd.DataFrame(scores)
 
