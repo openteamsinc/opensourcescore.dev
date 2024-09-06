@@ -97,7 +97,7 @@ def scrape_git(urls: list) -> pd.DataFrame:
         return {**LICENSE_DEFAULTS, **x}
 
     df["license"] = df["license"].apply(setdefaults)
-
+    df["py_package"] = df["py_package"].astype(pd.StringDtype())
     return df
 
 
