@@ -77,6 +77,8 @@ main:
         args:
           name: ${"namespaces/" + project_id + "/jobs/scrape-git" }
           location: ${job_location}
+          connector_params:
+            timeout: 3600
           body:
             overrides:
               containerOverrides:
@@ -88,6 +90,8 @@ main:
         args:
           name: ${"namespaces/" + project_id + "/jobs/score" }
           location: ${job_location}
+          connector_params:
+            timeout: 1800
           body:
             overrides:
               containerOverrides:
