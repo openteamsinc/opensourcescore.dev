@@ -4,6 +4,7 @@ import toml
 from typing import Optional
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
+from git.cmd import Git
 from tqdm import tqdm
 import tempfile
 from datetime import datetime, timedelta
@@ -29,6 +30,8 @@ LICENSE_DEFAULTS = {
     "modified": None,
 }
 
+MAX_CLONE_TIME = 30
+
 
 @contextmanager
 def clone_repo(url):
@@ -36,9 +39,21 @@ def clone_repo(url):
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:
         try:
-            repo = Repo.clone_from(
-                url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
+            mygit = Git(os.getcwd())
+            mygit.clone(
+                Git.polish_url(url),
+                tmpdir,
+                single_branch=True,
+                no_checkout=True,
+                filter="tree:0",
+                # https://github.com/gitpython-developers/GitPython/issues/892
+                # See issue for why we cant use clone_from
+                kill_after_timeout=MAX_CLONE_TIME,
             )
+            repo = Repo(tmpdir)
+            # repo = Repo.clone_from(
+            #     url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
+            # )
             yield repo, {"source_url": url}
         except UnsafeProtocolError:
             yield None, {
@@ -48,6 +63,12 @@ def clone_repo(url):
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr.lower():
                 yield None, {"error": "Repo not found", "source_url": url}
+            elif err.status == -9 and "timeout:" in err.stderr.lower():
+                yield None, {
+                    "error": "Could not clone repo in a reasonable amount of time",
+                    "source_url": url,
+                }
+
             else:
                 log.error(f"{url}: {err.stderr}")
                 yield None, {"error": "Could not clone repo", "source_url": url}
