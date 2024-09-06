@@ -50,7 +50,7 @@ def fmt_pypi(ecosystem_destination_name, p):
     if ecosystem_destination_name and ecosystem_destination_name != p["name"]:
         health_risk["value"] = HIGH_RISK
         health_risk["notes"].append(
-            f"package has a different name than specified in pyproject.toml."
+            f"package has a different name than specified in pyproject.toml. "
             f"Expected '{ecosystem_destination_name}'"
         )
     return {

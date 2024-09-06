@@ -10,8 +10,10 @@ from datetime import datetime, timedelta
 import logging
 import os
 from contextlib import contextmanager
-from .license_detection import identify_license
 from concurrent.futures import ThreadPoolExecutor
+
+from .license_detection import identify_license
+from .check_url import check_url
 
 one_year_ago = datetime.now() - timedelta(days=365)
 
@@ -120,6 +122,10 @@ def scrape_git(urls: list) -> pd.DataFrame:
 
 
 def create_git_metadata(url: str) -> dict:
+    is_valid, metadata = check_url(url)
+    if not is_valid:
+        return metadata
+
     with clone_repo(url) as (repo, metadata):
         if repo is None:
             return metadata
