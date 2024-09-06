@@ -1,6 +1,9 @@
 import pandas as pd
 from typing import List
 from dataclasses import dataclass, field
+import logging
+
+log = logging.getLogger(__name__)
 
 HEALTHY = "Healthy"
 CAUTION_NEEDED = "Caution Needed"
@@ -94,8 +97,10 @@ def score_python(git_info, score: Score):
         score.notes.append(
             "Could not determine the Python package name from pyproject.toml in the source code"
         )
+        return
 
     have_package_names = [p["name"].lower() for p in packages]
+
     if expected_name.lower() not in have_package_names:
         score.limit(CAUTION_NEEDED)
         score.notes.append(

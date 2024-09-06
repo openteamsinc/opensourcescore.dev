@@ -212,20 +212,74 @@ def git(input, num_partitions, partition, output):
     click.echo("Scraping completed.")
 
 
-def fmt_pypi(p):
-    return {
-        "name": p["name"],
-        "version": p["version"],
-        "ecosystem": "PyPI",
-    }
+@cli.command()
+@click.option(
+    "--git-input",
+    default=os.path.join(OUTPUT_ROOT, "git"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--git-output",
+    default=os.path.join(OUTPUT_ROOT, "final/git"),
+    help="The output path to save the aggregated data",
+)
+@click.option(
+    "--pypi-input",
+    default=os.path.join(OUTPUT_ROOT, "pypi-json"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--pypi-output",
+    default=os.path.join(OUTPUT_ROOT, "final/pypi"),
+    help="The output path to save the aggregated data",
+)
+@click.option(
+    "--conda-input",
+    default=os.path.join(OUTPUT_ROOT, "conda"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--conda-output",
+    default=os.path.join(OUTPUT_ROOT, "final/conda"),
+    help="The output path to save the aggregated data",
+)
+@partition_option
+@num_partitions_option
+def coalesce(
+    num_partitions,
+    partition,
+    git_input,
+    git_output,
+    pypi_input,
+    pypi_output,
+    conda_input,
+    conda_output,
+):
+    """
+    Step operation to reduce the number or partitions
+    """
+    db = duckdb.connect()
+    db.execute("CREATE SECRET (TYPE GCS);")
 
+    to_coalesce = [
+        ("conda", conda_input, conda_output, None),
+        ("pypi", pypi_input, pypi_output, None),
+        ("git", git_input, git_output, git_schema),
+    ]
+    for name, input_path, output_path, schema in to_coalesce:
+        click.echo(f"Reading data from {name} {input_path} into memory")
+        git_df = db.execute(
+            f"""
+        select * from read_parquet('{input_path}/**/*.parquet')
+        where (partition % {num_partitions}) = {partition}
+        """
+        ).df()
 
-def fmt_conda(p):
-    return {
-        "name": p["full_name"],
-        "version": p["latest_version"],
-        "ecosystem": "conda",
-    }
+        click.echo(f"Saving data to {output_path}")
+
+        git_df["partition"] = partition
+        git_df.to_parquet(output_path, partition_cols=["partition"], schema=schema)
+    click.echo("Scraping completed.")
 
 
 @cli.command()
@@ -259,6 +313,7 @@ def score(git_input, pypi_input, conda_input, output):
         f"""
     CREATE TABLE pypi AS
     SELECT name, version, source_url FROM read_parquet('{pypi_input}/*/*.parquet')
+    where partition = 0
     """
     )
     click.echo(f"Reading data from conda {conda_input} into memory")
@@ -266,6 +321,7 @@ def score(git_input, pypi_input, conda_input, output):
         f"""
     CREATE TABLE conda AS
     SELECT full_name, latest_version, source_url FROM read_parquet('{conda_input}/*/*/*.parquet')
+    where partition = 0
     """
     )
 
@@ -275,6 +331,7 @@ def score(git_input, pypi_input, conda_input, output):
         f"""
     CREATE TABLE git AS
     select * from read_parquet('{git_input}/*/*.parquet')
+    where partition = 0
     """
     )
 

@@ -156,6 +156,23 @@ steps:
         "run",
         "jobs",
         "deploy",
+        "coalesce",
+        "--region=us-west1",
+        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "--max-retries=1",
+        "--memory=4Gi",
+        "--tasks=8",
+        "--parallelism=8",
+        "--task-timeout=30m",
+        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
+        "--set-env-vars=COMMAND=coalesce",
+      ]
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      [
+        "run",
+        "jobs",
+        "deploy",
         "score",
         "--region=us-west1",
         "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
