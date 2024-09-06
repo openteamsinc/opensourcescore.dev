@@ -12,7 +12,7 @@ from .logger import setup_logger
 from .pypi.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
-from .git_vcs.scrape import scrape_git
+from .git_vcs.scrape import scrape_git, git_schema
 from .score.maturity import build_maturity_score
 from .score.health_risk import build_health_risk_score
 
@@ -210,7 +210,8 @@ def git(input, num_partitions, partition, output):
     df["partition"] = partition
 
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output, partition_cols=["partition"])
+
+    df.to_parquet(output, partition_cols=["partition"], schema=git_schema)
     click.echo("Scraping completed.")
 
 

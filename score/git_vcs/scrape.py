@@ -1,4 +1,5 @@
 import pandas as pd
+import pyarrow as pa
 import toml
 from typing import Optional
 from git import Repo
@@ -54,6 +55,31 @@ def clone_repo(url):
         return
 
 
+git_schema = pa.schema(
+    [
+        ("partition", pa.int32()),
+        ("source_url", pa.string()),
+        ("error", pa.string()),
+        ("recent_authors_count", pa.int32()),
+        ("max_monthly_authors_count", pa.float32()),
+        ("first_commit", pa.timestamp("ns")),
+        ("latest_commit", pa.timestamp("ns")),
+        (
+            "license",
+            pa.struct(
+                [
+                    ("best_match", pa.string()),
+                    ("error", pa.string()),
+                    ("kind", pa.string()),
+                    ("license", pa.string()),
+                    ("similarity", pa.float32()),
+                ]
+            ),
+        ),
+    ]
+)
+
+
 def scrape_git(urls: list) -> pd.DataFrame:
     """
     Clones a list of Git repositories, collects metadata about their commits and license types,
@@ -90,14 +116,6 @@ def scrape_git(urls: list) -> pd.DataFrame:
     )
 
     df = pd.DataFrame(all_data)
-
-    def setdefaults(x):
-        if pd.isna(x):
-            return {**LICENSE_DEFAULTS}
-        return {**LICENSE_DEFAULTS, **x}
-
-    df["license"] = df["license"].apply(setdefaults)
-    df["py_package"] = df["py_package"].astype(pd.StringDtype())
     return df
 
 
