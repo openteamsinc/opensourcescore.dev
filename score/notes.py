@@ -15,6 +15,7 @@ class Note(enum.Enum):
 
     UNSAFE_GIT_PROTOCOL = "Unsafe Git Protocol"
     REPO_NOT_FOUND = "Repo not found"
+    REPO_EMPTY = "Repository is empty"
     GIT_TIMEOUT = "Could not clone repo in a reasonable amount of time"
     OTHER_GIT_ERROR = "Could not clone repo"
     LICENSE_CHECKOUT_ERROR = "Could not checkout license"
