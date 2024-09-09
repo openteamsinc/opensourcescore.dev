@@ -6,7 +6,7 @@ from datetime import datetime
 
 from .maturity import build_maturity_score
 from .health_risk import build_health_risk_score, HIGH_RISK
-
+from ..notes import Note
 
 ecosystem_schema = pa.struct(
     [
@@ -17,7 +17,10 @@ ecosystem_schema = pa.struct(
 )
 
 assessment_schema = pa.struct(
-    [("notes", pa.list_(pa.string())), ("value", pa.string())]
+    [
+        ("notes", pa.list_(pa.int32())),
+        ("value", pa.string()),
+    ]
 )
 
 package_schema = pa.struct(
@@ -49,10 +52,8 @@ def fmt_pypi(ecosystem_destination_name, p):
 
     if ecosystem_destination_name and ecosystem_destination_name != p["name"]:
         health_risk["value"] = HIGH_RISK
-        health_risk["notes"].append(
-            f"package has a different name than specified in pyproject.toml. "
-            f"Expected '{ecosystem_destination_name}'"
-        )
+        health_risk["notes"].append(Note.PACKAGE_NAME_MISMATCH.value)
+
     return {
         "name": p["name"],
         "version": p["version"],

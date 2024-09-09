@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 from typing import Tuple
+from ..notes import Note
 
 
 def is_valid_hostname(hostname):
@@ -23,27 +24,27 @@ def check_url(url: str) -> Tuple[bool, dict]:
     if URL.scheme == "http":
         return False, {
             "source_url": url,
-            "error": "Source code location 'http://' does not use a secure connection",
+            "error": Note.INSECURE_CONNECTION.value,
         }
 
     if URL.hostname == "localhost":
         return False, {
             "source_url": url,
-            "error": "Source code location is a localhost url",
+            "error": Note.LOCALHOST_URL.value,
         }
     if not is_valid_hostname(URL.hostname):
         return False, {
             "source_url": url,
-            "error": "Source code location is not a valid url",
+            "error": Note.INVALID_URL.value,
         }
 
     if URL.hostname.startswith("127."):  # type: ignore
         return False, {
             "source_url": url,
-            "error": "Source code location is a localhost url",
+            "error": Note.LOCALHOST_URL.value,
         }
 
     return False, {
         "source_url": url,
-        "error": "Source code location is not a valid url",
+        "error": Note.INVALID_URL.value,
     }
