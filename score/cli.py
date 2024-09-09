@@ -363,8 +363,7 @@ def score(git_input, pypi_input, conda_input, output, note_output):
     df.to_parquet(output, schema=score_schema)
 
     note_df = notes.to_df()
-    print("note_output", note_output)
-    # note_df.to_parquet(note_output)
+    note_df.to_parquet(note_output)
     click.echo("Score complete")
 
 
