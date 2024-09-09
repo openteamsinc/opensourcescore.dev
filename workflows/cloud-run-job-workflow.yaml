@@ -77,6 +77,21 @@ main:
         args:
           name: ${"namespaces/" + project_id + "/jobs/scrape-git" }
           location: ${job_location}
+          connector_params:
+            timeout: 3600
+          body:
+            overrides:
+              containerOverrides:
+                env:
+                  - name: OUTPUT_ROOT
+                    value: ${output_root}
+    - coalesce:
+        call: googleapis.run.v1.namespaces.jobs.run
+        args:
+          name: ${"namespaces/" + project_id + "/jobs/coalesce" }
+          location: ${job_location}
+          connector_params:
+            timeout: 3600
           body:
             overrides:
               containerOverrides:
@@ -88,6 +103,8 @@ main:
         args:
           name: ${"namespaces/" + project_id + "/jobs/score" }
           location: ${job_location}
+          connector_params:
+            timeout: 1800
           body:
             overrides:
               containerOverrides:

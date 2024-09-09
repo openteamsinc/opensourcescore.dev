@@ -1,16 +1,20 @@
 import pandas as pd
+import pyarrow as pa
 import toml
 from typing import Optional
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
+from git.cmd import Git
 from tqdm import tqdm
 import tempfile
 from datetime import datetime, timedelta
 import logging
 import os
 from contextlib import contextmanager
-from .license_detection import identify_license
 from concurrent.futures import ThreadPoolExecutor
+
+from .license_detection import identify_license
+from .check_url import check_url
 
 one_year_ago = datetime.now() - timedelta(days=365)
 
@@ -26,18 +30,30 @@ LICENSE_DEFAULTS = {
     "modified": None,
 }
 
+MAX_CLONE_TIME = 30
+
 
 @contextmanager
 def clone_repo(url):
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:
-        os.chdir(tmpdir)
-
         try:
-            repo = Repo.clone_from(
-                url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
+            mygit = Git(os.getcwd())
+            mygit.clone(
+                Git.polish_url(url),
+                tmpdir,
+                single_branch=True,
+                no_checkout=True,
+                filter="tree:0",
+                # https://github.com/gitpython-developers/GitPython/issues/892
+                # See issue for why we cant use clone_from
+                kill_after_timeout=MAX_CLONE_TIME,
             )
+            repo = Repo(tmpdir)
+            # repo = Repo.clone_from(
+            #     url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
+            # )
             yield repo, {"source_url": url}
         except UnsafeProtocolError:
             yield None, {
@@ -47,11 +63,44 @@ def clone_repo(url):
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr.lower():
                 yield None, {"error": "Repo not found", "source_url": url}
+            elif err.status == -9 and "timeout:" in err.stderr.lower():
+                yield None, {
+                    "error": "Could not clone repo in a reasonable amount of time",
+                    "source_url": url,
+                }
+
             else:
                 log.error(f"{url}: {err.stderr}")
                 yield None, {"error": "Could not clone repo", "source_url": url}
 
         return
+
+
+git_schema = pa.schema(
+    [
+        ("partition", pa.int32()),
+        ("source_url", pa.string()),
+        ("error", pa.string()),
+        ("recent_authors_count", pa.int32()),
+        ("max_monthly_authors_count", pa.float32()),
+        ("first_commit", pa.timestamp("ns")),
+        ("latest_commit", pa.timestamp("ns")),
+        ("py_package", pa.string()),
+        (
+            "license",
+            pa.struct(
+                [
+                    ("best_match", pa.string()),
+                    ("error", pa.string()),
+                    ("kind", pa.string()),
+                    ("license", pa.string()),
+                    ("similarity", pa.float32()),
+                    ("modified", pa.bool_()),
+                ]
+            ),
+        ),
+    ]
+)
 
 
 def scrape_git(urls: list) -> pd.DataFrame:
@@ -90,18 +139,14 @@ def scrape_git(urls: list) -> pd.DataFrame:
     )
 
     df = pd.DataFrame(all_data)
-
-    def setdefaults(x):
-        if pd.isna(x):
-            return {**LICENSE_DEFAULTS}
-        return {**LICENSE_DEFAULTS, **x}
-
-    df["license"] = df["license"].apply(setdefaults)
-    df["py_package"] = df["py_package"].astype(pd.StringDtype())
     return df
 
 
 def create_git_metadata(url: str) -> dict:
+    is_valid, metadata = check_url(url)
+    if not is_valid:
+        return metadata
+
     with clone_repo(url) as (repo, metadata):
         if repo is None:
             return metadata
@@ -153,15 +198,17 @@ def get_license_type(repo: Repo, url: str) -> dict:
     try:
         # Check out the LICENSE file(s)
         repo.git.checkout(repo.active_branch, "--", "LICENSE*")
-    except GitCommandError:
+    except GitCommandError as e:
+        log.error(f"{url}: Could not checkout license file: {e.stderr}")
         return {"error": "Could not checkout license"}
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
     paths = ["LICENSE", "LICENSE.txt", "LICENSE.md"]
     license_file_path = None
     for path in paths:
-        if os.path.isfile(path):
-            license_file_path = path
+        full_path = os.path.join(repo.working_dir, path)
+        if os.path.isfile(full_path):
+            license_file_path = full_path
             break
 
     if not license_file_path:
@@ -181,9 +228,10 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
     except GitCommandError:
         return None
 
+    full_path = os.path.join(repo.working_dir, "pyproject.toml")
     try:
         # Read and return the license type
-        with open("pyproject.toml", encoding="utf8", errors="ignore") as fd:
+        with open(full_path, encoding="utf8", errors="ignore") as fd:
             data = toml.load(fd)
     except FileNotFoundError:
         return None

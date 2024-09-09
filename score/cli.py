@@ -1,8 +1,6 @@
 import os
-import pandas as pd
 import click
 import duckdb
-from tqdm import tqdm
 
 from .conda.get_conda_package_names import get_conda_package_names
 from .conda.scrape_conda import scrape_conda
@@ -12,9 +10,8 @@ from .logger import setup_logger
 from .pypi.get_pypi_package_list import get_pypi_package_names
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
-from .git_vcs.scrape import scrape_git
-from .score.maturity import build_maturity_score
-from .score.health_risk import build_health_risk_score
+from .git_vcs.scrape import scrape_git, git_schema
+from .score.score import create_scores, score_schema
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
@@ -210,40 +207,95 @@ def git(input, num_partitions, partition, output):
     df["partition"] = partition
 
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output, partition_cols=["partition"])
+
+    df.to_parquet(output, partition_cols=["partition"], schema=git_schema)
     click.echo("Scraping completed.")
-
-
-def fmt_pypi(p):
-    return {
-        "name": p["name"],
-        "version": p["version"],
-        "ecosystem": "PyPI",
-    }
-
-
-def fmt_conda(p):
-    return {
-        "name": p["full_name"],
-        "version": p["latest_version"],
-        "ecosystem": "conda",
-    }
 
 
 @cli.command()
 @click.option(
     "--git-input",
     default=os.path.join(OUTPUT_ROOT, "git"),
-    help="The git input path to read the data from",
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--git-output",
+    default=os.path.join(OUTPUT_ROOT, "final/git"),
+    help="The output path to save the aggregated data",
 )
 @click.option(
     "--pypi-input",
     default=os.path.join(OUTPUT_ROOT, "pypi-json"),
-    help="The pypi input path to read the data from",
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--pypi-output",
+    default=os.path.join(OUTPUT_ROOT, "final/pypi"),
+    help="The output path to save the aggregated data",
 )
 @click.option(
     "--conda-input",
     default=os.path.join(OUTPUT_ROOT, "conda"),
+    help="The output directory to save the scraped data in hive partition",
+)
+@click.option(
+    "--conda-output",
+    default=os.path.join(OUTPUT_ROOT, "final/conda"),
+    help="The output path to save the aggregated data",
+)
+@partition_option
+@num_partitions_option
+def coalesce(
+    num_partitions,
+    partition,
+    git_input,
+    git_output,
+    pypi_input,
+    pypi_output,
+    conda_input,
+    conda_output,
+):
+    """
+    Step operation to reduce the number or partitions
+    """
+    db = duckdb.connect()
+    db.execute("CREATE SECRET (TYPE GCS);")
+
+    to_coalesce = [
+        ("conda", conda_input, conda_output, None),
+        ("pypi", pypi_input, pypi_output, None),
+        ("git", git_input, git_output, git_schema),
+    ]
+    for name, input_path, output_path, schema in to_coalesce:
+        click.echo(f"Reading data from {name} {input_path} into memory")
+        git_df = db.execute(
+            f"""
+        select * from read_parquet('{input_path}/**/*.parquet')
+        where (partition % {num_partitions}) = {partition}
+        """
+        ).df()
+
+        click.echo(f"Saving data to {output_path}")
+
+        git_df["partition"] = partition
+        git_df.to_parquet(output_path, partition_cols=["partition"], schema=schema)
+    click.echo("Scraping completed.")
+
+
+@cli.command()
+@click.option(
+    "--git-input",
+    default=os.path.join(OUTPUT_ROOT, "final/git"),
+    help="The git input path to read the data from",
+)
+@click.option(
+    "--pypi-input",
+    default=os.path.join(OUTPUT_ROOT, "final/pypi"),
+    help="The pypi input path to read the data from",
+)
+@click.option(
+    "--conda-input",
+    default=os.path.join(OUTPUT_ROOT, "final/conda"),
     help="The conda input path to read the data from",
 )
 @click.option(
@@ -267,7 +319,7 @@ def score(git_input, pypi_input, conda_input, output):
     db.execute(
         f"""
     CREATE TABLE conda AS
-    SELECT full_name, latest_version, source_url FROM read_parquet('{conda_input}/*/*/*.parquet')
+    SELECT full_name, latest_version, source_url FROM read_parquet('{conda_input}/**/*.parquet')
     """
     )
 
@@ -281,35 +333,9 @@ def score(git_input, pypi_input, conda_input, output):
     )
 
     click.echo("Processing score")
-    df = db.query(
-        """
-SELECT
-    g.*,
-    array(SELECT p FROM pypi as p WHERE p.source_url = g.source_url) AS pypi_packages,
-    array(SELECT c FROM conda as c WHERE c.source_url = g.source_url) AS conda_packages
-FROM
-    git as g
-WHERE
-    g.source_url IS NOT NULL
-    """
-    ).df()
-    df = df[~df.source_url.isna()]
-    df.set_index("source_url", inplace=True)
-
-    scores = []
-    for source_url, row in tqdm(df.iterrows(), total=df.index.size):
-        score: dict = {"source_url": source_url, "packages": []}
-        scores.append(score)
-
-        score["packages"].extend([fmt_pypi(p) for p in row.pypi_packages])
-        score["packages"].extend([fmt_conda(c) for c in row.conda_packages])
-        score["maturity"] = build_maturity_score(source_url, row)
-        score["health_risk"] = build_health_risk_score(source_url, row)
-
-    df = pd.DataFrame(scores)
-
+    df = create_scores(db)
     click.echo(f"Saving data to {output}")
-    df.to_parquet(output)
+    df.to_parquet(output, schema=score_schema)
     click.echo("Scraping completed.")
 
 
