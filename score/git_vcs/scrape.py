@@ -15,20 +15,12 @@ from concurrent.futures import ThreadPoolExecutor
 
 from .license_detection import identify_license
 from .check_url import check_url
+from ..notes import Note
 
 one_year_ago = datetime.now() - timedelta(days=365)
 
 log = logging.getLogger(__name__)
 
-# Default values
-LICENSE_DEFAULTS = {
-    "best_match": None,
-    "error": None,
-    "kind": None,
-    "license": None,
-    "similarity": 0.0,
-    "modified": None,
-}
 
 MAX_CLONE_TIME = 30
 
@@ -57,21 +49,21 @@ def clone_repo(url):
             yield repo, {"source_url": url}
         except UnsafeProtocolError:
             yield None, {
-                "error": "Unsafe Git Protocol: protocol looks suspicious",
+                "error": Note.UNSAFE_GIT_PROTOCOL.value,
                 "source_url": url,
             }
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr.lower():
-                yield None, {"error": "Repo not found", "source_url": url}
+                yield None, {"error": Note.REPO_NOT_FOUND.value, "source_url": url}
             elif err.status == -9 and "timeout:" in err.stderr.lower():
                 yield None, {
-                    "error": "Could not clone repo in a reasonable amount of time",
+                    "error": Note.GIT_TIMEOUT.value,
                     "source_url": url,
                 }
 
             else:
                 log.error(f"{url}: {err.stderr}")
-                yield None, {"error": "Could not clone repo", "source_url": url}
+                yield None, {"error": Note.OTHER_GIT_ERROR.value, "source_url": url}
 
         return
 
@@ -80,7 +72,7 @@ git_schema = pa.schema(
     [
         ("partition", pa.int32()),
         ("source_url", pa.string()),
-        ("error", pa.string()),
+        ("error", pa.int32()),
         ("recent_authors_count", pa.int32()),
         ("max_monthly_authors_count", pa.float32()),
         ("first_commit", pa.timestamp("ns")),
@@ -91,7 +83,7 @@ git_schema = pa.schema(
             pa.struct(
                 [
                     ("best_match", pa.string()),
-                    ("error", pa.string()),
+                    ("error", pa.int32()),
                     ("kind", pa.string()),
                     ("license", pa.string()),
                     ("similarity", pa.float32()),
@@ -200,7 +192,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
         repo.git.checkout(repo.active_branch, "--", "LICENSE*")
     except GitCommandError as e:
         log.error(f"{url}: Could not checkout license file: {e.stderr}")
-        return {"error": "Could not checkout license"}
+        return {"error": Note.LICENSE_CHECKOUT_ERROR.value}
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
     paths = ["LICENSE", "LICENSE.txt", "LICENSE.md"]
@@ -212,7 +204,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
             break
 
     if not license_file_path:
-        return {"error": "No License Found"}
+        return {"error": Note.NO_LICENSE.value}
 
     # Read and return the license type
     with open(license_file_path, encoding="utf8", errors="ignore") as license_file:

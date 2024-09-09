@@ -3,6 +3,8 @@ from typing import List
 from dataclasses import dataclass, field
 import logging
 
+from ..notes import Note
+
 log = logging.getLogger(__name__)
 
 HEALTHY = "Healthy"
@@ -22,7 +24,7 @@ LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 @dataclass
 class Score:
     value: str = HEALTHY
-    notes: List[str] = field(default_factory=list)
+    notes: List[int] = field(default_factory=list)
 
     def limit(self, new_score: str):
         current_numeric_score = SCORE_ORDER.index(self.value)
@@ -40,23 +42,18 @@ def score_contributors(git_info, score: Score):
 
     if mma_count < 3:
         score.limit(CAUTION_NEEDED)
-        score.notes.append(
-            f"Only {mma_count:.0f} author{'s have' if mma_count > 1 else ' has'} "
-            "contributed to this repository in a single month"
-        )
+        score.notes.append(Note.FEW_MAX_MONTHLY_AUTHORS.value)
 
     if recent_count < 1:
         score.limit(CAUTION_NEEDED)
-        score.notes.append("No one has contributed to this repository in the last year")
+        score.notes.append(Note.NO_AUTHORS_THIS_YEAR.value)
     elif recent_count < 2:
         score.limit(CAUTION_NEEDED)
-        score.notes.append(
-            "Only one author has contributed to this repository in the last year"
-        )
+        score.notes.append(Note.ONE_AUTHORS_THIS_YEAR.value)
 
     if latest_commit < FIVE_YEARS_AGO:
         score.limit(HIGH_RISK)
-        score.notes.append("The last commit to source control was over 5 years ago")
+        score.notes.append(Note.LAST_COMMIT_5_YEARS.value)
 
 
 def score_license(git_info, score: Score):
@@ -65,23 +62,21 @@ def score_license(git_info, score: Score):
 
     if git_info.license.get("error"):
         score.limit(MODERATE_RISK)
-        note = git_info.license.get("error", "Could not retrieve licence information")
+        note = git_info.license.get("error", Note.NO_LICENSE_INFO.value)
         score.notes.append(note)
 
     elif not license_kind or license_kind == "Unknown":
         score.limit(MODERATE_RISK)
-        note = git_info.license.get("error", "Could not detect open source license")
+        note = git_info.license.get("error", Note.NO_OS_LICENSE.value)
         score.notes.append(note)
 
     if license_kind in LESS_PERMISSIVE_LICENSES:
         score.limit(CAUTION_NEEDED)
-        score.notes.append(
-            "License may have usage restrictions. Review terms before implementation"
-        )
+        score.notes.append(Note.LESS_PERMISSIVE_LICENSE.value)
 
     if modified:
         score.limit(CAUTION_NEEDED)
-        score.notes.append("License may have been modified from the original")
+        score.notes.append(Note.LICENSE_MODIFIED.value)
 
 
 def score_python(git_info, score: Score):
@@ -94,18 +89,14 @@ def score_python(git_info, score: Score):
 
     if not expected_name:
         score.limit(CAUTION_NEEDED)
-        score.notes.append(
-            "Could not determine the Python package name from pyproject.toml in the source code"
-        )
+        score.notes.append(Note.NO_PROJECT_NAME.value)
         return
 
     have_package_names = [p["name"].lower() for p in packages]
 
     if expected_name.lower() not in have_package_names:
         score.limit(CAUTION_NEEDED)
-        score.notes.append(
-            f"The Python package '{expected_name}' from pyproject.toml is not listed on PyPI"
-        )
+        score.notes.append(Note.PROJECT_NOT_PUBLISHED.value)
 
     return
 
@@ -113,14 +104,14 @@ def score_python(git_info, score: Score):
 def build_health_risk_score(git_info) -> Score:
     score = Score()
 
-    if git_info.error:
+    if git_info.error and not pd.isna(git_info.error):
         score.value = "Unknown"
         score.notes.append(git_info.error)
         return score
 
     if git_info.first_commit == "NaT":
         score.value = "Placeholder"
-        score.notes.append("There are no human commits in this repository")
+        score.notes.append(Note.NO_COMMITS.value)
         return score
 
     score_license(git_info, score)

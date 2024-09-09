@@ -12,9 +12,24 @@ from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerabilities
 from .git_vcs.get_git_urls import get_git_urls
 from .git_vcs.scrape import scrape_git, git_schema
 from .score.score import create_scores, score_schema
+from . import notes
 
 OUTPUT_ROOT = os.environ.get("OUTPUT_ROOT", "./output")
 
+PREP_PYPI_DIR = os.path.join(OUTPUT_ROOT, "pre/pypi")
+PREP_CONDA_DIR = os.path.join(OUTPUT_ROOT, "pre/conda")
+PREP_GIT_DIR = os.path.join(OUTPUT_ROOT, "pre/git")
+
+PYPI_DIR = os.path.join(OUTPUT_ROOT, "pypi")
+CONDA_DIR = os.path.join(OUTPUT_ROOT, "conda")
+GIT_DIR = os.path.join(OUTPUT_ROOT, "git")
+
+VULNERABILITIES_DIR = os.path.join(OUTPUT_ROOT, "vulnerabilities")
+PYPI_DOWNLOADS_PATH = os.path.join(OUTPUT_ROOT, "pypi-downloads.parquet")
+
+NOTES_PATH = os.path.join(OUTPUT_ROOT, "notes.parquet")
+SCORE_PATH = os.path.join(OUTPUT_ROOT, "score.parquet")
+SOURCE_URLS_PATH = os.path.join(OUTPUT_ROOT, "source-urls.parquet")
 
 partition_option = click.option(
     "-p",
@@ -44,7 +59,7 @@ def cli():
 @cli.command()
 @click.option(
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "pypi-json"),
+    default=PREP_PYPI_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @partition_option
@@ -60,14 +75,14 @@ def scrape_pypi(num_partitions, partition, output):
 
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["partition"])
-    click.echo("Scraping completed.")
+    click.echo("Pypi Scraping complete")
 
 
 @cli.command()
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "pypi-downloads.parquet"),
+    default=PYPI_DOWNLOADS_PATH,
     help="The output path",
 )
 def scrape_pypi_downloads(output):
@@ -85,7 +100,7 @@ def scrape_pypi_downloads(output):
 @cli.command()
 @click.option(
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "conda"),
+    default=PREP_CONDA_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
@@ -107,13 +122,13 @@ def conda(num_partitions, partition, output, channel):
 
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["channel", "partition"])
-    click.echo("Scraping completed.")
+    click.echo("Conda Scraping complete")
 
 
 @cli.command()
 @click.option(
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "vulnerabilities"),
+    default=VULNERABILITIES_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
@@ -140,23 +155,27 @@ def vulnerabilities(num_partitions, partition, output, ecosystem):
 
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, partition_cols=["ecosystem", "partition"])
-    click.echo("Scraping completed.")
+    click.echo("Vulnerabilities Scraping complete")
 
 
 @cli.command()
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "source-urls.parquet"),
+    default=SOURCE_URLS_PATH,
     help="The output path to save the aggregated data",
 )
 @click.option(
-    "-i",
-    "--input",
-    default=OUTPUT_ROOT,
+    "--pypi-input",
+    default=PREP_PYPI_DIR,
     help="The input directory to read the data from",
 )
-def agg_source_urls(input, output):
+@click.option(
+    "--conda-input",
+    default=PREP_CONDA_DIR,
+    help="The input directory to read the data from",
+)
+def agg_source_urls(pypi_input, conda_input, output):
     click.echo("Aggregating data")
 
     db = duckdb.connect()
@@ -166,10 +185,10 @@ def agg_source_urls(input, output):
     df = db.query(
         f"""
         WITH pypi_sources AS (
-        SELECT source_url FROM read_parquet('{input}/pypi-json/*/*.parquet')
+        SELECT source_url FROM read_parquet('{pypi_input}/*/*.parquet')
         ),
         conda_sources AS (
-        SELECT source_url FROM read_parquet('{input}/conda/*/*/*.parquet')
+        SELECT source_url FROM read_parquet('{conda_input}/**/*.parquet')
         )
         SELECT DISTINCT source_url
         FROM (
@@ -180,19 +199,19 @@ def agg_source_urls(input, output):
     """
     ).df()
     df.to_parquet(output)
-    click.echo("Aggregation completed.")
+    click.echo("Aggregation complete")
 
 
 @cli.command()
 @click.option(
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "git"),
+    default=PREP_GIT_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
     "-i",
     "--input",
-    default=os.path.join(OUTPUT_ROOT, "source-urls.parquet"),
+    default=SOURCE_URLS_PATH,
     help="The output path to save the aggregated data",
 )
 @partition_option
@@ -209,38 +228,38 @@ def git(input, num_partitions, partition, output):
     click.echo(f"Saving data to {output}")
 
     df.to_parquet(output, partition_cols=["partition"], schema=git_schema)
-    click.echo("Scraping completed.")
+    click.echo("Git Scraping complete")
 
 
 @cli.command()
 @click.option(
     "--git-input",
-    default=os.path.join(OUTPUT_ROOT, "git"),
+    default=PREP_GIT_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
     "--git-output",
-    default=os.path.join(OUTPUT_ROOT, "final/git"),
+    default=GIT_DIR,
     help="The output path to save the aggregated data",
 )
 @click.option(
     "--pypi-input",
-    default=os.path.join(OUTPUT_ROOT, "pypi-json"),
+    default=PREP_PYPI_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
     "--pypi-output",
-    default=os.path.join(OUTPUT_ROOT, "final/pypi"),
+    default=PYPI_DIR,
     help="The output path to save the aggregated data",
 )
 @click.option(
     "--conda-input",
-    default=os.path.join(OUTPUT_ROOT, "conda"),
+    default=PREP_CONDA_DIR,
     help="The output directory to save the scraped data in hive partition",
 )
 @click.option(
     "--conda-output",
-    default=os.path.join(OUTPUT_ROOT, "final/conda"),
+    default=CONDA_DIR,
     help="The output path to save the aggregated data",
 )
 @partition_option
@@ -279,32 +298,37 @@ def coalesce(
 
         git_df["partition"] = partition
         git_df.to_parquet(output_path, partition_cols=["partition"], schema=schema)
-    click.echo("Scraping completed.")
+    click.echo("Coalesce complete")
 
 
 @cli.command()
 @click.option(
     "--git-input",
-    default=os.path.join(OUTPUT_ROOT, "final/git"),
+    default=GIT_DIR,
     help="The git input path to read the data from",
 )
 @click.option(
     "--pypi-input",
-    default=os.path.join(OUTPUT_ROOT, "final/pypi"),
+    default=PYPI_DIR,
     help="The pypi input path to read the data from",
 )
 @click.option(
     "--conda-input",
-    default=os.path.join(OUTPUT_ROOT, "final/conda"),
+    default=CONDA_DIR,
     help="The conda input path to read the data from",
 )
 @click.option(
     "-o",
     "--output",
-    default=os.path.join(OUTPUT_ROOT, "score.parquet"),
+    default=SCORE_PATH,
     help="The output path to save the aggregated data",
 )
-def score(git_input, pypi_input, conda_input, output):
+@click.option(
+    "--note-output",
+    default=NOTES_PATH,
+    help="path to save notes",
+)
+def score(git_input, pypi_input, conda_input, output, note_output):
 
     db = duckdb.connect()
     db.execute("CREATE SECRET (TYPE GCS);")
@@ -333,10 +357,15 @@ def score(git_input, pypi_input, conda_input, output):
     )
 
     click.echo("Processing score")
+    print(db.query("select source_url, error from git").df())
     df = create_scores(db)
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, schema=score_schema)
-    click.echo("Scraping completed.")
+
+    note_df = notes.to_df()
+    print("note_output", note_output)
+    # note_df.to_parquet(note_output)
+    click.echo("Score complete")
 
 
 if __name__ == "__main__":
