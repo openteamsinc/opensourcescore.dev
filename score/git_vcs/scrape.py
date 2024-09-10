@@ -71,6 +71,7 @@ def clone_repo(url):
 git_schema = pa.schema(
     [
         ("partition", pa.int32()),
+        ("insert_ts", pa.timestamp("ns")),
         ("source_url", pa.string()),
         ("error", pa.int32()),
         ("recent_authors_count", pa.int32()),
@@ -230,5 +231,9 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
     except (toml.TomlDecodeError, IndexError, IOError) as err:
         log.error(f"Error reading pyproject.toml: {err}")
         return None
+    name = data.get("project", {}).get("name")
 
-    return data.get("project", {}).get("name")
+    if not name:
+        return None
+
+    return name.lower().replace("_", "-")

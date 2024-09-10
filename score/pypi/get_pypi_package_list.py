@@ -18,7 +18,7 @@ def get_all_pypi_package_names():
     package_names = re.findall(
         r'<a href="/simple/([^/]+)/">', response.text
     )  # Extract package names
-    return package_names
+    return [p.lower().replace("_", "-") for p in package_names]
 
 
 def get_pypi_package_names(num_partitions: int, partition: int):

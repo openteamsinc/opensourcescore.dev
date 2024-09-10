@@ -28,6 +28,7 @@ package_schema = pa.struct(
         ("ecosystem", pa.string()),
         ("name", pa.string()),
         ("version", pa.string()),
+        ("release_date", pa.timestamp("ns")),
         ("health_risk", assessment_schema),
     ]
 )
@@ -38,6 +39,9 @@ score_schema = pa.schema(
         ("timestamp", pa.timestamp("ns")),
         ("last_updated", pa.timestamp("ns")),
         ("source_url", pa.string()),
+        ("license", pa.string()),
+        ("license_kind", pa.string()),
+        ("license_modified", pa.bool_()),
         ("packages", pa.list_(package_schema)),
         ("ecosystem_destination", ecosystem_schema),
         ("maturity", assessment_schema),
@@ -59,6 +63,7 @@ def fmt_pypi(ecosystem_destination_name, p):
         "version": p["version"],
         "ecosystem": "PyPI",
         "health_risk": health_risk,
+        "release_date": p["release_date"],
     }
 
 
@@ -68,6 +73,7 @@ def fmt_conda(p):
         "version": p["latest_version"],
         "ecosystem": "conda",
         "health_risk_notes": [],
+        "release_date": p["release_date"],
     }
 
 
@@ -84,6 +90,11 @@ def build_score(source_url, row):
     score["health_risk"] = build_health_risk_score(row).dict()
     score["timestamp"] = datetime.now()
     score["last_updated"] = row.latest_commit
+
+    if not pd.isna(row.license):
+        score["license"] = row.license["license"]
+        score["license_kind"] = row.license["kind"]
+        score["license_modified"] = row.license["modified"]
 
     return score
 
