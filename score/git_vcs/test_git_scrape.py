@@ -14,4 +14,4 @@ def test_scrape_flask():
     assert metadata
     print(metadata)
     assert metadata["license"]["kind"] == "BSD"
-    assert metadata["py_package"] == "Flask"
+    assert metadata["py_package"] == "flask"
