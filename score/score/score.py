@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 import pyarrow as pa
 from datetime import datetime, timedelta
-
+from typing import Optional
 from .maturity import build_maturity_score
 from .health_risk import build_health_risk_score, HIGH_RISK, MODERATE_RISK, Score
 from ..notes import Note
@@ -50,6 +50,14 @@ score_schema = pa.schema(
 )
 
 
+def safe_date_diff(a, b) -> Optional[pd.Timedelta]:
+    if pd.isnull(a):
+        return None
+    if pd.isnull(b):
+        return None
+    return a - b
+
+
 def fmt_pypi(ecosystem_destination_name, latest_commit, p):
 
     score = Score(value=None)  # type: ignore
@@ -60,11 +68,11 @@ def fmt_pypi(ecosystem_destination_name, latest_commit, p):
         score.notes.append(Note.PACKAGE_NAME_MISMATCH.value)
 
     one_year = timedelta(days=365)
-    skew = latest_commit - p["release_date"]
-    if skew > one_year:
+    skew = safe_date_diff(latest_commit, p["release_date"])
+    if skew and skew > one_year:
         score.limit(MODERATE_RISK)
         score.notes.append(Note.PACKGE_SKEW_NOT_UPDATED.value)
-    if skew < -one_year:
+    if skew and skew < -one_year:
         score.limit(MODERATE_RISK)
         score.notes.append(Note.PACKGE_SKEW_NOT_RELEASED.value)
 
