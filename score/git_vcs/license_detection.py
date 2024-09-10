@@ -154,7 +154,6 @@ license_dir = Path(__file__).parent / "licenses"
 
 @lru_cache
 def get_all_licenses():
-    print("license_dir", license_dir)
     licenses = {}
     for license_file in license_dir.glob("*"):
         with open(license_file, "rb") as f:

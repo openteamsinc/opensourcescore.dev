@@ -11,8 +11,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from contextlib import contextmanager
-from concurrent.futures import ThreadPoolExecutor
-
+from ..utils.map import do_map
 from .license_detection import identify_license
 from .check_url import check_url
 from ..notes import Note
@@ -126,9 +125,8 @@ def scrape_git(urls: list) -> pd.DataFrame:
                 how closely the detected license matches the best-known license text (value between 0 and 1).
     """
 
-    exec = ThreadPoolExecutor(16)
     all_data = list(
-        tqdm(exec.map(create_git_metadata, urls), total=len(urls), disable=None)
+        tqdm(do_map(create_git_metadata, urls), total=len(urls), disable=None)
     )
 
     df = pd.DataFrame(all_data)

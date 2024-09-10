@@ -6,8 +6,8 @@ import pyarrow as pa
 from tqdm import tqdm
 import logging
 from dateutil.parser import parse as parsedate
-from concurrent.futures import ThreadPoolExecutor
 from ..utils.request_session import get_session
+from ..utils.map import do_map
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +45,6 @@ def get_package_data(package_name: str):
     package_data = response.json()  # Parse the JSON response
 
     # Extract the 'info' section
-    # print("package_data", list(package_data.keys()))
     info = package_data.get("info", {})
 
     source_url_key, source_url = extract_source_url(info.get("project_urls", {}))
@@ -53,10 +52,7 @@ def get_package_data(package_name: str):
     version = info.get("version", None)
     release_date = None
     release_info = package_data.get("releases", {}).get(version, [])
-    print("----")
-    print("----")
-    print("info", list(info.keys()))
-    # print("release_info", release_info)
+
     if version and release_info:
         upload_dates = [
             parsedate(i.get("upload_time"))
@@ -136,9 +132,8 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
         - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was
             identified as the source URL (e.g., "code", "repository", "source", "homepage").
     """
-    exec = ThreadPoolExecutor(16)
     all_package_data = list(
-        tqdm(exec.map(get_package_data, packages), total=len(packages), disable=None)
+        tqdm(do_map(get_package_data, packages), total=len(packages), disable=None)
     )
     failed_count = len([x for x in all_package_data if x is None])
     all_package_data = [x for x in all_package_data if x is not None]

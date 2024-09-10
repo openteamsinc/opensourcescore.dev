@@ -378,7 +378,6 @@ def score(git_input, pypi_input, conda_input, output, note_output):
     )
 
     click.echo("Processing score")
-    print(db.query("select source_url, error from git").df())
     df = create_scores(db)
     click.echo(f"Saving data to {output}")
     df.to_parquet(output, schema=score_schema)
