@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List
+from typing import List, Optional
 from dataclasses import dataclass, field
 import logging
 
@@ -23,10 +23,14 @@ LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 
 @dataclass
 class Score:
-    value: str = HEALTHY
+    value: Optional[str] = HEALTHY
     notes: List[int] = field(default_factory=list)
 
     def limit(self, new_score: str):
+        if self.value is None:
+            self.value = new_score
+            return
+
         current_numeric_score = SCORE_ORDER.index(self.value)
         new_numeric_score = SCORE_ORDER.index(new_score)
         self.value = SCORE_ORDER[max(current_numeric_score, new_numeric_score)]
@@ -92,9 +96,9 @@ def score_python(git_info, score: Score):
         score.notes.append(Note.NO_PROJECT_NAME.value)
         return
 
-    have_package_names = [p["name"].lower() for p in packages]
+    have_package_names = [p["name"] for p in packages]
 
-    if expected_name.lower() not in have_package_names:
+    if expected_name not in have_package_names:
         score.limit(CAUTION_NEEDED)
         score.notes.append(Note.PROJECT_NOT_PUBLISHED.value)
 
@@ -109,7 +113,11 @@ def build_health_risk_score(git_info) -> Score:
         score.notes.append(git_info.error)
         return score
 
-    if git_info.first_commit == "NaT":
+    if (
+        git_info.first_commit == "NaT"
+        or pd.isna(git_info.first_commit)
+        or not git_info.first_commit
+    ):
         score.value = "Placeholder"
         score.notes.append(Note.NO_COMMITS.value)
         return score

@@ -2,12 +2,26 @@ import click
 from typing import List, Optional, Dict, Tuple
 from urllib.parse import urlparse
 import pandas as pd
+import pyarrow as pa
 from tqdm import tqdm
 import logging
-from concurrent.futures import ThreadPoolExecutor
+from dateutil.parser import parse as parsedate
 from ..utils.request_session import get_session
+from ..utils.map import do_map
 
 log = logging.getLogger(__name__)
+
+pypi_schema = pa.schema(
+    [
+        ("partition", pa.int32()),
+        ("insert_ts", pa.timestamp("ns")),
+        ("name", pa.string()),
+        ("version", pa.string()),
+        ("source_url", pa.string()),
+        ("source_url_key", pa.string()),
+        ("release_date", pa.timestamp("ns")),
+    ]
+)
 
 
 def get_package_data(package_name: str):
@@ -35,19 +49,25 @@ def get_package_data(package_name: str):
 
     source_url_key, source_url = extract_source_url(info.get("project_urls", {}))
 
-    # Extract desired fields
+    version = info.get("version", None)
+    release_date = None
+    release_info = package_data.get("releases", {}).get(version, [])
+
+    if version and release_info:
+        upload_dates = [
+            parsedate(i.get("upload_time"))
+            for i in release_info
+            if i.get("upload_time")
+        ]
+        first_upload_date = min(upload_dates)
+        release_date = first_upload_date
+
     filtered_data = {
-        "name": info.get("name", None),
-        "docs_url": info.get("docs_url", None),
-        "download_url": info.get("download_url", None),
-        "home_page": info.get("home_page", None),
-        "maintainer": info.get("maintainer", None),
-        "maintainer_email": info.get("maintainer_email", None),
-        "release_url": info.get("release_url", None),
-        "requires_python": info.get("requires_python", None),
-        "version": info.get("version", None),
+        "name": package_name,
+        "version": version,
         "source_url": source_url,
         "source_url_key": source_url_key,
+        "release_date": release_date,
     }
 
     return filtered_data
@@ -112,9 +132,8 @@ def scrape_json(packages: List[str]) -> pd.DataFrame:
         - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was
             identified as the source URL (e.g., "code", "repository", "source", "homepage").
     """
-    exec = ThreadPoolExecutor(16)
     all_package_data = list(
-        tqdm(exec.map(get_package_data, packages), total=len(packages), disable=None)
+        tqdm(do_map(get_package_data, packages), total=len(packages), disable=None)
     )
     failed_count = len([x for x in all_package_data if x is None])
     all_package_data = [x for x in all_package_data if x is not None]

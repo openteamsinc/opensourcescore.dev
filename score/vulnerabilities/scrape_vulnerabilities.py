@@ -3,8 +3,8 @@ from dateutil.parser import parse as parse_date
 import pandas as pd
 from cvss import CVSS2, CVSS3, CVSS4
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor
 from ..utils.request_session import get_session
+from ..utils.map import do_map
 
 OSV_API_URL = "https://api.osv.dev/v1/query"
 
@@ -67,7 +67,7 @@ def get_vulnerability_severity(vuln):
     return extract_affected_severity(vuln)
 
 
-def scrape_vulnerability(ecosystem, package: str) -> pd.DataFrame:
+def scrape_vulnerability(ecosystem, package: str) -> list:
     session = get_session()
     payload = {"package": {"name": package, "ecosystem": ecosystem}}
     response = session.post(OSV_API_URL, json=payload)
@@ -102,8 +102,7 @@ def scrape_vulnerabilities(ecosystem, package_names: List[str]) -> pd.DataFrame:
     #     vulns = scrape_vulnerability(ecosystem, package)
     #     all_packages.extend(vulns)
 
-    exec = ThreadPoolExecutor(16)
-    mapped = exec.map(lambda x: scrape_vulnerability(ecosystem, x), package_names)
+    mapped = do_map(lambda x: scrape_vulnerability(ecosystem, x), package_names)
     all_packages = [
         item for sublist in tqdm(mapped, total=len(package_names)) for item in sublist
     ]

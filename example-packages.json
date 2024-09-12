@@ -1,0 +1,33 @@
+{
+    "pypi": [
+        "flask",
+        "captchaai",
+        "dnsblock-update",
+        "django-projector",
+        "OAuthClientUser",
+        "dashing",
+        "hay-say-common",
+        "django-projector",
+        "junhao-sales",
+        "slacktools",
+        "obsidian-metadata",
+        "smartstatic",
+        "smartpip",
+        "smartdb",
+        "smartpivot",
+        "smartchart",
+        "smartui",
+        "dnsblock-update",
+        "dashing",
+        "nesterSPC",
+        "aonetest",
+        "obsidian-metadata",
+        "biogeme-optimization",
+        "nesterSPC",
+        "aonetest",
+        "django-passwordless"
+    ],
+    "conda": [
+        "flask"
+    ]
+}

@@ -11,8 +11,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from contextlib import contextmanager
-from concurrent.futures import ThreadPoolExecutor
-
+from ..utils.map import do_map
 from .license_detection import identify_license
 from .check_url import check_url
 from ..notes import Note
@@ -71,6 +70,7 @@ def clone_repo(url):
 git_schema = pa.schema(
     [
         ("partition", pa.int32()),
+        ("insert_ts", pa.timestamp("ns")),
         ("source_url", pa.string()),
         ("error", pa.int32()),
         ("recent_authors_count", pa.int32()),
@@ -125,9 +125,8 @@ def scrape_git(urls: list) -> pd.DataFrame:
                 how closely the detected license matches the best-known license text (value between 0 and 1).
     """
 
-    exec = ThreadPoolExecutor(16)
     all_data = list(
-        tqdm(exec.map(create_git_metadata, urls), total=len(urls), disable=None)
+        tqdm(do_map(create_git_metadata, urls), total=len(urls), disable=None)
     )
 
     df = pd.DataFrame(all_data)
@@ -230,5 +229,9 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
     except (toml.TomlDecodeError, IndexError, IOError) as err:
         log.error(f"Error reading pyproject.toml: {err}")
         return None
+    name = data.get("project", {}).get("name")
 
-    return data.get("project", {}).get("name")
+    if not name:
+        return None
+
+    return name.lower().replace("_", "-")

@@ -1,10 +1,26 @@
 from typing import List
 import pandas as pd
+import pyarrow as pa
 from tqdm import tqdm
-
+from dateutil.parser import parse as parsedate
 from ..utils.request_session import get_session
 
 CONDA_PACKAGE_URL_TEMPLATE = "https://api.anaconda.org/package/{channel}/{package}"
+
+
+conda_schema = pa.schema(
+    [
+        ("partition", pa.int32()),
+        ("insert_ts", pa.timestamp("ns")),
+        ("name", pa.string()),
+        ("channel", pa.string()),
+        ("full_name", pa.string()),
+        ("source_url", pa.string()),
+        ("latest_version", pa.string()),
+        ("ndownloads", pa.int64()),
+        ("release_date", pa.timestamp("ns")),
+    ]
+)
 
 
 def scrape_conda(channel, package_names: List[str]) -> pd.DataFrame:
@@ -44,6 +60,7 @@ def scrape_conda(channel, package_names: List[str]) -> pd.DataFrame:
                 "source_url": source_url,
                 "latest_version": package_data["latest_version"],
                 "ndownloads": ndownloads,
+                "release_date": parsedate(package_data["modified_at"]),
             }
         )
 

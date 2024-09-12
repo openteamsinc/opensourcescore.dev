@@ -59,6 +59,10 @@ class Note(enum.Enum):
 
     LAST_COMMIT_OVER_A_YEAR = "The last commit was over a year ago"
 
+    PACKGE_SKEW_NOT_UPDATED = "Package is out of sync with the source code"
+
+    PACKGE_SKEW_NOT_RELEASED = "Package is ahead of the source code"
+
 
 def to_df():
     return pd.DataFrame.from_records(
