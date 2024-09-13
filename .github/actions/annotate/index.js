@@ -1,5 +1,4 @@
 const fs = require('fs/promises');
-const fetch = require('node-fetch');
 
 // Validate package names using a regex (for valid package name characters)
 function isValidPackageName(packageName) {
