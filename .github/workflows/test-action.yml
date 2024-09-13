@@ -7,17 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Display Notice with Requirements
-        run: |
-          if [ -f requirements.txt ]; then
-            LINE=1
-            while IFS= read -r package; do
-              echo "::notice file=requirements.txt,line=$LINE,col=1,endColumn=${#package}::Found package: $package"
-              LINE=$((LINE + 1))
-            done < requirements.txt
-          else
-            echo "::error::requirements.txt file not found"
-          fi
 
       - name: Run local action
         uses: ./.github/actions/annotate

@@ -1,0 +1,5 @@
+name: "Annotate Requirements"
+description: "Annotates the requirements.txt file using the Score API"
+runs:
+  using: "node12"
+  main: "index.js"
