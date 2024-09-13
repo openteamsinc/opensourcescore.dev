@@ -6,5 +6,16 @@ jobs:
   hello_world_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Say Hello World
-        run: echo "Hello World"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Display Notice with Requirements
+        run: |
+          if [ -f requirements.txt ]; then
+            LINE=1
+            while IFS= read -r package; do
+              echo "::notice file=requirements.txt,line=$LINE,col=1,endColumn=${#package}::Found package: $package"
+              LINE=$((LINE + 1))
+            done < requirements.txt
+          else
+            echo "::error::requirements.txt file not found"
