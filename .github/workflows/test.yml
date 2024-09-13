@@ -19,3 +19,4 @@ jobs:
             done < requirements.txt
           else
             echo "::error::requirements.txt file not found"
+          fi
