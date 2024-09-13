@@ -9,10 +9,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Set up dependencies using Score
         uses: openteamsinc/score@v3
         with:
-          - package-ecosystem: pip
+          package-ecosystem: pip
+          directory: '.'
 
       - name: Display Notice with Requirements
         run: |
