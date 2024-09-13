@@ -1,8 +1,6 @@
 name: Requirements Check Action
 
-on:
-  pull_request:
-  push:
+on: [push]
 
 jobs:
   requirements_check_job:
