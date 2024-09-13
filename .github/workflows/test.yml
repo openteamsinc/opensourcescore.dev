@@ -1,6 +1,6 @@
 name: Annotate Requirements with Score API
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   annotate_requirements_job:

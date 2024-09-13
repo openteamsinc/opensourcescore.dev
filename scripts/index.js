@@ -1,6 +1,12 @@
 const fs = require('fs');
 const axios = require('axios');
 
+// Function to strip versioning from package names
+function stripVersion(packageLine) {
+    // Regular expression to match version constraints
+    return packageLine.split(/[<>=~!]/)[0].trim();
+}
+
 async function annotatePackage(packageName) {
     try {
         const response = await axios.get(`https://openteams-score.vercel.app/api/package/pypi/${packageName}`);
@@ -24,7 +30,8 @@ async function run() {
 
     const packages = fs.readFileSync(filePath, 'utf-8').split('\n').filter(pkg => pkg);
     
-    for (const packageName of packages) {
+    for (const packageLine of packages) {
+        const packageName = stripVersion(packageLine);  // Strip the version
         await annotatePackage(packageName);
     }
 }
