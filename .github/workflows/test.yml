@@ -21,5 +21,8 @@ jobs:
             echo "::error::requirements.txt file not found"
           fi
 
+      - name: Install dependencies
+        run: npm install axios
+
       - name: Run Score API Annotation Script
         run: node ./scripts/index.js
