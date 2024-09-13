@@ -22,4 +22,4 @@ jobs:
           fi
 
       - name: Run Score API Annotation Script
-        run: node index.js
+        run: node ./scripts/index.js
