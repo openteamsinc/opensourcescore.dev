@@ -1,9 +1,9 @@
-name: Hello World Action
+name: Annotate Requirements with Score API
 
 on: [push, pull_request]
 
 jobs:
-  hello_world_job:
+  annotate_requirements_job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,3 +20,6 @@ jobs:
           else
             echo "::error::requirements.txt file not found"
           fi
+
+      - name: Run Score API Annotation Script
+        run: node index.js
