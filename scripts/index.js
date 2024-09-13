@@ -3,15 +3,18 @@ const axios = require('axios');
 
 // Function to strip versioning from package names
 function stripVersion(packageLine) {
-    // Regular expression to match version constraints
     return packageLine.split(/[<>=~!]/)[0].trim();
 }
 
 async function annotatePackage(packageName) {
     try {
         const response = await axios.get(`https://openteams-score.vercel.app/api/package/pypi/${packageName}`);
-        if (response.status === 200) {
-            console.log(`::notice file=requirements.txt::Package ${packageName} found with status ${response.data.status}`);
+        if (response.status === 200 && response.data.source) {
+            const { maturity, health_risk } = response.data.source;
+            const maturityValue = maturity ? maturity.value : 'Unknown';
+            const healthRiskValue = health_risk ? health_risk.value : 'Unknown';
+            
+            console.log(`::notice file=requirements.txt::Package ${packageName} found. (Maturity: ${maturityValue}, Health: ${healthRiskValue})`);
         } else {
             console.log(`::error file=requirements.txt::Package ${packageName} not found.`);
         }
