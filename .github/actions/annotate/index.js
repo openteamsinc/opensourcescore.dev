@@ -32,7 +32,7 @@ async function fetchPackageScore(packageName) {
     }
 }
 
-async function annotatePackage(packageName, lineNumber) {
+async function annotatePackage(packageName, filePath, lineNumber) {
     try {
         const response = await fetchPackageScore(packageName);
         if (response && response.source) {
@@ -60,20 +60,20 @@ async function annotatePackage(packageName, lineNumber) {
 
             // Add annotation to the specific file and line number
             core.notice(`Package ${packageName}: (Maturity: ${maturityValue}, Health: ${healthRiskValue}). ${recommendation}`, {
-                file: 'requirements.txt',
+                file: filePath,
                 startLine: lineNumber,
                 endLine: lineNumber
             });
         } else {
             core.error(`Package ${packageName} not found.`, {
-                file: 'requirements.txt',
+                file: filePath,
                 startLine: lineNumber,
                 endLine: lineNumber
             });
         }
     } catch (error) {
         core.error(`Error looking up package ${packageName}: ${error.message}`, {
-            file: 'requirements.txt',
+            file: filePath,
             startLine: lineNumber,
             endLine: lineNumber
         });
@@ -105,7 +105,7 @@ async function run() {
                     });
                     return;
                 }
-                annotatePackage(packageName, lineNumber);
+                annotatePackage(packageName, filePath, lineNumber);
             }
         });
     } catch (error) {
