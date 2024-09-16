@@ -1,4 +1,5 @@
 const fs = require('fs/promises');
+const core = require('@actions/core');
 
 // Validate package names using a regex (for valid package name characters)
 function isValidPackageName(packageName) {
@@ -10,11 +11,10 @@ function stripVersion(packageLine) {
     return packageLine.split(/[<>=~!]/)[0].trim();
 }
 
-// Process and clean up each line from requirements.txt
 function processPackageLine(line) {
-    const cleanLine = line.split('#')[0].trim();  // Remove inline comments and whitespace
-    if (!cleanLine || cleanLine.startsWith('-')) return null;  // Skip empty lines, comments, or flags
-    return stripVersion(cleanLine);  // Strip versioning
+    const cleanLine = line.split('#')[0].trim();
+    if (!cleanLine || cleanLine.startsWith('-')) return null;
+    return stripVersion(cleanLine);
 }
 
 // Fetch package information from Score API
@@ -39,43 +39,61 @@ async function annotatePackage(packageName) {
             const { maturity, health_risk } = response.source;
             const maturityValue = maturity ? maturity.value : 'Unknown';
             const healthRiskValue = health_risk ? health_risk.value : 'Unknown';
-            
-            console.log(`::notice file=requirements.txt::Package ${packageName} found. (Maturity: ${maturityValue}, Health: ${healthRiskValue})`);
+
+            let recommendation = '';
+
+            if (maturityValue === 'Mature' && healthRiskValue === 'Healthy') {
+                recommendation = 'This package is likely to enhance stability and maintainability with minimal risks.';
+            } else if (maturityValue === 'Mature' && healthRiskValue === 'Moderate Risk') {
+                recommendation = 'The package is stable but may introduce some moderate risks.';
+            } else if (maturityValue === 'Mature' && healthRiskValue === 'High Risk') {
+                recommendation = 'The package is stable but introduces high risks.';
+            } else if (maturityValue === 'Developing' && healthRiskValue === 'Healthy') {
+                recommendation = 'The package is in development but poses low risks.';
+            } else if (maturityValue === 'Experimental' || healthRiskValue === 'High Risk') {
+                recommendation = 'This package may pose significant risks to stability and maintainability.';
+            } else if (maturityValue === 'Legacy') {
+                recommendation = 'This package is legacy and may not be stable, consider alternatives.';
+            } else {
+                recommendation = 'Insufficient data to make an informed recommendation.';
+            }
+
+            core.notice(`Package ${packageName}: (Maturity: ${maturityValue}, Health: ${healthRiskValue}). ${recommendation}`);
         } else {
-            console.log(`::error file=requirements.txt::Package ${packageName} not found.`);
+            core.error(`Package ${packageName} not found.`);
         }
     } catch (error) {
-        console.log(`::error file=requirements.txt::Error looking up package ${packageName}: ${error.message}`);
+        core.error(`Error looking up package ${packageName}: ${error.message}`);
     }
 }
 
 async function run() {
     const filePath = 'requirements.txt';
-    const ecosystem = process.env.PACKAGE_ECOSYSTEM || 'pip';
+    const ecosystem = core.getInput('package-ecosystem', { required: true });
 
     // Check if the ecosystem is supported
     if (ecosystem !== 'pip') {
-        console.log(`::error::Unsupported package ecosystem: ${ecosystem}`);
+        core.setFailed(`Unsupported package ecosystem: ${ecosystem}`);
         return;
     }
 
     try {
         // Read the file asynchronously
-        const lines = (await fs.readFile(filePath, 'utf-8')).split('\n');
-        
-        for (const line of lines) {
-            const packageName = processPackageLine(line);
+        const packages = (await fs.readFile(filePath, 'utf-8')).split('\n').filter(pkg => pkg);
+
+        for (const packageLine of packages) {
+            const packageName = processPackageLine(packageLine);
 
             if (packageName) {
                 if (!isValidPackageName(packageName)) {
-                    console.log(`::error file=requirements.txt::Invalid package name: ${packageName}`);
+                    core.error(`Invalid package name: ${packageName}`);
                     continue;
                 }
                 await annotatePackage(packageName);
             }
         }
     } catch (error) {
-        console.log(`::error::Failed to read ${filePath}: ${error.message}`);
+        core.setFailed(`Failed to read ${filePath}: ${error.message}`);
     }
 }
 
