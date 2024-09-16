@@ -59,11 +59,14 @@ async function annotatePackage(packageName) {
             }
 
             core.notice(`Package ${packageName}: (Maturity: ${maturityValue}, Health: ${healthRiskValue}). ${recommendation}`);
+            core.setOutput(packageName, recommendation)
         } else {
             core.error(`Package ${packageName} not found.`);
+            core.setOutput(packageName, 'Package not found.')
         }
     } catch (error) {
         core.error(`Error looking up package ${packageName}: ${error.message}`);
+        core.setOutput(packageName, `Error: ${error.message}`)
     }
 }
 
