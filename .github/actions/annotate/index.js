@@ -32,7 +32,7 @@ async function fetchPackageScore(packageName) {
     }
 }
 
-async function annotatePackage(packageName) {
+async function annotatePackage(packageName, lineNumber) {
     try {
         const response = await fetchPackageScore(packageName);
         if (response && response.source) {
@@ -58,15 +58,25 @@ async function annotatePackage(packageName) {
                 recommendation = 'Insufficient data to make an informed recommendation.';
             }
 
-            core.notice(`Package ${packageName}: (Maturity: ${maturityValue}, Health: ${healthRiskValue}). ${recommendation}`);
-            core.setOutput(packageName, recommendation)
+            // Add annotation to the specific file and line number
+            core.notice(`Package ${packageName}: (Maturity: ${maturityValue}, Health: ${healthRiskValue}). ${recommendation}`, {
+                file: 'requirements.txt',
+                startLine: lineNumber,
+                endLine: lineNumber
+            });
         } else {
-            core.error(`Package ${packageName} not found.`);
-            core.setOutput(packageName, 'Package not found.')
+            core.error(`Package ${packageName} not found.`, {
+                file: 'requirements.txt',
+                startLine: lineNumber,
+                endLine: lineNumber
+            });
         }
     } catch (error) {
-        core.error(`Error looking up package ${packageName}: ${error.message}`);
-        core.setOutput(packageName, `Error: ${error.message}`)
+        core.error(`Error looking up package ${packageName}: ${error.message}`, {
+            file: 'requirements.txt',
+            startLine: lineNumber,
+            endLine: lineNumber
+        });
     }
 }
 
@@ -74,27 +84,30 @@ async function run() {
     const filePath = 'requirements.txt';
     const ecosystem = core.getInput('package-ecosystem', { required: true });
 
-    // Check if the ecosystem is supported
     if (ecosystem !== 'pip') {
         core.setFailed(`Unsupported package ecosystem: ${ecosystem}`);
         return;
     }
 
     try {
-        // Read the file asynchronously
         const packages = (await fs.readFile(filePath, 'utf-8')).split('\n').filter(pkg => pkg);
 
-        for (const packageLine of packages) {
+        packages.forEach((packageLine, index) => {
             const packageName = processPackageLine(packageLine);
+            const lineNumber = index + 1;
 
             if (packageName) {
                 if (!isValidPackageName(packageName)) {
-                    core.error(`Invalid package name: ${packageName}`);
-                    continue;
+                    core.error(`Invalid package name: ${packageName}`, {
+                        file: filePath,
+                        startLine: lineNumber,
+                        endLine: lineNumber
+                    });
+                    return;
                 }
-                await annotatePackage(packageName);
+                annotatePackage(packageName, lineNumber);
             }
-        }
+        });
     } catch (error) {
         core.setFailed(`Failed to read ${filePath}: ${error.message}`);
     }
