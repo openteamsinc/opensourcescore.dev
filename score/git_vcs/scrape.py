@@ -221,8 +221,7 @@ def get_pyproject_toml(repo: Repo) -> Optional[str]:
         try:
             repo.git.checkout(repo.active_branch, "--", "**/pyproject.toml")
         except GitCommandError:
-            return None
-        return None
+            pass
 
     possible_paths = glob.glob(f"{repo.working_dir}/**/pyproject.toml", recursive=True)
 
