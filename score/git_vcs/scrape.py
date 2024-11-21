@@ -194,7 +194,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
         return {"error": Note.LICENSE_CHECKOUT_ERROR.value}
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
-    paths = ["LICENSE", "LICENSE.txt", "LICENSE.md"]
+    paths = ["LICENSE", "LICENSE.txt", "LICENSE.md", "LICENSE.rst"]
     license_file_path = None
     for path in paths:
         full_path = os.path.join(repo.working_dir, path)
@@ -212,14 +212,28 @@ def get_license_type(repo: Repo, url: str) -> dict:
     return identify_license(license_content)
 
 
-def get_pypackage_name(repo: Repo) -> Optional[str]:
+def get_pyproject_toml(repo: Repo) -> Optional[str]:
+    # Check out the PYPROJECT file(s)
     try:
-        # Check out the LICENSE file(s)
         repo.git.checkout(repo.active_branch, "--", "pyproject.toml")
     except GitCommandError:
+        try:
+            repo.git.checkout(repo.active_branch, "--", "**/pyproject.toml")
+        except GitCommandError:
+            return None
+        return None
+    # Check out the PYPROJECT file(s)
+    if os.path.exists("pyproject.toml"):
+        full_path = os.path.join(repo.working_dir, "pyproject.toml")
+        
+    return full_path
+
+
+def get_pypackage_name(repo: Repo) -> Optional[str]:
+    full_path = get_pyproject_toml(repo)
+    if full_path is None:
         return None
 
-    full_path = os.path.join(repo.working_dir, "pyproject.toml")
     try:
         # Read and return the license type
         with open(full_path, encoding="utf8", errors="ignore") as fd:
