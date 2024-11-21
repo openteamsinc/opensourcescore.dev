@@ -225,6 +225,8 @@ def get_pyproject_toml(repo: Repo) -> Optional[str]:
         return None
 
     possible_paths = glob.glob(f"{repo.working_dir}/**/pyproject.toml", recursive=True)
+
+    # Shortest path picks the pyproject.toml in the root first
     possible_paths = sorted(possible_paths, key=lambda x: len(x))
     return possible_paths[0]
 
