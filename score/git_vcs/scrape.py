@@ -225,7 +225,7 @@ def get_pyproject_toml(repo: Repo) -> Optional[str]:
     # Check out the PYPROJECT file(s)
     if os.path.exists("pyproject.toml"):
         full_path = os.path.join(repo.working_dir, "pyproject.toml")
-        
+
     return full_path
 
 
