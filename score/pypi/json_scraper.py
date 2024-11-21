@@ -93,7 +93,7 @@ def extract_source_url(
 
     project_urls = {k.lower(): v for k, v in project_urls.items()}
 
-    for key in ["code", "repository", "source", "source code", "homepage"]:
+    for key in ["code", "repository", "source", "source code", "github", "homepage"]:
         if key not in project_urls:
             continue
         source_url = normalize_source_url(project_urls[key])
