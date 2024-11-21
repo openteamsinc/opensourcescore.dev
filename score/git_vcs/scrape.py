@@ -10,6 +10,7 @@ import tempfile
 from datetime import datetime, timedelta
 import logging
 import os
+import glob
 from contextlib import contextmanager
 from ..utils.map import do_map
 from .license_detection import identify_license
@@ -222,11 +223,10 @@ def get_pyproject_toml(repo: Repo) -> Optional[str]:
         except GitCommandError:
             return None
         return None
-    # Check out the PYPROJECT file(s)
-    if os.path.exists("pyproject.toml"):
-        full_path = os.path.join(repo.working_dir, "pyproject.toml")
 
-    return full_path
+    possible_paths = glob.glob(f"{repo.working_dir}/**/pyproject.toml", recursive=True)
+    possible_paths = sorted(possible_paths, key=lambda x: len(x))
+    return possible_paths[0]
 
 
 def get_pypackage_name(repo: Repo) -> Optional[str]:
