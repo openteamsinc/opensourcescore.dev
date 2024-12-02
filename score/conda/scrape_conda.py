@@ -23,6 +23,27 @@ conda_schema = pa.schema(
 )
 
 
+def get_conda_package_data(channel, package_name: str):
+    s = get_session()
+    url = CONDA_PACKAGE_URL_TEMPLATE.format(channel=channel, package=package_name)
+    res = s.get(url)
+    res.raise_for_status()
+    package_data = res.json()
+
+    ndownloads = 0
+    for f in package_data["files"]:
+        ndownloads += f["ndownloads"]
+    source_url = package_data.get("dev_url") or package_data.get("source_git_url")
+    return {
+        "name": package_data["name"],
+        "full_name": package_data["full_name"],
+        "source_url": source_url,
+        "latest_version": package_data["latest_version"],
+        "ndownloads": ndownloads,
+        "release_date": parsedate(package_data["modified_at"]),
+    }
+
+
 def scrape_conda(channel, package_names: List[str]) -> pd.DataFrame:
     """
     Scrapes metadata for a list of Conda packages from the Anaconda API and returns the data as a DataFrame.
@@ -41,27 +62,9 @@ def scrape_conda(channel, package_names: List[str]) -> pd.DataFrame:
         - `latest_version` (str): The latest version of the package available on the specified Anaconda channel.
         - `ndownloads` (int): The total number of downloads for all versions of the package.
     """
-    s = get_session()
     all_packages = []
     for package in tqdm(package_names, disable=None):
-        url = CONDA_PACKAGE_URL_TEMPLATE.format(channel=channel, package=package)
-        res = s.get(url)
-        res.raise_for_status()
-        package_data = res.json()
-
-        ndownloads = 0
-        for f in package_data["files"]:
-            ndownloads += f["ndownloads"]
-        source_url = package_data.get("dev_url") or package_data.get("source_git_url")
-        all_packages.append(
-            {
-                "name": package_data["name"],
-                "full_name": package_data["full_name"],
-                "source_url": source_url,
-                "latest_version": package_data["latest_version"],
-                "ndownloads": ndownloads,
-                "release_date": parsedate(package_data["modified_at"]),
-            }
-        )
+        data = get_conda_package_data(channel, package)
+        all_packages.append(data)
 
     return pd.DataFrame(all_packages)
