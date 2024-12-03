@@ -80,7 +80,10 @@ steps:
         "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
         "--command=bash",
         "--args=-c,fastapi run score/app.py --port $$PORT",
-        "--allow-unauthenticated"
+        "--allow-unauthenticated",
+        "--revision-suffix=$SHORT_SHA",
+        "--max-instances=10",
+        "--concurrency=100",
       ]
   - name: "gcr.io/cloud-builders/gcloud"
     args:
