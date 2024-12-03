@@ -17,8 +17,6 @@ RUN --mount=type=cache,target=/var/cache/pip \
     --cache-dir /var/cache/pip \
     -r requirements.txt
 
-RUN python -m compileall /usr/local/lib/python3.10/site-packages
-
 COPY score/ /usr/src/app/score/
 RUN python -m compileall score
 

@@ -3,6 +3,7 @@ FROM python:3.10-slim-bullseye
 WORKDIR /usr/src/app
 ENV PYTHONPATH=/usr/src/app
 ENV GIT_TERMINAL_PROMPT=0
+ENV PORT=8000
 
 ARG REVISION_ID
 ENV REVISION_ID=$REVISION_ID
@@ -17,12 +18,9 @@ RUN --mount=type=cache,target=/var/cache/pip \
     --cache-dir /var/cache/pip \
     -r requirements.txt
 
-RUN python -m compileall /usr/local/lib/python3.10/site-packages
-
 COPY score/ /usr/src/app/score/
 RUN python -m compileall score
 
 COPY run_script.sh /usr/src/app/run_script.sh
 
-CMD ["fastapi", "run", "score/app.py", "--port", "$PORT"]
-
+CMD bash -c "fastapi run score/app.py --port $PORT"
