@@ -1,13 +1,15 @@
 import click
 from typing import List, Optional, Dict, Tuple
-from urllib.parse import urlparse
+import logging
+
 import pandas as pd
 import pyarrow as pa
 from tqdm import tqdm
-import logging
 from dateutil.parser import parse as parsedate
+
 from ..utils.request_session import get_session
 from ..utils.map import do_map
+from ..utils.normalize_source_url import normalize_source_url
 
 log = logging.getLogger(__name__)
 
@@ -71,18 +73,6 @@ def get_package_data(package_name: str):
     }
 
     return filtered_data
-
-
-def normalize_source_url(url: str):
-    URL = urlparse(url)
-    if URL.hostname in ["github.com", "gitlab.com", "bitbucket.org"]:
-        path_components = URL.path.strip("/").split("/")
-        if len(path_components) < 2:
-            # Invalid git*.com/ URL
-            return None
-        return f"https://{URL.hostname}/{path_components[0]}/{path_components[1]}"
-
-    return url
 
 
 def extract_source_url(
