@@ -77,6 +77,6 @@ class Note(enum.Enum):
 
 def to_df():
     return pd.DataFrame.from_records(
-        [(k, v.value, v.note) for k, v in vars(Note).items() if not k.startswith("_")],
+        [(k, v.value, v.note) for k, v in vars(Note).items() if isinstance(v, Note)],
         columns=["code", "id", "note"],
     ).set_index("id")
