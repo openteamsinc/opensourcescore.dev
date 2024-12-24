@@ -38,11 +38,14 @@ class Score:
     def dict(self):
         return {"value": self.value, "notes": self.notes}
 
+    def dict_string_notes(self):
+        return {"value": self.value, "notes": [Note.lookup(n) for n in self.notes]}
 
-def score_contributors(git_info, score: Score):
+
+def score_contributors(git_info: dict, score: Score):
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
-    latest_commit = git_info.latest_commit
+    latest_commit = git_info["latest_commit"]
 
     if mma_count < 3:
         score.limit(CAUTION_NEEDED)
@@ -60,18 +63,19 @@ def score_contributors(git_info, score: Score):
         score.notes.append(Note.LAST_COMMIT_5_YEARS.value)
 
 
-def score_license(git_info, score: Score):
-    license_kind = git_info.license.get("kind")
-    modified = git_info.license.get("modified")
+def score_license(git_info: dict, score: Score):
+    license = git_info.get("license", {})
+    license_kind = license.get("kind")
+    modified = license.get("modified")
 
-    if git_info.license.get("error"):
+    if license.get("error"):
         score.limit(MODERATE_RISK)
-        note = git_info.license.get("error", Note.NO_LICENSE_INFO.value)
+        note = license.get("error", Note.NO_LICENSE_INFO.value)
         score.notes.append(note)
 
     elif not license_kind or license_kind == "Unknown":
         score.limit(MODERATE_RISK)
-        note = git_info.license.get("error", Note.NO_OS_LICENSE.value)
+        note = license.get("error", Note.NO_OS_LICENSE.value)
         score.notes.append(note)
 
     if license_kind in LESS_PERMISSIVE_LICENSES:
@@ -83,7 +87,7 @@ def score_license(git_info, score: Score):
         score.notes.append(Note.LICENSE_MODIFIED.value)
 
 
-def score_python(git_info, score: Score):
+def score_python(git_info: dict, score: Score):
 
     packages = git_info.pypi_packages
     expected_name = git_info.py_package
@@ -105,25 +109,21 @@ def score_python(git_info, score: Score):
     return
 
 
-def build_health_risk_score(git_info) -> Score:
+def build_health_risk_score(git_info: dict) -> Score:
     score = Score()
 
-    if git_info.error and not pd.isna(git_info.error):
+    if git_info.get("error") and not pd.isna(git_info["error"]):
         score.value = "Unknown"
-        score.notes.append(git_info.error)
+        score.notes.append(git_info["error"])
         return score
 
-    if (
-        git_info.first_commit == "NaT"
-        or pd.isna(git_info.first_commit)
-        or not git_info.first_commit
-    ):
+    if not git_info.get("first_commit") or pd.isnull(git_info["first_commit"]):
         score.value = "Placeholder"
         score.notes.append(Note.NO_COMMITS.value)
         return score
 
     score_license(git_info, score)
     score_contributors(git_info, score)
-    score_python(git_info, score)
+    # score_python(git_info, score)
 
     return score

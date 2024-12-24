@@ -13,6 +13,17 @@ class Note(enum.Enum):
     def __init__(self, note):
         self.note = note
 
+    @classmethod
+    def lookup(cls, note_id):
+        if not hasattr(cls, "_lookup"):
+            # for k, v in vars(cls).items():
+            #     print(k, v)
+            cls._lookup = {
+                v.value: k for k, v in vars(cls).items() if isinstance(v, Note)
+            }
+
+        return cls._lookup.get(note_id, f"UNKNOWN_{note_id}")
+
     UNSAFE_GIT_PROTOCOL = "Unsafe Git Protocol"
     REPO_NOT_FOUND = "Repo not found"
     REPO_EMPTY = "Repository is empty"
