@@ -14,7 +14,7 @@ import glob
 from contextlib import contextmanager
 from ..utils.map import do_map
 from .license_detection import identify_license
-from .check_url import check_url
+from .check_url import check_url, check_url_str
 from ..notes import Note
 
 one_year_ago = datetime.now() - timedelta(days=365)
@@ -150,6 +150,22 @@ def create_git_metadata(url: str) -> dict:
         return metadata
 
 
+def create_git_metadata_str(url: str) -> dict:
+    is_valid, metadata = check_url_str(url)
+    if not is_valid:
+        return metadata
+
+    with clone_repo(url) as (repo, metadata):
+        if repo is None:
+            return metadata
+        metadata.update(get_commit_metadata(repo, url))
+        license_data = get_license_type(repo, url)
+        metadata["license"] = license_data
+        metadata["py_package"] = get_pypackage_name(repo)
+
+        return metadata
+
+
 def get_commit_metadata(repo: Repo, url: str) -> dict:
     one_year_ago = datetime.now() - timedelta(days=365)
 
@@ -160,6 +176,7 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
                 for c in repo.iter_commits()
             ]
         )
+
     except ValueError as err:
         log.error(f"{url}: {err}")
         return {"error": Note.REPO_EMPTY.value}
