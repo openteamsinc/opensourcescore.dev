@@ -42,7 +42,7 @@ def get_package_data(package_name: str):
     response = s.get(url)
     if response.status_code == 404:
         log.debug(f"Skipping package not found for package {package_name}")
-        return None
+        return {"status": "not_found"}
     response.raise_for_status()  # Raise an error for bad status codes
     package_data = response.json()  # Parse the JSON response
 

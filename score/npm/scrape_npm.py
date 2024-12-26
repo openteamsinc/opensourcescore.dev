@@ -15,7 +15,7 @@ def get_npm_package_data(package_name):
 
     if res.status_code == 404:
         log.debug(f"Skipping package not found for package {package_name}")
-        return {"status": "not found"}
+        return {"status": "not_found"}
     res.raise_for_status()
     package_data = res.json()
 

@@ -30,6 +30,8 @@ class Score:
         if self.value is None:
             self.value = new_score
             return
+        if self.value == "Unknown":
+            return
 
         current_numeric_score = SCORE_ORDER.index(self.value)
         new_numeric_score = SCORE_ORDER.index(new_score)

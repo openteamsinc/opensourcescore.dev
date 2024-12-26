@@ -5,7 +5,7 @@ from cachetools import cached, TTLCache
 from .pypi.json_scraper import get_package_data as get_pypi_package_data
 from .conda.scrape_conda import get_conda_package_data
 from .npm.scrape_npm import get_npm_package_data
-from .git_vcs.scrape import create_git_metadata
+from .git_vcs.scrape import create_git_metadata_str
 
 max_age = 60 * 60
 get_pypi_package_data_cached = cached(cache=TTLCache(maxsize=2**18, ttl=max_age))(
@@ -20,7 +20,7 @@ get_npm_package_data_cached = cached(cache=TTLCache(maxsize=2**18, ttl=max_age))
 )
 
 create_git_metadata_cached = cached(cache=TTLCache(maxsize=2**18, ttl=max_age))(
-    create_git_metadata
+    create_git_metadata_str
 )
 
 
