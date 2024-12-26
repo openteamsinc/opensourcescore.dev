@@ -51,6 +51,7 @@ def pypi_score(package_name):
         "package": package_data,
         "source": source_data,
         "score": score,
+        "status": package_data.get("status", "ok"),
     }
 
 
@@ -80,6 +81,7 @@ def npm_score(package_name):
         "package": package_data,
         "source": source_data,
         "score": score,
+        "status": package_data.get("status", "ok"),
     }
 
 
