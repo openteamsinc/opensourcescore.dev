@@ -119,8 +119,9 @@ def build_score(source_url, row):
     score["packages"].extend(
         [fmt_conda(row.latest_commit, c) for c in row.conda_packages]
     )
-    score["maturity"] = build_maturity_score(source_url, row)
-    score["health_risk"] = build_health_risk_score(row).dict()
+
+    score["maturity"] = build_maturity_score(source_url, row.to_dict())
+    score["health_risk"] = build_health_risk_score(row.to_dict()).dict()
     score["timestamp"] = datetime.now()
     score["last_updated"] = row.latest_commit
 
