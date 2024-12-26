@@ -45,26 +45,27 @@ def score_python(package_data: dict, source_data: dict, score: Score):
 
 
 def build_score(source_url, source_data, package_data):
-    if source_data is None:
-        return None
+
     score: dict = {
         "source_url": source_url,
         "packages": [],
         "ecosystem_destination": {
-            "pypi": source_data.get("py_package"),
+            "pypi": source_data and source_data.get("py_package"),
             "npm": None,
             "conda": None,
         },
     }
 
     score["maturity"] = build_maturity_score(source_url, source_data)
+
     sc = build_health_risk_score(source_data)
     score_python(package_data, source_data, sc)
+
     score["health_risk"] = sc.dict_string_notes()
-    score["last_updated"] = source_data["latest_commit"]
+    score["last_updated"] = source_data.get("latest_commit")
 
     license = source_data.get("license")
-    if license:
+    if license and not license.get("error"):
         score["license"] = license["license"]
         score["license_kind"] = license["kind"]
         score["license_modified"] = license["modified"]
