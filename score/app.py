@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, Request
 from .score.app_score import build_score
+from .notes import to_dict
 from .app_utils import (
     get_conda_package_data_cached,
     get_pypi_package_data_cached,
@@ -23,6 +24,11 @@ async def add_process_time_header(request: Request, call_next):
 @app.get("/")
 async def root():
     return {"version": os.environ.get("K_REVISION", "?")}
+
+
+@app.get("/notes")
+async def notes():
+    return to_dict()
 
 
 @app.get("/pkg/pypi/{package_name}")

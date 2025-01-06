@@ -75,6 +75,14 @@ class Note(enum.Enum):
     PACKGE_SKEW_NOT_RELEASED = "Package is ahead of the source code"
 
 
+def to_dict():
+    return {
+        v.value: {"code": k, "note": v.note, "id": v.value}
+        for k, v in vars(Note).items()
+        if isinstance(v, Note)
+    }
+
+
 def to_df():
     return pd.DataFrame.from_records(
         [(k, v.value, v.note) for k, v in vars(Note).items() if isinstance(v, Note)],
