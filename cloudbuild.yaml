@@ -83,7 +83,8 @@ steps:
         "--allow-unauthenticated",
         "--revision-suffix=$SHORT_SHA",
         "--max-instances=10",
-        "--concurrency=100",
+        "--concurrency=20",
+        "--memory=2Gi",
       ]
   - name: "gcr.io/cloud-builders/gcloud"
     args:

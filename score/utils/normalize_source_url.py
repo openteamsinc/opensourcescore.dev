@@ -5,7 +5,7 @@ def normalize_source_url(url: str):
     URL = urlparse(url)
     if URL.hostname in ["github.com", "gitlab.com", "bitbucket.org"]:
         path_components = URL.path.strip("/").split("/")
-        if len(path_components) < 2:
+        if len(path_components) != 2:
             # Invalid git*.com/ URL
             return None
         org, repo = path_components
