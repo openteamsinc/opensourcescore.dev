@@ -1,4 +1,3 @@
-import pandas as pd
 from typing import List, Optional
 from dataclasses import dataclass, field
 import logging
