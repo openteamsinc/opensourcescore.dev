@@ -1,9 +1,8 @@
 import pandas as pd
-from typing import List, Optional
-from dataclasses import dataclass, field
 import logging
 
 from ..notes import Note
+from .score_type import Score
 
 log = logging.getLogger(__name__)
 
@@ -19,29 +18,6 @@ THREE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=3)
 FIVE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=5)
 
 LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
-
-
-@dataclass
-class Score:
-    value: Optional[str] = HEALTHY
-    notes: List[int] = field(default_factory=list)
-
-    def limit(self, new_score: str):
-        if self.value is None:
-            self.value = new_score
-            return
-        if self.value == "Unknown":
-            return
-
-        current_numeric_score = SCORE_ORDER.index(self.value)
-        new_numeric_score = SCORE_ORDER.index(new_score)
-        self.value = SCORE_ORDER[max(current_numeric_score, new_numeric_score)]
-
-    def dict(self):
-        return {"value": self.value, "notes": self.notes}
-
-    def dict_string_notes(self):
-        return {"value": self.value, "notes": [Note.lookup(n) for n in self.notes]}
 
 
 def score_contributors(git_info: dict, score: Score):
@@ -63,30 +39,6 @@ def score_contributors(git_info: dict, score: Score):
     if latest_commit < FIVE_YEARS_AGO:
         score.limit(HIGH_RISK)
         score.notes.append(Note.LAST_COMMIT_5_YEARS.value)
-
-
-def score_license(git_info: dict, score: Score):
-    license = git_info.get("license", {})
-    license_kind = license.get("kind")
-    modified = license.get("modified")
-
-    if license.get("error"):
-        score.limit(MODERATE_RISK)
-        note = license.get("error", Note.NO_LICENSE_INFO.value)
-        score.notes.append(note)
-
-    elif not license_kind or license_kind == "Unknown":
-        score.limit(MODERATE_RISK)
-        note = license.get("error", Note.NO_OS_LICENSE.value)
-        score.notes.append(note)
-
-    if license_kind in LESS_PERMISSIVE_LICENSES:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.LESS_PERMISSIVE_LICENSE.value)
-
-    if modified:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.LICENSE_MODIFIED.value)
 
 
 def score_python(git_info: dict, score: Score):
@@ -124,7 +76,6 @@ def build_health_risk_score(git_info: dict) -> Score:
         score.notes.append(Note.NO_COMMITS.value)
         return score
 
-    score_license(git_info, score)
     score_contributors(git_info, score)
     # score_python(git_info, score)
 

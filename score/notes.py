@@ -1,6 +1,12 @@
 import enum
 import pandas as pd
 
+HEALTHY = "Healthy"
+CAUTION_NEEDED = "Caution Needed"
+MODERATE_RISK = "Moderate Risk"
+HIGH_RISK = "High Risk"
+SCORE_ORDER = [HEALTHY, CAUTION_NEEDED, MODERATE_RISK, HIGH_RISK]
+
 
 class Note(enum.Enum):
 
