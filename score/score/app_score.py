@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from .score import safe_date_diff
 from .maturity import build_maturity_score
+from .legal import build_legal_score
 from .health_risk import (
     build_health_risk_score,
     Score,
@@ -58,11 +59,14 @@ def build_score(source_url, source_data, package_data):
 
     score["maturity"] = build_maturity_score(source_url, source_data)
 
-    sc = build_health_risk_score(source_data)
-    score_python(package_data, source_data, sc)
+    health_score = build_health_risk_score(source_data)
+    score_python(package_data, source_data, health_score)
 
-    score["health_risk"] = sc.dict_string_notes()
+    score["health_risk"] = health_score.dict_string_notes()
     score["last_updated"] = source_data.get("latest_commit")
+
+    legal_score = build_legal_score(source_data)
+    score["legal"] = legal_score.dict_string_notes()
 
     license = source_data.get("license")
     if license and not license.get("error"):
