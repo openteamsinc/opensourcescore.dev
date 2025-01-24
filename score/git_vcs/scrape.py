@@ -49,21 +49,21 @@ def clone_repo(url):
             yield repo, {"source_url": url}
         except UnsafeProtocolError:
             yield None, {
-                "error": Note.UNSAFE_GIT_PROTOCOL.value,
+                "error": Note.UNSAFE_GIT_PROTOCOL,
                 "source_url": url,
             }
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr.lower():
-                yield None, {"error": Note.REPO_NOT_FOUND.value, "source_url": url}
+                yield None, {"error": Note.REPO_NOT_FOUND, "source_url": url}
             elif err.status == -9 and "timeout:" in err.stderr.lower():
                 yield None, {
-                    "error": Note.GIT_TIMEOUT.value,
+                    "error": Note.GIT_TIMEOUT,
                     "source_url": url,
                 }
 
             else:
                 log.error(f"{url}: {err.stderr}")
-                yield None, {"error": Note.OTHER_GIT_ERROR.value, "source_url": url}
+                yield None, {"error": Note.OTHER_GIT_ERROR, "source_url": url}
 
         return
 
@@ -209,7 +209,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
         repo.git.checkout(repo.active_branch, "--", "LICENSE*")
     except GitCommandError as e:
         log.error(f"{url}: Could not checkout license file: {e.stderr}")
-        return {"error": Note.LICENSE_CHECKOUT_ERROR.value}
+        return {"error": Note.LICENSE_CHECKOUT_ERROR}
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
     paths = ["LICENSE", "LICENSE.txt", "LICENSE.md", "LICENSE.rst"]
@@ -221,7 +221,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
             break
 
     if not license_file_path:
-        return {"error": Note.NO_LICENSE.value}
+        return {"error": Note.NO_LICENSE}
 
     # Read and return the license type
     with open(license_file_path, encoding="utf8", errors="ignore") as license_file:

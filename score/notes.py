@@ -7,6 +7,13 @@ MODERATE_RISK = "Moderate Risk"
 HIGH_RISK = "High Risk"
 SCORE_ORDER = [HEALTHY, CAUTION_NEEDED, MODERATE_RISK, HIGH_RISK]
 
+LEGACY = "Legacy"
+UNKNOWN = "Unknown"
+PLACEHOLDER = "Placeholder"
+
+
+EXPERIMENTAL = "Experimental"
+
 
 class Note(enum.Enum):
 
@@ -16,8 +23,11 @@ class Note(enum.Enum):
         obj._value_ = value
         return obj
 
-    def __init__(self, note):
-        self.note = note
+    def __init__(self, *dd):
+        print("dd", dd)
+        category, description = dd
+        self.description = description
+        self.category = category
 
     @classmethod
     def lookup(cls, note_id):
@@ -30,60 +40,83 @@ class Note(enum.Enum):
 
         return cls._lookup.get(note_id, f"UNKNOWN_{note_id}")
 
-    UNSAFE_GIT_PROTOCOL = "Unsafe Git Protocol"
-    REPO_NOT_FOUND = "Repo not found"
-    REPO_EMPTY = "Repository is empty"
-    GIT_TIMEOUT = "Could not clone repo in a reasonable amount of time"
-    OTHER_GIT_ERROR = "Could not clone repo"
-    LICENSE_CHECKOUT_ERROR = "Could not checkout license"
-    NO_LICENSE = "No License Found"
-    NO_LICENSE_INFO = "Could not retrieve licence information"
-    NO_OS_LICENSE = "Could not detect open source license"
+    UNSAFE_GIT_PROTOCOL = UNKNOWN, "Unsafe Git Protocol"
+    REPO_NOT_FOUND = MODERATE_RISK, "Repo not found"
+    REPO_EMPTY = PLACEHOLDER, "Repository is empty"
+    GIT_TIMEOUT = UNKNOWN, "Could not clone repo in a reasonable amount of time"
+    OTHER_GIT_ERROR = UNKNOWN, "Could not clone repo"
+    LICENSE_CHECKOUT_ERROR = MODERATE_RISK, "Could not checkout license"
+    NO_LICENSE = MODERATE_RISK, "No License Found"
+    NO_LICENSE_INFO = MODERATE_RISK, "Could not retrieve licence information"
+    NO_OS_LICENSE = MODERATE_RISK, "Could not detect open source license"
     LESS_PERMISSIVE_LICENSE = (
-        "License may have usage restrictions. Review terms before implementation"
+        CAUTION_NEEDED,
+        "License may have usage restrictions. Review terms before implementation",
     )
-    LICENSE_MODIFIED = "License may have been modified from the original"
+    LICENSE_MODIFIED = (
+        CAUTION_NEEDED,
+        "License may have been modified from the original",
+    )
 
-    INSECURE_CONNECTION = "Source code scheme 'http://' is not secure"
-    LOCALHOST_URL = "Source code location is a localhost url"
-    INVALID_URL = "Source code location is not a valid url"
+    INSECURE_CONNECTION = UNKNOWN, "Source code scheme 'http://' is not secure"
+    LOCALHOST_URL = UNKNOWN, "Source code location is a localhost url"
+    INVALID_URL = UNKNOWN, "Source code location is not a valid url"
 
     FEW_MAX_MONTHLY_AUTHORS = (
-        "Few authors have contributed to this repository in a single month"
+        CAUTION_NEEDED,
+        "Few authors have contributed to this repository in a single month",
     )
 
-    NO_AUTHORS_THIS_YEAR = "No one has contributed to this repository in the last year"
+    NO_AUTHORS_THIS_YEAR = (
+        CAUTION_NEEDED,
+        "No one has contributed to this repository in the last year",
+    )
     ONE_AUTHORS_THIS_YEAR = (
-        "Only one author has contributed to this repository in the last year"
+        CAUTION_NEEDED,
+        "Only one author has contributed to this repository in the last year",
     )
 
-    LAST_COMMIT_5_YEARS = "The last commit to source control was over 5 years ago"
+    LAST_COMMIT_5_YEARS = (
+        HIGH_RISK,
+        "The last commit to source control was over 5 years ago",
+    )
 
     NO_PROJECT_NAME = (
-        "Could not confirm the published package name from the source code"
+        CAUTION_NEEDED,
+        "Could not confirm the published package name from the source code",
     )
     PROJECT_NOT_PUBLISHED = (
-        "The Python package name from the source code is not a published package"
+        CAUTION_NEEDED,
+        "The Python package name from the source code is not a published package",
     )
 
     PACKAGE_NAME_MISMATCH = (
-        "published package has a different name than specified in the source code"
+        HIGH_RISK,
+        "published package has a different name than specified in the source code",
     )
 
-    NO_COMMITS = "There are no human commits in this repository"
+    NO_COMMITS = PLACEHOLDER, "There are no human commits in this repository"
 
-    FIRST_COMMIT_THIS_YEAR = "First commit in the last year"
+    FIRST_COMMIT_THIS_YEAR = EXPERIMENTAL, "First commit in the last year"
 
-    LAST_COMMIT_OVER_A_YEAR = "The last commit was over a year ago"
+    LAST_COMMIT_OVER_A_YEAR = LEGACY, "The last commit was over a year ago"
 
-    PACKGE_SKEW_NOT_UPDATED = "Package is out of sync with the source code"
+    PACKGE_SKEW_NOT_UPDATED = (
+        MODERATE_RISK,
+        "Package is out of sync with the source code",
+    )
 
-    PACKGE_SKEW_NOT_RELEASED = "Package is ahead of the source code"
+    PACKGE_SKEW_NOT_RELEASED = MODERATE_RISK, "Package is ahead of the source code"
 
 
 def to_dict():
     return {
-        v.value: {"code": k, "note": v.note, "id": v.value}
+        v.value: {
+            "code": k,
+            "category": v.category,
+            "description": v.description,
+            "id": v.value,
+        }
         for k, v in vars(Note).items()
         if isinstance(v, Note)
     }
@@ -91,6 +124,10 @@ def to_dict():
 
 def to_df():
     return pd.DataFrame.from_records(
-        [(k, v.value, v.note) for k, v in vars(Note).items() if isinstance(v, Note)],
-        columns=["code", "id", "note"],
+        [
+            (k, v.value, v.category, v.description)
+            for k, v in vars(Note).items()
+            if isinstance(v, Note)
+        ],
+        columns=["code", "id", "category", "description"],
     ).set_index("id")

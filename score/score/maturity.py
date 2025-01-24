@@ -13,21 +13,26 @@ def build_maturity_score(source_url: str, git_info: dict):
     #     return score
 
     if git_info.get("error") and not pd.isna(git_info["error"]):
-        score["value"] = "Unknown"
-        score["notes"].append(git_info["error"])
+        note = git_info["error"]
+        score["value"] = note.category
+        score["notes"].append(note.name)
         return score
 
     if not git_info.get("first_commit") or pd.isnull(git_info["first_commit"]):
-        score["value"] = "Placeholder"
-        score["notes"].append(Note.NO_COMMITS.name)
+        note = Note.NO_COMMITS
+        score["value"] = note.category
+        score["notes"].append(note.name)
+
         return score
 
     if git_info["latest_commit"] < one_year_ago:
-        score["value"] = "Legacy"
-        score["notes"].append(Note.LAST_COMMIT_OVER_A_YEAR.name)
+        note = Note.LAST_COMMIT_OVER_A_YEAR
+        score["value"] = note.category
+        score["notes"].append(note.name)
 
     if git_info["first_commit"] > one_year_ago:
-        score["value"] = "Experimental"
-        score["notes"].append(Note.FIRST_COMMIT_THIS_YEAR.name)
+        note = Note.FIRST_COMMIT_THIS_YEAR
+        score["value"] = note.category
+        score["notes"].append(note.name)
 
     return score

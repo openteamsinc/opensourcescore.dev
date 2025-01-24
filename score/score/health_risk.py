@@ -26,19 +26,15 @@ def score_contributors(git_info: dict, score: Score):
     latest_commit = git_info["latest_commit"]
 
     if mma_count < 3:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.FEW_MAX_MONTHLY_AUTHORS.value)
+        score.add_note(Note.FEW_MAX_MONTHLY_AUTHORS)
 
     if recent_count < 1:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.NO_AUTHORS_THIS_YEAR.value)
+        score.add_note(Note.NO_AUTHORS_THIS_YEAR)
     elif recent_count < 2:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.ONE_AUTHORS_THIS_YEAR.value)
+        score.add_note(Note.ONE_AUTHORS_THIS_YEAR)
 
     if latest_commit < FIVE_YEARS_AGO:
-        score.limit(HIGH_RISK)
-        score.notes.append(Note.LAST_COMMIT_5_YEARS.value)
+        score.add_note(Note.LAST_COMMIT_5_YEARS)
 
 
 def score_python(git_info: dict, score: Score):
@@ -50,15 +46,13 @@ def score_python(git_info: dict, score: Score):
         return
 
     if not expected_name:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.NO_PROJECT_NAME.value)
+        score.add_note(Note.NO_PROJECT_NAME)
         return
 
     have_package_names = [p["name"] for p in packages]
 
     if expected_name not in have_package_names:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.PROJECT_NOT_PUBLISHED.value)
+        score.add_note(Note.PROJECT_NOT_PUBLISHED)
 
     return
 
@@ -67,13 +61,12 @@ def build_health_risk_score(git_info: dict) -> Score:
     score = Score()
 
     if git_info.get("error") and not pd.isna(git_info["error"]):
-        score.value = "Unknown"
-        score.notes.append(git_info["error"])
+
+        score.add_note(git_info["error"])
         return score
 
     if not git_info.get("first_commit") or pd.isnull(git_info["first_commit"]):
-        score.value = "Placeholder"
-        score.notes.append(Note.NO_COMMITS.value)
+        score.add_note(Note.NO_COMMITS)
         return score
 
     score_contributors(git_info, score)

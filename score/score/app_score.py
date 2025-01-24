@@ -6,9 +6,6 @@ from .legal import build_legal_score
 from .health_risk import (
     build_health_risk_score,
     Score,
-    CAUTION_NEEDED,
-    HIGH_RISK,
-    MODERATE_RISK,
 )
 from ..notes import Note
 
@@ -22,25 +19,21 @@ def score_python(package_data: dict, source_data: dict, score: Score):
     actual_name = package_data.get("name")
 
     if not expected_name:
-        score.limit(CAUTION_NEEDED)
-        score.notes.append(Note.NO_PROJECT_NAME.value)
+        score.add_note(Note.NO_PROJECT_NAME)
         return
 
     if expected_name != actual_name:
-        score.limit(HIGH_RISK)
-        score.notes.append(Note.PACKAGE_NAME_MISMATCH.value)
+        score.add_note(Note.PACKAGE_NAME_MISMATCH)
 
     one_year = timedelta(days=365)
     skew = safe_date_diff(
         source_data.get("latest_commit"), package_data.get("release_date")
     )
     if skew and skew > one_year:
-        score.limit(MODERATE_RISK)
-        score.notes.append(Note.PACKGE_SKEW_NOT_UPDATED.value)
+        score.add_note(Note.PACKGE_SKEW_NOT_UPDATED)
 
     if skew and skew < -one_year:
-        score.limit(MODERATE_RISK)
-        score.notes.append(Note.PACKGE_SKEW_NOT_RELEASED.value)
+        score.add_note(Note.PACKGE_SKEW_NOT_RELEASED)
 
     return
 

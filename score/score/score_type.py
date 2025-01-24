@@ -29,8 +29,13 @@ class Score:
         new_numeric_score = SCORE_ORDER.index(new_score)
         self.value = SCORE_ORDER[max(current_numeric_score, new_numeric_score)]
 
+    def add_note(self, note: Note):
+        assert isinstance(note, Note), f"Note must be an instance of Note, got {note}"
+        self.limit(note.category)
+        self.notes.append(note)
+
     def dict(self):
-        return {"value": self.value, "notes": self.notes}
+        return {"value": self.value, "notes": [n.value for n in self.notes]}
 
     def dict_string_notes(self):
-        return {"value": self.value, "notes": [Note.lookup(n) for n in self.notes]}
+        return {"value": self.value, "notes": [n.name for n in self.notes]}

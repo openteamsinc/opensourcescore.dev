@@ -24,29 +24,29 @@ def check_url(url: str) -> Tuple[bool, dict]:
     if URL.scheme == "http":
         return False, {
             "source_url": url,
-            "error": Note.INSECURE_CONNECTION.value,
+            "error": Note.INSECURE_CONNECTION,
         }
 
     if URL.hostname == "localhost":
         return False, {
             "source_url": url,
-            "error": Note.LOCALHOST_URL.value,
+            "error": Note.LOCALHOST_URL,
         }
     if not is_valid_hostname(URL.hostname):
         return False, {
             "source_url": url,
-            "error": Note.INVALID_URL.value,
+            "error": Note.INVALID_URL,
         }
 
     if URL.hostname.startswith("127."):  # type: ignore
         return False, {
             "source_url": url,
-            "error": Note.LOCALHOST_URL.value,
+            "error": Note.LOCALHOST_URL,
         }
 
     return False, {
         "source_url": url,
-        "error": Note.INVALID_URL.value,
+        "error": Note.INVALID_URL,
     }
 
 
@@ -59,27 +59,27 @@ def check_url_str(url: str) -> Tuple[bool, dict]:
     if URL.scheme == "http":
         return False, {
             "source_url": url,
-            "error": Note.INSECURE_CONNECTION.name,
+            "error": Note.INSECURE_CONNECTION,
         }
 
     if URL.hostname == "localhost":
         return False, {
             "source_url": url,
-            "error": Note.LOCALHOST_URL.name,
+            "error": Note.LOCALHOST_URL,
         }
     if not is_valid_hostname(URL.hostname):
         return False, {
             "source_url": url,
-            "error": Note.INVALID_URL.name,
+            "error": Note.INVALID_URL,
         }
 
     if URL.hostname.startswith("127."):  # type: ignore
         return False, {
             "source_url": url,
-            "error": Note.LOCALHOST_URL.name,
+            "error": Note.LOCALHOST_URL,
         }
 
     return False, {
         "source_url": url,
-        "error": Note.INVALID_URL.name,
+        "error": Note.INVALID_URL,
     }
