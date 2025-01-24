@@ -12,10 +12,8 @@ def score_license(git_info: dict, score: Score):
     license_kind = license.get("kind")
     modified = license.get("modified")
 
-    if license.get("error"):
-        # score.limit(MODERATE_RISK)
-        note = license.get("error", Note.NO_LICENSE_INFO)
-        # score.notes.append(note)
+    if git_info.get("error") and not pd.isna(git_info["error"]):
+        note = license[Note.NO_LICENSE_INFO]
         score.add_note(note)
 
     elif not license_kind or license_kind == "Unknown":
@@ -23,13 +21,9 @@ def score_license(git_info: dict, score: Score):
 
     if license_kind in LESS_PERMISSIVE_LICENSES:
         score.add_note(Note.LESS_PERMISSIVE_LICENSE)
-        # score.limit(CAUTION_NEEDED)
-        # score.notes.append(Note.LESS_PERMISSIVE_LICENSE.value)
 
     if modified:
         score.add_note(Note.LICENSE_MODIFIED)
-        # score.limit(CAUTION_NEEDED)
-        # score.notes.append(Note.LICENSE_MODIFIED.value)
 
 
 def build_legal_score(git_info: dict) -> Score:
