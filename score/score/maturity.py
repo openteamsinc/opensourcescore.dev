@@ -1,17 +1,11 @@
 import pandas as pd
-from ..notes import Note
+from ..notes import Note, MATURE
 
 one_year_ago = pd.Timestamp.now() - pd.DateOffset(years=1)
 
 
 def build_maturity_score(source_url: str, git_info: dict):
-    score = {"value": "Mature", "notes": []}
-
-    # if git_info is None:
-    #     score["value"] = "Unknown"
-    #     score["notes"].append(git_info["error"])
-    #     return score
-
+    score = {"value": MATURE, "notes": []}
     if git_info.get("error") and not pd.isna(git_info["error"]):
         note = git_info["error"]
         score["value"] = note.category

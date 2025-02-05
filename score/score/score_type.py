@@ -2,15 +2,9 @@ from typing import List, Optional
 from dataclasses import dataclass, field
 import logging
 
-from ..notes import Note
+from ..notes import Note, SCORE_ORDER, HEALTHY
 
 log = logging.getLogger(__name__)
-
-HEALTHY = "Healthy"
-CAUTION_NEEDED = "Caution Needed"
-MODERATE_RISK = "Moderate Risk"
-HIGH_RISK = "High Risk"
-SCORE_ORDER = [HEALTHY, CAUTION_NEEDED, MODERATE_RISK, HIGH_RISK]
 
 
 @dataclass

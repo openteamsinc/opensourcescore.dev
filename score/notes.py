@@ -5,14 +5,42 @@ HEALTHY = "Healthy"
 CAUTION_NEEDED = "Caution Needed"
 MODERATE_RISK = "Moderate Risk"
 HIGH_RISK = "High Risk"
-SCORE_ORDER = [HEALTHY, CAUTION_NEEDED, MODERATE_RISK, HIGH_RISK]
 
 LEGACY = "Legacy"
 UNKNOWN = "Unknown"
 PLACEHOLDER = "Placeholder"
-
+MATURE = "Mature"
 
 EXPERIMENTAL = "Experimental"
+
+RISKS = [
+    HEALTHY,
+    CAUTION_NEEDED,
+    MODERATE_RISK,
+    HIGH_RISK,
+]
+
+GROUPS = {
+    "Health": RISKS,
+    "Legal": RISKS,
+    "Maturuty": [
+        HEALTHY,
+        CAUTION_NEEDED,
+        MODERATE_RISK,
+        HIGH_RISK,
+    ],
+}
+SCORE_ORDER = [
+    HEALTHY,
+    MATURE,
+    CAUTION_NEEDED,
+    MODERATE_RISK,
+    HIGH_RISK,
+    EXPERIMENTAL,
+    LEGACY,
+    UNKNOWN,
+    PLACEHOLDER,
+]
 
 
 class Note(enum.Enum):
@@ -24,7 +52,7 @@ class Note(enum.Enum):
         return obj
 
     def __init__(self, *dd):
-        print("dd", dd)
+
         category, description = dd
         self.description = description
         self.category = category
@@ -32,8 +60,7 @@ class Note(enum.Enum):
     @classmethod
     def lookup(cls, note_id):
         if not hasattr(cls, "_lookup"):
-            # for k, v in vars(cls).items():
-            #     print(k, v)
+
             cls._lookup = {
                 v.value: k for k, v in vars(cls).items() if isinstance(v, Note)
             }
@@ -103,10 +130,13 @@ class Note(enum.Enum):
 
     PACKGE_SKEW_NOT_UPDATED = (
         MODERATE_RISK,
-        "Package is out of sync with the source code",
+        "Package is at least a year behind the the source code",
     )
 
-    PACKGE_SKEW_NOT_RELEASED = MODERATE_RISK, "Package is ahead of the source code"
+    PACKGE_SKEW_NOT_RELEASED = (
+        MODERATE_RISK,
+        "Package is at least a year ahead of the source code",
+    )
 
 
 def to_dict():

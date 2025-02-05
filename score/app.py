@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Request
 from .score.app_score import build_score
-from .notes import to_dict
+from .notes import SCORE_ORDER, GROUPS, to_dict
 from .app_utils import (
     get_conda_package_data_cached,
     get_pypi_package_data_cached,
@@ -29,6 +29,15 @@ async def root():
 @app.get("/notes")
 async def notes():
     return to_dict()
+
+
+@app.get("/notes/categories")
+async def category_notes():
+    return {
+        "notes": {v["code"]: v for k, v in to_dict().items()},
+        "categories": list(SCORE_ORDER),
+        "groups": GROUPS,
+    }
 
 
 @app.get("/pkg/pypi/{package_name}")
