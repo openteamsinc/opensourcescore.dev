@@ -55,6 +55,13 @@ def safe_date_diff(a, b) -> Optional[pd.Timedelta]:
         return None
     if pd.isnull(b):
         return None
+
+    # Convert timezone-naive datetimes to UTC
+    if a.tzinfo is None:
+        a = pd.to_datetime(a).tz_localize("UTC")
+    if b.tzinfo is None:
+        b = pd.to_datetime(b).tz_localize("UTC")
+
     return a - b
 
 

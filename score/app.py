@@ -53,9 +53,7 @@ def pypi_score(package_name):
 
     source_url = package_data.get("source_url")
     source_data = None
-    print("package_data", package_data)
     if source_url:
-        print("fetch source")
         source_data = create_git_metadata_cached(source_url)
         source_data = convert_numpy_types(source_data)
 
@@ -83,9 +81,7 @@ def npm_score(package_name):
 
     source_url = package_data.get("source_url")
     source_data = None
-    print("package_data", package_data)
     if source_url:
-        print("fetch source")
         source_data = create_git_metadata_cached(source_url)
         source_data = convert_numpy_types(source_data)
 
@@ -108,6 +104,27 @@ def conda(channel, package_name):
         "channel": channel,
         "package_name": package_name,
         "data": data,
+    }
+
+
+@app.get("/score/conda/{channel}/{package_name}")
+def conda_score(channel, package_name):
+    package_data = get_conda_package_data_cached(channel, package_name)
+
+    source_url = package_data.get("source_url")
+    source_data = None
+    if source_url:
+        source_data = create_git_metadata_cached(source_url)
+        source_data = convert_numpy_types(source_data)
+
+    score = build_score(source_url, source_data, package_data)
+    return {
+        "ecosystem": "conda",
+        "package_name": package_name,
+        "package": package_data,
+        "source": source_data,
+        "score": score,
+        "status": package_data.get("status", "ok"),
     }
 
 
