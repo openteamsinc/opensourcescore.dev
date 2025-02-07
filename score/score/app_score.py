@@ -49,6 +49,9 @@ def build_score(source_url, source_data, package_data):
             "conda": None,
         },
     }
+    if source_data is None:
+        score["status"] = "not_found"
+        return score
 
     score["maturity"] = build_maturity_score(source_url, source_data)
 

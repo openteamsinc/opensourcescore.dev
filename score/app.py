@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
 from .app_utils import (
@@ -93,6 +93,14 @@ def npm_score(package_name):
         "source": source_data,
         "score": score,
         "status": package_data.get("status", "ok"),
+    }
+
+
+@app.get("/score/{ecosystem}/{package_name:path}", status_code=404)
+def invalid_ecosystem(ecosystem):
+    return {
+        "detail": f"Ecosystem {ecosystem} not supported",
+        "error": "invalid_ecosystem",
     }
 
 
