@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
 from .app_utils import (
