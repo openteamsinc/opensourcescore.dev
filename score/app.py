@@ -96,14 +96,6 @@ def npm_score(package_name):
     }
 
 
-@app.get("/score/{ecosystem}/{package_name:path}", status_code=404)
-def invalid_ecosystem(ecosystem):
-    return {
-        "detail": f"Ecosystem {ecosystem} not supported",
-        "error": "invalid_ecosystem",
-    }
-
-
 @app.get("/pkg/conda/{channel}/{package_name}")
 def conda(channel, package_name):
     data = get_conda_package_data_cached(channel, package_name)
@@ -141,3 +133,11 @@ def git(source_url):
     data = create_git_metadata_cached(source_url)
     data = convert_numpy_types(data)
     return {"source_url": source_url, "data": data}
+
+
+@app.get("/score/{ecosystem}/{package_name:path}", status_code=404)
+def invalid_ecosystem(ecosystem):
+    return {
+        "detail": f"Ecosystem {ecosystem} not supported",
+        "error": "invalid_ecosystem",
+    }
