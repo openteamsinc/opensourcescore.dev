@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from fastapi import FastAPI, Request
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
@@ -48,10 +49,11 @@ def pypi(package_name):
 
 
 @app.get("/score/pypi/{package_name}")
-def pypi_score(package_name):
+def pypi_score(package_name, source_url: Optional[str] = None):
     package_data = get_pypi_package_data_cached(package_name)
 
-    source_url = package_data.get("source_url")
+    if source_url is None:
+        source_url = package_data.get("source_url")
     source_data = None
     if source_url:
         source_data = create_git_metadata_cached(source_url)
@@ -76,10 +78,11 @@ def npm(package_name):
 
 
 @app.get("/score/npm/{package_name}")
-def npm_score(package_name):
+def npm_score(package_name, source_url: Optional[str] = None):
     package_data = get_npm_package_data_cached(package_name)
 
-    source_url = package_data.get("source_url")
+    if source_url is None:
+        source_url = package_data.get("source_url")
     source_data = None
     if source_url:
         source_data = create_git_metadata_cached(source_url)
@@ -108,10 +111,11 @@ def conda(channel, package_name):
 
 
 @app.get("/score/conda/{channel}/{package_name}")
-def conda_score(channel, package_name):
+def conda_score(channel, package_name, source_url: Optional[str] = None):
     package_data = get_conda_package_data_cached(channel, package_name)
 
-    source_url = package_data.get("source_url")
+    if source_url is None:
+        source_url = package_data.get("source_url")
     source_data = None
     if source_url:
         source_data = create_git_metadata_cached(source_url)
