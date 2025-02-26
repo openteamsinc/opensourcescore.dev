@@ -76,7 +76,7 @@ def get_package_data(package_name: str):
 
 
 def extract_source_url(
-    project_urls: Dict[str, str]
+    project_urls: Dict[str, str],
 ) -> Tuple[Optional[str], Optional[str]]:
     if not project_urls:
         return None, None
