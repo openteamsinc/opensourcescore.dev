@@ -52,7 +52,7 @@ def pypi(package_name):
 def pypi_score(package_name, source_url: Optional[str] = None):
     package_data = get_pypi_package_data_cached(package_name)
 
-    if source_url is None:
+    if not source_url:
         source_url = package_data.get("source_url")
     source_data = None
     if source_url:
@@ -81,7 +81,7 @@ def npm(package_name):
 def npm_score(package_name, source_url: Optional[str] = None):
     package_data = get_npm_package_data_cached(package_name)
 
-    if source_url is None:
+    if not source_url:
         source_url = package_data.get("source_url")
     source_data = None
     if source_url:
@@ -114,7 +114,7 @@ def conda(channel, package_name):
 def conda_score(channel, package_name, source_url: Optional[str] = None):
     package_data = get_conda_package_data_cached(channel, package_name)
 
-    if source_url is None:
+    if not source_url:
         source_url = package_data.get("source_url")
     source_data = None
     if source_url:

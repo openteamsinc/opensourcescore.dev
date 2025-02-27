@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Union
 from pathlib import Path
 from functools import lru_cache
 from strsimpy import SorensenDice
@@ -116,13 +117,19 @@ PROBABLY_NOT = 0.9
 
 def identify_license(license_content: str) -> dict:
 
+    license_content_without_copyright = "".join(
+        [line for line in license_content.splitlines() if not copyright_line(line)]
+    )
+
     sd = SorensenDice()
     similarities = []
     for license_name, ref_license in get_all_licenses().items():
         similarities.append(
             {
                 "name": license_name,
-                "similarity": sd.similarity(license_content.strip(), ref_license),
+                "similarity": sd.similarity(
+                    license_content_without_copyright.strip(), ref_license
+                ),
             }
         )
     similarities = pd.DataFrame(similarities).set_index("name")
@@ -152,12 +159,22 @@ def identify_license(license_content: str) -> dict:
 license_dir = Path(__file__).parent / "licenses"
 
 
+def copyright_line(line: Union[bytes | str]):
+    copyright = b"copyright" if isinstance(line, bytes) else "copyright"
+    if line.strip().lower().startswith(copyright):
+        return True
+    return False
+
+
 @lru_cache
 def get_all_licenses():
     licenses = {}
     for license_file in license_dir.glob("*"):
         with open(license_file, "rb") as f:
-            data = f.read()
+            lines = f.readlines()
+            lines = [line for line in lines if not copyright_line(line)]
+            data = b"".join(lines)
+
         data = data.decode(errors="ignore")
         licenses[license_file.name] = data.strip()
     return licenses
