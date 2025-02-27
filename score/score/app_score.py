@@ -1,5 +1,5 @@
 from datetime import timedelta
-
+import re
 from .score import safe_date_diff
 from .maturity import build_maturity_score
 from .legal import build_legal_score
@@ -10,13 +10,20 @@ from .health_risk import (
 from ..notes import Note
 
 
+def pypi_normalize(name):
+    if not name:
+        return None
+
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
 def score_python(package_data: dict, source_data: dict, score: Score):
 
     if not package_data:
         return
 
-    expected_name = source_data.get("py_package")
-    actual_name = package_data.get("name")
+    expected_name = pypi_normalize(source_data.get("py_package"))
+    actual_name = pypi_normalize(package_data.get("name"))
 
     if not expected_name:
         score.add_note(Note.NO_PROJECT_NAME)
