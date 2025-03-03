@@ -10,6 +10,6 @@ duckdb~=1.2.0
 cvss==3.4
 GitPython~=3.1.44
 strsimpy~=0.2.1
-google-cloud-bigquery==3.29.0
+google-cloud-bigquery==3.30.0
 toml~=0.10.2
-fastapi[standard]~=0.115.8
+fastapi[standard]~=0.115.11
