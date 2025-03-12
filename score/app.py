@@ -18,21 +18,33 @@ app = FastAPI()
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
+    rev = os.environ.get("K_REVISION", "?")
     response.headers["Cache-control"] = f"max-age={max_age}, public"
+    response.headers["Content-Language"] = "en-US"
+    response.headers["App"] = f"opensourcescore.dev {rev}"
     return response
 
 
 @app.get("/")
 async def root():
-    return {"version": os.environ.get("K_REVISION", "?")}
+    rev = os.environ.get("K_REVISION", "?")
+    commit = rev.rsplit("-", 1)[-1]
+    return {
+        "version": rev,
+        "html_docs_url": "https://opensourcescore.dev/docs",
+        "source_code_url": f"https://github.com/openteamsinc/opensourcescore.dev/commit/{commit}",
+    }
 
 
-@app.get("/notes")
+@app.get("/notes", tags=["notes"], summary="depricated")
 async def notes():
+    "depricated"
     return to_dict()
 
 
-@app.get("/notes/categories")
+@app.get(
+    "/notes/categories", tags=["notes"], summary="Return notes in a dictionary format"
+)
 async def category_notes():
     return {
         "notes": {v["code"]: v for k, v in to_dict().items()},
@@ -41,14 +53,18 @@ async def category_notes():
     }
 
 
-@app.get("/pkg/pypi/{package_name}")
+@app.get("/pkg/pypi/{package_name}", tags=["pkg", "pypi"])
 def pypi(package_name):
     data = get_pypi_package_data_cached(package_name)
 
     return {"ecosystem": "pypi", "package_name": package_name, "data": data}
 
 
-@app.get("/score/pypi/{package_name}")
+@app.get(
+    "/score/pypi/{package_name}",
+    tags=["score", "pypi"],
+    summary="get the score for a pypi package",
+)
 def pypi_score(package_name, source_url: Optional[str] = None):
     package_data = get_pypi_package_data_cached(package_name)
 
@@ -70,14 +86,18 @@ def pypi_score(package_name, source_url: Optional[str] = None):
     }
 
 
-@app.get("/pkg/npm/{package_name}")
+@app.get("/pkg/npm/{package_name}", tags=["pkg", "npm"])
 def npm(package_name):
     data = get_npm_package_data_cached(package_name)
 
     return {"ecosystem": "pypi", "package_name": package_name, "data": data}
 
 
-@app.get("/score/npm/{package_name}")
+@app.get(
+    "/score/npm/{package_name}",
+    tags=["score", "npm"],
+    summary="get the score for an npm package",
+)
 def npm_score(package_name, source_url: Optional[str] = None):
     package_data = get_npm_package_data_cached(package_name)
 
@@ -99,7 +119,7 @@ def npm_score(package_name, source_url: Optional[str] = None):
     }
 
 
-@app.get("/pkg/conda/{channel}/{package_name}")
+@app.get("/pkg/conda/{channel}/{package_name}", tags=["pkg", "conda"])
 def conda(channel, package_name):
     data = get_conda_package_data_cached(channel, package_name)
     return {
@@ -110,7 +130,11 @@ def conda(channel, package_name):
     }
 
 
-@app.get("/score/conda/{channel}/{package_name}")
+@app.get(
+    "/score/conda/{channel}/{package_name}",
+    tags=["score", "conda"],
+    summary="get the score for a conda package",
+)
 def conda_score(channel, package_name, source_url: Optional[str] = None):
     package_data = get_conda_package_data_cached(channel, package_name)
 
@@ -132,14 +156,19 @@ def conda_score(channel, package_name, source_url: Optional[str] = None):
     }
 
 
-@app.get("/source/git/{source_url:path}")
+@app.get("/source/git/{source_url:path}", tags=["source", "git"])
 def git(source_url):
     data = create_git_metadata_cached(source_url)
     data = convert_numpy_types(data)
     return {"source_url": source_url, "data": data}
 
 
-@app.get("/score/{ecosystem}/{package_name:path}", status_code=404)
+@app.get(
+    "/score/{ecosystem}/{package_name:path}",
+    status_code=404,
+    tags=["score", "errors"],
+    summary="Return 404 error for unsupported ecosystem",
+)
 def invalid_ecosystem(ecosystem):
     return {
         "detail": f"Ecosystem {ecosystem} not supported",
