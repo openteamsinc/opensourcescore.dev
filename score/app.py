@@ -22,11 +22,11 @@ app = FastAPI(
     summary="Discover and evaluate open source projects with ease",
     description=f"""
 
-Info:  
+Info:
  * Last deployed: {DEPLOY_DATE}
  * Github repo: [github.com/openteamsinc/opensourcescore.dev](https://github.com/openteamsinc/opensourcescore.dev)
  * Commit: [{COMMIT}]({SOURCE_URL})
-    
+
     """,
     version=VERSION,
 )
