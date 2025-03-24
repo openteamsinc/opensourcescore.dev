@@ -138,6 +138,8 @@ class Note(enum.Enum):
         "Package is at least a year ahead of the source code",
     )
 
+    HEALTHY = HEALTHY, "Healthy"
+
 
 def to_dict():
     return {
