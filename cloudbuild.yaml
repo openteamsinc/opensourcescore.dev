@@ -19,17 +19,21 @@ steps:
   #   id: "set-deploy-date"
 
   - name: "docker"
-    entrypoint: "bash"
     args:
-      - "-c"
-      - >-
-        docker build
-        --cache-from us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest
-        -t us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID
-        -t us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest
-        --build-arg REVISION_ID=$REVISION_ID
-        --build-arg DEPLOY_DATE=$(date +'%Y-%m-%d')
-        -f Dockerfile .
+      [
+        "build",
+        "--cache-from",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
+        "-t",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
+        "-t",
+        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
+        "--build-arg",
+        "REVISION_ID=$REVISION_ID",
+        "-f",
+        "Dockerfile",
+        ".",
+      ]
 
   - name: "docker"
     args:
