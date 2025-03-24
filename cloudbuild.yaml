@@ -55,8 +55,6 @@ steps:
         --region=us-west1
         --image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID
         --service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com
-        --command=bash
-        "--args=-c,fastapi run score/app.py --port $$PORT"
         --allow-unauthenticated
         --revision-suffix=$SHORT_SHA
         --max-instances=10
