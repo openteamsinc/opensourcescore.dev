@@ -9,57 +9,56 @@ steps:
   #   env: ["REF_NAME=$REF_NAME", "COMMIT_SHA=$COMMIT_SHA", "BUILD_ID=$BUILD_ID"]
   #   secretEnv: ["GITHUB_TOKEN"]
   #   args: [buildscripts/github-deployment.sh]
-  - name: "bash"
+
+  # Remove this step as we're using bash entrypoint directly
+  # - name: "bash"
+  #   entrypoint: "bash"
+  #   args:
+  #     - "-c"
+  #     - "echo 'DEPLOY_DATE='$(date +'%Y-%m-%d') > build.env"
+  #   id: "set-deploy-date"
+
+  - name: "docker"
     entrypoint: "bash"
     args:
       - "-c"
-      - "echo 'DEPLOY_DATE='$(date +'%Y-%m-%d') > build.env"
-    id: "set-deploy-date"
+      - >-
+        docker build
+        --cache-from us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest
+        -t us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID
+        -t us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest
+        --build-arg REVISION_ID=$REVISION_ID
+        --build-arg DEPLOY_DATE=$(date +'%Y-%m-%d')
+        -f Dockerfile .
 
-  - name: "docker"
-    args:
-      [
-        "build",
-        "--cache-from",
-        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
-        "-t",
-        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
-        "-t",
-        "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
-        "--build-arg",
-        "REVISION_ID=$REVISION_ID",
-        "--build-arg",
-        "DEPLOY_DATE=$(date +'%Y-%m-%d')",
-        "-f",
-        "Dockerfile",
-        ".",
-      ]
   - name: "docker"
     args:
       [
         "push",
         "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
       ]
+
   - name: "docker"
     args:
       ["push", "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest"]
+
   - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
     args:
-      [
-        "run",
-        "deploy",
-        "score",
-        "--region=us-west1",
-        "--image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID",
-        "--service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com",
-        "--command=bash",
-        "--args=-c,fastapi run score/app.py --port $$PORT",
-        "--allow-unauthenticated",
-        "--revision-suffix=$SHORT_SHA",
-        "--max-instances=10",
-        "--concurrency=20",
-        "--memory=2Gi",
-      ]
+      - "-c"
+      - >-
+        gcloud run deploy score
+        --region=us-west1
+        --image=us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:$REVISION_ID
+        --service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com
+        --command=bash
+        "--args=-c,fastapi run score/app.py --port $$PORT"
+        --allow-unauthenticated
+        --revision-suffix=$SHORT_SHA
+        --max-instances=10
+        --concurrency=20
+        --memory=2Gi
+        --set-env-vars DEPLOY_DATE=$(date +'%Y-%m-%d')
 
   # Mark the deployment as successful
   # - name: "gcr.io/cloud-builders/curl"
@@ -68,6 +67,7 @@ steps:
   #     ["SHORT_SHA=$SHORT_SHA", "BUILD_ID=$BUILD_ID", "PROJECT_ID=$PROJECT_ID"]
   #   secretEnv: ["GITHUB_TOKEN"]
   #   args: [buildscripts/github-deployment-status.sh]
+
 # availableSecrets:
 #   secretManager:
 #     - versionName: projects/$PROJECT_ID/secrets/GITHUB_TOKEN/versions/latest
