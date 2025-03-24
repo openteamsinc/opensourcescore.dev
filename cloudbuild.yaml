@@ -9,6 +9,12 @@ steps:
   #   env: ["REF_NAME=$REF_NAME", "COMMIT_SHA=$COMMIT_SHA", "BUILD_ID=$BUILD_ID"]
   #   secretEnv: ["GITHUB_TOKEN"]
   #   args: [buildscripts/github-deployment.sh]
+  - name: "bash"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - "echo 'DEPLOY_DATE='$(date +'%Y-%m-%d') > build.env"
+    id: "set-deploy-date"
 
   - name: "docker"
     args:
@@ -22,6 +28,8 @@ steps:
         "us-west1-docker.pkg.dev/$PROJECT_ID/containers/scraper:latest",
         "--build-arg",
         "REVISION_ID=$REVISION_ID",
+        "--build-arg",
+        "DEPLOY_DATE=$(date +'%Y-%m-%d')",
         "-f",
         "Dockerfile",
         ".",
