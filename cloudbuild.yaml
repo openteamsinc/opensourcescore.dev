@@ -60,7 +60,7 @@ steps:
         --max-instances=10
         --concurrency=20
         --memory=2Gi
-        --set-env-vars DEPLOY_DATE=$(date +'%Y-%m-%d')
+  # --set-env-vars DEPLOY_DATE=$(date +'%Y-%m-%d')
 
   # Mark the deployment as successful
   # - name: "gcr.io/cloud-builders/curl"
