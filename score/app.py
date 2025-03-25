@@ -12,27 +12,42 @@ from .app_utils import (
     max_age,
 )
 
-app = FastAPI()
+TITLE = "opensourcescore.dev"
+VERSION = os.environ.get("K_REVISION", "¿dev?")
+COMMIT = VERSION.rsplit("-", 1)[-1]
+DEPLOY_DATE = os.environ.get("DEPLOY_DATE", "¿today?")
+SOURCE_URL = "https://github.com/openteamsinc/opensourcescore.dev/commit/{COMMIT}"
+app = FastAPI(
+    title="opensourcescore.dev",
+    summary="Discover and evaluate open source projects with ease",
+    description=f"""
+
+Info:
+ * Last deployed: {DEPLOY_DATE}
+ * Github repo: [github.com/openteamsinc/opensourcescore.dev](https://github.com/openteamsinc/opensourcescore.dev)
+ * Commit: [{COMMIT}]({SOURCE_URL})
+
+    """,
+    version=VERSION,
+)
 
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
-    rev = os.environ.get("K_REVISION", "?")
     response.headers["Cache-control"] = f"max-age={max_age}, public"
     response.headers["Content-Language"] = "en-US"
-    response.headers["App"] = f"opensourcescore.dev {rev}"
+    response.headers["App"] = f"{TITLE} {VERSION}"
     return response
 
 
 @app.get("/")
 async def root():
-    rev = os.environ.get("K_REVISION", "?")
-    commit = rev.rsplit("-", 1)[-1]
+
     return {
-        "version": rev,
+        "version": VERSION,
         "html_docs_url": "https://opensourcescore.dev/docs",
-        "source_code_url": f"https://github.com/openteamsinc/opensourcescore.dev/commit/{commit}",
+        "source_code_url": f"https://github.com/openteamsinc/opensourcescore.dev/commit/{COMMIT}",
     }
 
 

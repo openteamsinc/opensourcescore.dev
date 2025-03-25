@@ -9,6 +9,9 @@ ENV PORT=8080
 ARG REVISION_ID
 ENV REVISION_ID=$REVISION_ID
 
+ARG DEPLOY_DATE
+ENV DEPLOY_DATE=$DEPLOY_DATE
+
 RUN apt-get update && apt-get  install git -y
 
 COPY requirements.txt ./requirements.txt
@@ -22,7 +25,4 @@ RUN --mount=type=cache,target=/var/cache/pip \
 COPY score/ /usr/src/app/score/
 RUN python -m compileall score
 
-COPY run_script.sh /usr/src/app/run_script.sh
-
-CMD /usr/src/app/run_script.sh
-
+CMD ["sh", "-c", "fastapi run score/app.py --port ${PORT}"]
