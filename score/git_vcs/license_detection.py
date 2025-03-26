@@ -153,8 +153,6 @@ def identify_license(license_content: str) -> dict:
     modified = similarity < CLOSE_ENOUGH  # type: ignore
     diff = None
     if modified:
-        print("best_match", best_match)
-        print("----")
         diff = "\n".join(
             unified_diff(
                 license_content.splitlines(),
@@ -163,9 +161,6 @@ def identify_license(license_content: str) -> dict:
                 tofile="Open Source License",
             )
         )
-        print("diff")
-        print(diff)
-        print("diff")
 
     return {
         "license": best_match,

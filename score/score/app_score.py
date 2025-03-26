@@ -44,8 +44,11 @@ def score_python(package_data: dict, source_data: dict, score: Score):
     package_license = package_data.get("license")
     if not package_license:
         score.add_note(Note.PACKAGE_NO_LICENSE)
-    if package_license != source_data.get("license", {}).get("kind"):
-        score.add_note(Note.PACKAGE_LICENSE_MISMATCH)
+    else:
+        print(package_license, source_data.get("license", {}).get("kind"))
+        if package_license != source_data.get("license", {}).get("kind"):
+            print("nope!")
+            score.add_note(Note.PACKAGE_LICENSE_MISMATCH)
 
     return
 
@@ -69,9 +72,6 @@ def build_score(source_url, source_data, package_data):
 
     health_score = build_health_risk_score(source_data)
 
-    score["health_risk"] = health_score.dict_string_notes()
-    score["last_updated"] = source_data.get("latest_commit")
-
     legal_score = build_legal_score(source_data)
     score["legal"] = legal_score.dict_string_notes()
 
@@ -83,5 +83,8 @@ def build_score(source_url, source_data, package_data):
 
     # -- Language specific
     score_python(package_data, source_data, health_score)
+
+    score["health_risk"] = health_score.dict_string_notes()
+    score["last_updated"] = source_data.get("latest_commit")
 
     return score

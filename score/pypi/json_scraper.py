@@ -25,7 +25,11 @@ pypi_schema = pa.schema(
     ]
 )
 
-oss_name_lookup = {"BSD License": "BSD", "MPL-2.0": "MPL"}
+oss_name_lookup = {
+    "BSD License": "BSD",
+    "MPL-2.0": "MPL",
+    "The Unlicense (Unlicense)": "UNLICENSE",
+}
 
 
 def get_license_from_classifier(classifier: str) -> Optional[str]:
