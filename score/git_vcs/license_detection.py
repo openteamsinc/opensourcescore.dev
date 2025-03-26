@@ -62,6 +62,7 @@ KIND_MAP = {
     "LiLiQ-P-1.1": "LiLi",
     "LiLiQ-R+": "LiLi",
     "LiLiQ-R-1.1": "LiLi",
+    "MIT-CMU": "CMU",
     "MIT": "MIT",
     "MIT-0": "MIT",
     "MPL-1.0": "MPL",

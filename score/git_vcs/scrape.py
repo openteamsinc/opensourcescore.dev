@@ -204,15 +204,27 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
 
 
 def get_license_type(repo: Repo, url: str) -> dict:
-    try:
-        # Check out the LICENSE file(s)
-        repo.git.checkout(repo.active_branch, "--", "LICENSE*")
-    except GitCommandError as e:
-        log.error(f"{url}: Could not checkout license file: {e.stderr}")
-        return {"error": Note.LICENSE_CHECKOUT_ERROR}
+
+    PATTERNS = ["LICENSE*", "LICENCE*", "COPYING"]
+    for PATTERN in PATTERNS:
+        try:
+            # Check out the LICENSE file(s)
+            repo.git.checkout(repo.active_branch, "--", PATTERN)
+        except GitCommandError as e:
+            log.error(f"{url}: Could not checkout license file: {PATTERN} {e.stderr}")
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
-    paths = ["LICENSE", "LICENSE.txt", "LICENSE.md", "LICENSE.rst"]
+    paths = [
+        "LICENSE",
+        "LICENSE.txt",
+        "LICENSE.md",
+        "LICENSE.rst",
+        "COPYING",
+        "LICENCE",
+        "LICENCE.txt",
+        "LICENCE.md",
+        "LICENCE.rst",
+    ]
     license_file_path = None
     for path in paths:
         full_path = os.path.join(repo.working_dir, path)
