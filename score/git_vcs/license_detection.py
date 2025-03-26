@@ -3,7 +3,7 @@ from typing import Union
 from pathlib import Path
 from functools import lru_cache
 from strsimpy import SorensenDice
-
+from difflib import unified_diff
 
 KIND_MAP = {
     "AAL": "AAL",
@@ -115,20 +115,24 @@ CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9
 
 
+def remove_copyright_lines(content: str):
+    return "".join([line for line in content.splitlines() if not copyright_line(line)])
+
+
 def identify_license(license_content: str) -> dict:
 
-    license_content_without_copyright = "".join(
-        [line for line in license_content.splitlines() if not copyright_line(line)]
-    )
+    license_content_without_copyright = remove_copyright_lines(license_content)
 
+    all_licenses = get_all_licenses()
     sd = SorensenDice()
     similarities = []
-    for license_name, ref_license in get_all_licenses().items():
+    for license_name, ref_license in all_licenses.items():
         similarities.append(
             {
                 "name": license_name,
                 "similarity": sd.similarity(
-                    license_content_without_copyright.strip(), ref_license
+                    license_content_without_copyright.strip(),
+                    remove_copyright_lines(ref_license).strip(),
                 ),
             }
         )
@@ -147,12 +151,23 @@ def identify_license(license_content: str) -> dict:
     kind = KIND_MAP.get(best_match, best_match)
 
     modified = similarity < CLOSE_ENOUGH  # type: ignore
+    diff = None
+    if modified:
+        diff = "\n".join(
+            unified_diff(
+                license_content.splitlines(),
+                all_licenses[best_match].splitlines(),
+                fromfile="Project Licence",
+                tofile="Open Source License",
+            )
+        )
 
     return {
         "license": best_match,
         "kind": kind,
         "similarity": similarity,
         "modified": modified,
+        "diff": diff,
     }
 
 

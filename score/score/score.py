@@ -78,10 +78,10 @@ def fmt_pypi(ecosystem_destination_name, latest_commit, p):
     skew = safe_date_diff(latest_commit, p["release_date"])
     if skew and skew > one_year:
         score.limit(MODERATE_RISK)
-        score.notes.append(Note.PACKGE_SKEW_NOT_UPDATED.value)
+        score.notes.append(Note.PACKAGE_SKEW_NOT_UPDATED.value)
     if skew and skew < -one_year:
         score.limit(MODERATE_RISK)
-        score.notes.append(Note.PACKGE_SKEW_NOT_RELEASED.value)
+        score.notes.append(Note.PACKAGE_SKEW_NOT_RELEASED.value)
 
     return {
         "name": p["name"],
@@ -99,10 +99,10 @@ def fmt_conda(latest_commit, p):
     skew = latest_commit - p["release_date"]
     if skew > one_year:
         score.limit(MODERATE_RISK)
-        score.notes.append(Note.PACKGE_SKEW_NOT_UPDATED.value)
+        score.notes.append(Note.PACKAGE_SKEW_NOT_UPDATED.value)
     if skew < -one_year:
         score.limit(MODERATE_RISK)
-        score.notes.append(Note.PACKGE_SKEW_NOT_RELEASED.value)
+        score.notes.append(Note.PACKAGE_SKEW_NOT_RELEASED.value)
 
     return {
         "name": p["full_name"],
