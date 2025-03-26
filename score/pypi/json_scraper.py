@@ -25,6 +25,32 @@ pypi_schema = pa.schema(
     ]
 )
 
+oss_name_lookup = {"BSD License": "BSD", "MPL-2.0": "MPL"}
+
+
+def get_license_from_classifier(classifier: str) -> Optional[str]:
+
+    [first, *rest] = classifier.split(" :: ")
+    if first.lower() != "license":
+        return None
+    if len(rest) == 0:
+        return None
+    if len(rest) == 1:
+        return rest[0]
+
+    if rest[0] == "OSI Approved":
+        oss = " :: ".join(rest[1:])
+        return oss
+
+    return " :: ".join(rest[1:])
+
+
+def get_license_from_classifiers(classifiers: List[str]) -> Optional[str]:
+    for classifier in classifiers:
+        license = get_license_from_classifier(classifier)
+        if license:
+            return license
+
 
 def get_package_data(package_name: str):
     """
@@ -64,12 +90,18 @@ def get_package_data(package_name: str):
         first_upload_date = min(upload_dates)
         release_date = first_upload_date
 
+    license = info.get("license")
+    if not license:
+        license = get_license_from_classifiers(info.get("classifiers", []))
+    license = oss_name_lookup.get(license, license)
+
     filtered_data = {
         "name": package_name,
         "version": version,
         "source_url": source_url,
         "source_url_key": source_url_key,
         "release_date": release_date,
+        "license": license,
     }
 
     return filtered_data

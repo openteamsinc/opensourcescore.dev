@@ -128,16 +128,25 @@ class Note(enum.Enum):
 
     LAST_COMMIT_OVER_A_YEAR = LEGACY, "The last commit was over a year ago"
 
-    PACKGE_SKEW_NOT_UPDATED = (
+    PACKAGE_SKEW_NOT_UPDATED = (
         MODERATE_RISK,
         "Package is at least a year behind the the source code",
     )
 
-    PACKGE_SKEW_NOT_RELEASED = (
+    PACKAGE_SKEW_NOT_RELEASED = (
         MODERATE_RISK,
         "Package is at least a year ahead of the source code",
     )
 
+    PACKAGE_LICENSE_MISMATCH = (
+        MODERATE_RISK,
+        "Package license does not match the source code license",
+    )
+
+    PACKAGE_NO_LICENSE = (
+        MODERATE_RISK,
+        "Package has no license",
+    )
     HEALTHY = HEALTHY, "Healthy"
 
 

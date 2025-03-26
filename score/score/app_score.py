@@ -27,9 +27,7 @@ def score_python(package_data: dict, source_data: dict, score: Score):
 
     if not expected_name:
         score.add_note(Note.NO_PROJECT_NAME)
-        return
-
-    if expected_name != actual_name:
+    elif expected_name != actual_name:
         score.add_note(Note.PACKAGE_NAME_MISMATCH)
 
     one_year = timedelta(days=365)
@@ -37,10 +35,17 @@ def score_python(package_data: dict, source_data: dict, score: Score):
         source_data.get("latest_commit"), package_data.get("release_date")
     )
     if skew and skew > one_year:
-        score.add_note(Note.PACKGE_SKEW_NOT_UPDATED)
+        score.add_note(Note.PACKAGE_SKEW_NOT_UPDATED)
 
     if skew and skew < -one_year:
-        score.add_note(Note.PACKGE_SKEW_NOT_RELEASED)
+        score.add_note(Note.PACKAGE_SKEW_NOT_RELEASED)
+
+    print("package_data, source_data")
+    package_license = package_data.get("license")
+    if not package_license:
+        score.add_note(Note.PACKAGE_NO_LICENSE)
+    if package_license != source_data.get("license", {}).get("kind"):
+        score.add_note(Note.PACKAGE_LICENSE_MISMATCH)
 
     return
 
@@ -63,7 +68,6 @@ def build_score(source_url, source_data, package_data):
     score["maturity"] = build_maturity_score(source_url, source_data)
 
     health_score = build_health_risk_score(source_data)
-    score_python(package_data, source_data, health_score)
 
     score["health_risk"] = health_score.dict_string_notes()
     score["last_updated"] = source_data.get("latest_commit")
@@ -76,5 +80,8 @@ def build_score(source_url, source_data, package_data):
         score["license"] = license["license"]
         score["license_kind"] = license["kind"]
         score["license_modified"] = license["modified"]
+
+    # -- Language specific
+    score_python(package_data, source_data, health_score)
 
     return score

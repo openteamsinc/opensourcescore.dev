@@ -159,7 +159,7 @@ def identify_license(license_content: str) -> dict:
         print("best_match", best_match)
         # print(all_licenses[best_match])
         print("----")
-        diff = "".join(
+        diff = "\n".join(
             unified_diff(
                 license_content.splitlines(),
                 all_licenses[best_match].splitlines(),
