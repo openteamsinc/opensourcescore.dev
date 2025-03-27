@@ -1,5 +1,7 @@
 from datetime import timedelta
+from hashlib import md5
 import re
+from score.utils.normalize_license_content import normalize_license_content
 from .score import safe_date_diff, Score
 from .maturity import build_maturity_score
 from .legal import build_legal_score
@@ -15,6 +17,35 @@ def pypi_normalize(name):
         return None
 
     return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def check_package_license(package_data: dict, source_data: dict):
+    package_license = package_data.get("license")
+    if not package_license:
+        yield Note.PACKAGE_NO_LICENSE
+        return
+
+    source_license_kind = source_data.get("license", {}).get("kind")
+    source_license_md5 = source_data.get("license", {}).get("md5")
+
+    if not source_license_kind:
+        return
+
+    if source_license_kind.lower() == "unknown":
+        return
+
+    if package_license == source_license_kind:
+        return
+
+    package_license_md5 = md5(
+        normalize_license_content(package_license).encode("utf-8")
+    ).hexdigest()
+
+    if package_license_md5 == source_license_md5:
+        # The package license is the exact same as the source file contents
+        return
+
+    yield Note.PACKAGE_LICENSE_MISMATCH
 
 
 def score_python(package_data: dict, source_data: dict):
@@ -47,14 +78,7 @@ def score_python(package_data: dict, source_data: dict):
     if skew and skew < -one_year:
         yield Note.PACKAGE_SKEW_NOT_RELEASED
 
-    package_license = package_data.get("license")
-    if not package_license:
-        yield Note.PACKAGE_NO_LICENSE
-    else:
-        source_license_kind = source_data.get("license", {}).get("kind")
-        if source_license_kind and source_license_kind.lower() != "unknown":
-            if package_license != source_license_kind:
-                yield Note.PACKAGE_LICENSE_MISMATCH
+    yield from check_package_license(package_data, source_data)
 
     return
 
