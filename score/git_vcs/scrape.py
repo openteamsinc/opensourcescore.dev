@@ -303,9 +303,7 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
 
 def get_all_pypackage_names(repo: Repo):
     full_paths = get_pyproject_tomls(repo)
-    print("full_paths", full_paths)
+
     for full_path in full_paths:
         name, source_file = read_pypi_toml(repo, full_path)
-        print("name, source_file")
-        print(name, source_file)
         yield f"pypi/{name}", source_file
