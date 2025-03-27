@@ -51,8 +51,10 @@ def score_python(package_data: dict, source_data: dict):
     if not package_license:
         yield Note.PACKAGE_NO_LICENSE
     else:
-        if package_license != source_data.get("license", {}).get("kind"):
-            yield Note.PACKAGE_LICENSE_MISMATCH
+        source_license_kind = source_data.get("license", {}).get("kind")
+        if source_license_kind and source_license_kind.lower() != "unknown":
+            if package_license != source_license_kind:
+                yield Note.PACKAGE_LICENSE_MISMATCH
 
     return
 
