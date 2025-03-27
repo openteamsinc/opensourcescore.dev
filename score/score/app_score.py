@@ -22,12 +22,17 @@ def score_python(package_data: dict, source_data: dict):
     if not package_data:
         return
 
-    expected_name = pypi_normalize(source_data.get("py_package"))
-    actual_name = pypi_normalize(package_data.get("name"))
+    published_name = pypi_normalize(package_data.get("name"))
+    # expected_name = pypi_normalize(source_data.get("py_package"))
+    package_destinations_names = [
+        name[5:]
+        for name, _ in source_data["package_destinations"]
+        if name.startswith("pypi/")
+    ]
 
-    if not expected_name:
+    if len(package_destinations_names) == 0:
         yield Note.NO_PROJECT_NAME
-    elif expected_name != actual_name:
+    elif published_name not in package_destinations_names:
         yield Note.PACKAGE_NAME_MISMATCH
 
     one_year = timedelta(days=365)
@@ -44,9 +49,7 @@ def score_python(package_data: dict, source_data: dict):
     if not package_license:
         yield Note.PACKAGE_NO_LICENSE
     else:
-        print(package_license, source_data.get("license", {}).get("kind"))
         if package_license != source_data.get("license", {}).get("kind"):
-
             yield Note.PACKAGE_LICENSE_MISMATCH
 
     return

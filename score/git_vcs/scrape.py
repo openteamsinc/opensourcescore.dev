@@ -10,6 +10,7 @@ import tempfile
 from datetime import datetime, timedelta
 import logging
 import os
+import re
 import glob
 from contextlib import contextmanager
 from ..utils.map import do_map
@@ -23,6 +24,13 @@ log = logging.getLogger(__name__)
 
 
 MAX_CLONE_TIME = 30
+
+
+def pypi_normalize(name):
+    if not name:
+        return None
+
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 @contextmanager
@@ -146,6 +154,8 @@ def create_git_metadata(url: str) -> dict:
         license_data = get_license_type(repo, url)
         metadata["license"] = license_data
         metadata["py_package"] = get_pypackage_name(repo)
+        metadata["package_destinations"] = package_destinations = []
+        package_destinations.extend(get_all_pypackage_names(repo))
 
         return metadata
 
@@ -162,6 +172,8 @@ def create_git_metadata_str(url: str) -> dict:
         license_data = get_license_type(repo, url)
         metadata["license"] = license_data
         metadata["py_package"] = get_pypackage_name(repo)
+        metadata["package_destinations"] = package_destinations = []
+        package_destinations.extend(get_all_pypackage_names(repo))
 
         return metadata
 
@@ -242,7 +254,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
     return identify_license(license_content)
 
 
-def get_pyproject_toml(repo: Repo) -> Optional[str]:
+def get_pyproject_tomls(repo: Repo):
     # Check out the PYPROJECT file(s)
     try:
         repo.git.checkout(repo.active_branch, "--", "pyproject.toml")
@@ -258,26 +270,40 @@ def get_pyproject_toml(repo: Repo) -> Optional[str]:
 
     # Shortest path picks the pyproject.toml in the root first
     possible_paths = sorted(possible_paths, key=lambda x: len(x))
-    return possible_paths[0]
+    return possible_paths
 
 
-def get_pypackage_name(repo: Repo) -> Optional[str]:
-    full_path = get_pyproject_toml(repo)
-    if full_path is None:
-        return None
-
+def read_pypi_toml(repo: Repo, full_path: str):
     try:
         # Read and return the license type
         with open(full_path, encoding="utf8", errors="ignore") as fd:
             data = toml.load(fd)
     except FileNotFoundError:
-        return None
+        return None, None
     except (toml.TomlDecodeError, IndexError, IOError) as err:
         log.error(f"Error reading pyproject.toml: {err}")
-        return None
+        return None, None
     name = data.get("project", {}).get("name")
 
     if not name:
+        return None, None
+
+    return pypi_normalize(name), full_path.replace(repo.working_dir, "")
+
+
+def get_pypackage_name(repo: Repo) -> Optional[str]:
+    full_paths = get_pyproject_tomls(repo)
+    if len(full_paths) == 0:
         return None
 
-    return name.lower().replace("_", "-")
+    full_path = full_paths[0]
+    name, _ = read_pypi_toml(repo, full_path)
+    return name
+
+
+def get_all_pypackage_names(repo: Repo):
+    full_paths = get_pyproject_tomls(repo)
+
+    for full_path in full_paths:
+        name, source_file = read_pypi_toml(repo, full_path)
+        yield f"pypi/{name}", source_file
