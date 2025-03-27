@@ -1,38 +1,33 @@
 import pandas as pd
-
-from .score_type import Score
-
 from ..notes import Note
 
 LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 
 
-def score_license(git_info: dict, score: Score):
+def score_license(git_info: dict):
     license = git_info.get("license", {})
     license_kind = license.get("kind")
     modified = license.get("modified")
 
     if git_info.get("error") and not pd.isna(git_info["error"]):
         note = license[Note.NO_LICENSE_INFO]
-        score.add_note(note)
+        yield note
 
     elif not license_kind or license_kind == "Unknown":
-        score.add_note(Note.NO_OS_LICENSE)
+        yield Note.NO_OS_LICENSE
 
     if license_kind in LESS_PERMISSIVE_LICENSES:
-        score.add_note(Note.LESS_PERMISSIVE_LICENSE)
+        yield Note.LESS_PERMISSIVE_LICENSE
 
     if modified:
-        score.add_note(Note.LICENSE_MODIFIED)
+        yield Note.LICENSE_MODIFIED
 
 
-def build_legal_score(git_info: dict) -> Score:
-    score = Score()
+def build_legal_score(git_info: dict):
 
     if git_info.get("error") and not pd.isna(git_info["error"]):
-        score.add_note(git_info["error"])
-        return score
+        yield git_info["error"]
 
-    score_license(git_info, score)
+    yield from score_license(git_info)
 
-    return score
+    return
