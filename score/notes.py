@@ -48,6 +48,8 @@ SCORE_ORDER = [
     PLACEHOLDER,
 ]
 
+FEW_MAX_MONTHLY_AUTHORS_CONST = 3
+
 
 class Note(enum.Enum):
 
@@ -107,16 +109,11 @@ class Note(enum.Enum):
 
     FEW_MAX_MONTHLY_AUTHORS = (
         HEALTH,
-        CAUTION_NEEDED,
-        "Few authors have contributed to this repository in a single month",
+        MODERATE_RISK,
+        f"Fewer than {FEW_MAX_MONTHLY_AUTHORS_CONST} authors have contributed to this repository",
     )
 
-    NO_AUTHORS_THIS_YEAR = (
-        HEALTH,
-        CAUTION_NEEDED,
-        "No one has contributed to this repository in the last year",
-    )
-    ONE_AUTHORS_THIS_YEAR = (
+    ONE_AUTHOR_THIS_YEAR = (
         HEALTH,
         CAUTION_NEEDED,
         "Only one author has contributed to this repository in the last year",
@@ -172,13 +169,13 @@ class Note(enum.Enum):
     PACKAGE_NO_LICENSE = (
         LEGAL,
         MODERATE_RISK,
-        "Package has no license",
+        "Package was not published with a license",
     )
 
-    SOURCE_NOT_FOUND = (
+    PACKAGE_SOURCE_NOT_FOUND = (
         ANY,
         HIGH_RISK,
-        "The source code could not be found",
+        "The source code location could not be found",
     )
     HEALTHY = ANY, HEALTHY, "Healthy"
 
