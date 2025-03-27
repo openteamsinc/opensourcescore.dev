@@ -4,7 +4,7 @@ from pathlib import Path
 from functools import lru_cache
 from strsimpy import SorensenDice
 from difflib import unified_diff
-from score.utils.licence_name_to_kind import KIND_MAP
+from score.utils.license_name_to_kind import KIND_MAP
 
 CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9

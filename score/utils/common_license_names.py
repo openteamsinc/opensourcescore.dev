@@ -1,4 +1,4 @@
-from .licence_name_to_kind import KIND_MAP
+from .license_name_to_kind import KIND_MAP
 
 common_license_names_to_kind = {
     "BSD License": "BSD",
