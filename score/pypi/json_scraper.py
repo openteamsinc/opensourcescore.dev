@@ -10,6 +10,7 @@ from dateutil.parser import parse as parsedate
 from ..utils.request_session import get_session
 from ..utils.map import do_map
 from ..utils.normalize_source_url import normalize_source_url
+from ..utils.common_license_names import common_license_names_to_kind
 
 log = logging.getLogger(__name__)
 
@@ -24,12 +25,6 @@ pypi_schema = pa.schema(
         ("release_date", pa.timestamp("ns")),
     ]
 )
-
-oss_name_lookup = {
-    "BSD License": "BSD",
-    "MPL-2.0": "MPL",
-    "The Unlicense (Unlicense)": "UNLICENSE",
-}
 
 
 def get_license_from_classifier(classifier: str) -> Optional[str]:
@@ -97,7 +92,7 @@ def get_package_data(package_name: str):
     license = info.get("license")
     if not license:
         license = get_license_from_classifiers(info.get("classifiers", []))
-    license = oss_name_lookup.get(license, license)
+    license = common_license_names_to_kind.get(license, license)
 
     filtered_data = {
         "name": package_name,
