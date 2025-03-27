@@ -113,7 +113,7 @@ class Note(enum.Enum):
         f"Fewer than {FEW_MAX_MONTHLY_AUTHORS_CONST} authors have contributed to this repository",
     )
 
-    ONE_AUTHORS_THIS_YEAR = (
+    ONE_AUTHOR_THIS_YEAR = (
         HEALTH,
         CAUTION_NEEDED,
         "Only one author has contributed to this repository in the last year",

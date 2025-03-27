@@ -22,7 +22,7 @@ def score_contributors(git_info: dict):
         yield Note.FEW_MAX_MONTHLY_AUTHORS
 
     if recent_count < 2:
-        yield Note.ONE_AUTHORS_THIS_YEAR
+        yield Note.ONE_AUTHOR_THIS_YEAR
 
 
 def score_python(git_info: dict, score: Score):
