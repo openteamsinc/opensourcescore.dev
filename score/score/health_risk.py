@@ -23,7 +23,6 @@ LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 def score_contributors(git_info: dict):
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
-    latest_commit = git_info["latest_commit"]
 
     if mma_count < 3:
         yield Note.FEW_MAX_MONTHLY_AUTHORS
@@ -32,9 +31,6 @@ def score_contributors(git_info: dict):
         yield Note.NO_AUTHORS_THIS_YEAR
     elif recent_count < 2:
         yield Note.ONE_AUTHORS_THIS_YEAR
-
-    if latest_commit < FIVE_YEARS_AGO:
-        yield Note.LAST_COMMIT_5_YEARS
 
 
 def score_python(git_info: dict, score: Score):

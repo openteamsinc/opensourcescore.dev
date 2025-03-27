@@ -10,7 +10,7 @@ LEGACY = "Legacy"
 UNKNOWN = "Unknown"
 PLACEHOLDER = "Placeholder"
 MATURE = "Mature"
-
+STALE = "Stale"
 EXPERIMENTAL = "Experimental"
 
 RISKS = [
@@ -42,6 +42,7 @@ SCORE_ORDER = [
     MODERATE_RISK,
     HIGH_RISK,
     EXPERIMENTAL,
+    STALE,
     LEGACY,
     UNKNOWN,
     PLACEHOLDER,
@@ -121,9 +122,9 @@ class Note(enum.Enum):
         "Only one author has contributed to this repository in the last year",
     )
 
-    LAST_COMMIT_5_YEARS = (
-        HEALTH,
-        HIGH_RISK,
+    LAST_COMMIT_OVER_5_YEARS = (
+        MATURITY,
+        LEGACY,
         "The last commit to source control was over 5 years ago",
     )
 
@@ -148,7 +149,7 @@ class Note(enum.Enum):
 
     FIRST_COMMIT_THIS_YEAR = MATURITY, EXPERIMENTAL, "First commit in the last year"
 
-    LAST_COMMIT_OVER_A_YEAR = MATURITY, LEGACY, "The last commit was over a year ago"
+    LAST_COMMIT_OVER_A_YEAR = MATURITY, STALE, "The last commit was over a year ago"
 
     PACKAGE_SKEW_NOT_UPDATED = (
         HEALTH,
