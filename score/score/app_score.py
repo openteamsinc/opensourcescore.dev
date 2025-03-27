@@ -21,12 +21,14 @@ def score_python(package_data: dict, source_data: dict):
 
     if not package_data:
         return
+    if source_data.get("error"):
+        return
 
     published_name = pypi_normalize(package_data.get("name"))
     # expected_name = pypi_normalize(source_data.get("py_package"))
     package_destinations_names = [
         name[5:]
-        for name, _ in source_data["package_destinations"]
+        for name, _ in source_data.get("package_destinations", [])
         if name.startswith("pypi/")
     ]
 

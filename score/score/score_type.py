@@ -30,11 +30,19 @@ class Score:
         new_numeric_score = SCORE_ORDER.index(new_score)
         self.value = SCORE_ORDER[max(current_numeric_score, new_numeric_score)]
 
+    def is_in_group(self, note: Note):
+        return note.group == ANY or note.group == self.group
+
     def add_note(self, note: Note):
         assert isinstance(note, Note), f"Note must be an instance of Note, got {note}"
-        if note.group == ANY or note.group == self.group:
-            self.limit(note.category)
-            self.notes.append(note)
+        if note in self.notes:
+            return
+
+        if not self.is_in_group(note):
+            return
+
+        self.limit(note.category)
+        self.notes.append(note)
 
     def dict(self):
         return {"value": self.value, "notes": [n.value for n in self.notes]}
