@@ -8,7 +8,7 @@ def build_maturity_score(source_url: str, git_info: dict):
 
     if git_info.get("error") and not pd.isna(git_info["error"]):
         note = git_info["error"]
-        yield note.name
+        yield note
         return
 
     if not git_info.get("first_commit") or pd.isnull(git_info["first_commit"]):
