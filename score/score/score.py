@@ -5,8 +5,10 @@ import pyarrow as pa
 from datetime import datetime, timedelta
 from typing import Optional
 from .maturity import build_maturity_score
-from .health_risk import build_health_risk_score, HIGH_RISK, MODERATE_RISK, Score
-from ..notes import Note
+from .health_risk import build_health_risk_score
+from .score_type import Score
+
+from ..notes import Note, HIGH_RISK, MODERATE_RISK
 
 ecosystem_schema = pa.struct(
     [
