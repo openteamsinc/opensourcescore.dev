@@ -266,7 +266,7 @@ def get_pyproject_tomls(repo: Repo):
 
     possible_paths = glob.glob(f"{repo.working_dir}/**/pyproject.toml", recursive=True)
     if not possible_paths:
-        return None
+        return []
 
     # Shortest path picks the pyproject.toml in the root first
     possible_paths = sorted(possible_paths, key=lambda x: len(x))
@@ -306,4 +306,5 @@ def get_all_pypackage_names(repo: Repo):
 
     for full_path in full_paths:
         name, source_file = read_pypi_toml(repo, full_path)
-        yield f"pypi/{name}", source_file
+        if name:
+            yield f"pypi/{name}", source_file
