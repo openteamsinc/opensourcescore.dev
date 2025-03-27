@@ -66,8 +66,7 @@ def build_score(source_url, source_data, package_data):
     }
     if source_data is None:
         score["status"] = "not_found"
-        score["notes"] = [Note.SOURCE_NOT_FOUND.name]
-
+        score["notes"] = [Note.PACKAGE_SOURCE_NOT_FOUND.name]
         return score
 
     license = source_data.get("license")

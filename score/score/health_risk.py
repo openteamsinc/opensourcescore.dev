@@ -1,16 +1,10 @@
 import pandas as pd
 import logging
 
-from ..notes import Note
+from ..notes import Note, FEW_MAX_MONTHLY_AUTHORS_CONST
 from .score_type import Score
 
 log = logging.getLogger(__name__)
-
-HEALTHY = "Healthy"
-CAUTION_NEEDED = "Caution Needed"
-MODERATE_RISK = "Moderate Risk"
-HIGH_RISK = "High Risk"
-SCORE_ORDER = [HEALTHY, CAUTION_NEEDED, MODERATE_RISK, HIGH_RISK]
 
 
 ONE_YEAR_AGO = pd.Timestamp.now() - pd.DateOffset(years=1)
@@ -24,12 +18,10 @@ def score_contributors(git_info: dict):
     mma_count = git_info["max_monthly_authors_count"]
     recent_count = git_info["recent_authors_count"]
 
-    if mma_count < 3:
+    if mma_count < FEW_MAX_MONTHLY_AUTHORS_CONST:
         yield Note.FEW_MAX_MONTHLY_AUTHORS
 
-    if recent_count < 1:
-        yield Note.NO_AUTHORS_THIS_YEAR
-    elif recent_count < 2:
+    if recent_count < 2:
         yield Note.ONE_AUTHORS_THIS_YEAR
 
 
