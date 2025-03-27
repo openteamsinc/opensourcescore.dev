@@ -2,7 +2,7 @@ from typing import List
 from dataclasses import dataclass, field
 import logging
 
-from ..notes import Note, SCORE_ORDER, ANY, HEALTHY, HEALTH, LEGAL, MATURE, MATURUTY
+from ..notes import Note, SCORE_ORDER, ANY, HEALTHY, HEALTH, LEGAL, MATURE, MATURITY
 
 log = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class Score:
 
     @classmethod
     def maturity(cls, notes):
-        score = cls(MATURE, MATURUTY)
+        score = cls(MATURE, MATURITY)
         for note in notes:
             score.add_note(note)
         return score

@@ -23,12 +23,12 @@ RISKS = [
 ANY = "Any"
 HEALTH = "Health"
 LEGAL = "Legal"
-MATURUTY = "Maturuty"
+MATURITY = "Maturity"
 
 GROUPS = {
     HEALTH: RISKS,
     LEGAL: RISKS,
-    MATURUTY: [
+    MATURITY: [
         HEALTHY,
         CAUTION_NEEDED,
         MODERATE_RISK,
@@ -146,9 +146,9 @@ class Note(enum.Enum):
 
     NO_COMMITS = ANY, PLACEHOLDER, "There are no human commits in this repository"
 
-    FIRST_COMMIT_THIS_YEAR = MATURUTY, EXPERIMENTAL, "First commit in the last year"
+    FIRST_COMMIT_THIS_YEAR = MATURITY, EXPERIMENTAL, "First commit in the last year"
 
-    LAST_COMMIT_OVER_A_YEAR = MATURUTY, LEGACY, "The last commit was over a year ago"
+    LAST_COMMIT_OVER_A_YEAR = MATURITY, LEGACY, "The last commit was over a year ago"
 
     PACKAGE_SKEW_NOT_UPDATED = (
         HEALTH,
