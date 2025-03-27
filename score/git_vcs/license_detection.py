@@ -1,10 +1,13 @@
 import pandas as pd
+
 from typing import Union
 from pathlib import Path
 from functools import lru_cache
 from strsimpy import SorensenDice
 from difflib import unified_diff
 from score.utils.license_name_to_kind import KIND_MAP
+from score.utils.normalize_license_content import normalize_license_content
+from hashlib import md5
 
 CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9
@@ -57,12 +60,17 @@ def identify_license(license_content: str) -> dict:
             )
         )
 
+    md5hash = md5(
+        normalize_license_content(license_content).encode("utf-8")
+    ).hexdigest()
+
     return {
         "license": best_match,
         "kind": kind,
         "similarity": similarity,
         "modified": modified,
         "diff": diff,
+        "md5": md5hash,
     }
 
 
