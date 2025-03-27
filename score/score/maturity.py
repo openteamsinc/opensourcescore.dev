@@ -1,7 +1,8 @@
 import pandas as pd
 from ..notes import Note
 
-one_year_ago = pd.Timestamp.now() - pd.DateOffset(years=1)
+ONE_YEAR_AGO = pd.Timestamp.now() - pd.DateOffset(years=1)
+FIVE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=5)
 
 
 def build_maturity_score(source_url: str, git_info: dict):
@@ -15,11 +16,18 @@ def build_maturity_score(source_url: str, git_info: dict):
         yield Note.NO_COMMITS
         return
 
-    if git_info["latest_commit"] < one_year_ago:
+    latest_commit = git_info["latest_commit"]
+    first_commit = git_info["first_commit"]
+
+    if latest_commit < ONE_YEAR_AGO:
+        if latest_commit < FIVE_YEARS_AGO:
+            yield Note.LAST_COMMIT_OVER_5_YEARS
+            return
+
         yield Note.LAST_COMMIT_OVER_A_YEAR
         return
 
-    if git_info["first_commit"] > one_year_ago:
+    if first_commit > ONE_YEAR_AGO:
         yield Note.FIRST_COMMIT_THIS_YEAR
 
     return
