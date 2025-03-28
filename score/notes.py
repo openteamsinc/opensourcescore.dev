@@ -80,7 +80,7 @@ class Note(enum.Enum):
         return cls._lookup.get(note_id, f"UNKNOWN_{note_id}")
 
     UNSAFE_GIT_PROTOCOL = ANY, UNKNOWN, "Unsafe Git Protocol"
-    REPO_NOT_FOUND = ANY, MODERATE_RISK, "Repo not found"
+    REPO_NOT_FOUND = ANY, UNKNOWN, "Repo not found"
     REPO_EMPTY = ANY, PLACEHOLDER, "Repository is empty"
     GIT_TIMEOUT = ANY, UNKNOWN, "Could not clone repo in a reasonable amount of time"
     OTHER_GIT_ERROR = ANY, UNKNOWN, "Could not clone repo"
