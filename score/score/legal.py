@@ -8,7 +8,6 @@ def score_license(git_info: dict):
     license = git_info.get("license", {})
     license_kind = license.get("kind")
     modified = license.get("modified")
-    print("git_info")
     if git_info.get("error") and not pd.isna(git_info["error"]):
         note = git_info["error"]
         yield note
