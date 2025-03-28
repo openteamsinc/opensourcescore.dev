@@ -2,6 +2,7 @@ from typing import Optional
 from .license_name_to_kind import KIND_MAP
 
 common_license_names_to_kind = {
+    "BSD": "BSD",
     "BSD-2-Clause": "BSD",
     "BSD-3-Clause": "BSD",
     "The-Unlicense-(Unlicense)": "UNLICENSE",
@@ -22,9 +23,12 @@ def get_kind_from_common_license_name(orig_license_name: Optional[str]):
         return None
 
     license_name = orig_license_name.lower()
+    print("license_name", license_name)
+    print('license_name.endswith(" license")', license_name.endswith(" license"))
     if license_name.endswith(" license"):
         license_name = license_name[:-8]
 
     license_name = license_name.replace(" ", "-")
+    print("license_name", license_name)
 
     return common_license_names_to_kind.get(license_name, orig_license_name)
