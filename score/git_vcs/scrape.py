@@ -252,7 +252,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
     with open(license_file_path, encoding="utf8", errors="ignore") as license_file:
         license_content = license_file.read().strip()
 
-    return identify_license(license_content)
+    return identify_license(url, license_content)
 
 
 def checkout_and_read_file(repo: Repo, suffix: str):

@@ -32,7 +32,7 @@ def normalize(content: str):
     return content.lower().strip()
 
 
-def identify_license(license_content: str) -> dict:
+def identify_license(source_url: str, license_content: str) -> dict:
 
     normalized_license_content = normalize(license_content)
     print(repr(normalized_license_content))
@@ -69,10 +69,10 @@ def identify_license(license_content: str) -> dict:
     if modified:
         diff = "\n".join(
             unified_diff(
-                license_content.splitlines(),
                 all_licenses[best_match].splitlines(),
-                fromfile="Project Licence",
-                tofile="Open Source License",
+                license_content.splitlines(),
+                fromfile=f"https://opensource.org/license/{best_match}",
+                tofile=f"{source_url}",
             )
         )
 
