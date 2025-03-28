@@ -1,6 +1,7 @@
 import pandas as pd
 import pyarrow as pa
-import toml
+import tomli
+import configparser
 from typing import Optional
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
@@ -223,7 +224,7 @@ def get_license_type(repo: Repo, url: str) -> dict:
             # Check out the LICENSE file(s)
             repo.git.checkout(repo.active_branch, "--", PATTERN)
         except GitCommandError as e:
-            log.error(f"{url}: Could not checkout license file: {PATTERN} {e.stderr}")
+            log.debug(f"{url}: Could not checkout license file: {PATTERN} {e.stderr}")
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
     paths = [
@@ -254,40 +255,95 @@ def get_license_type(repo: Repo, url: str) -> dict:
     return identify_license(license_content)
 
 
-def get_pyproject_tomls(repo: Repo):
-    # Check out the PYPROJECT file(s)
+def checkout_and_read_file(repo: Repo, suffix: str):
     try:
-        repo.git.checkout(repo.active_branch, "--", "pyproject.toml")
+        repo.git.checkout(repo.active_branch, "--", suffix)
     except GitCommandError:
         try:
-            repo.git.checkout(repo.active_branch, "--", "**/pyproject.toml")
+            repo.git.checkout(repo.active_branch, "--", f"**/{suffix}")
         except GitCommandError:
             pass
 
-    possible_paths = glob.glob(f"{repo.working_dir}/**/pyproject.toml", recursive=True)
+    possible_paths = glob.glob(f"{repo.working_dir}/**/{suffix}", recursive=True)
     if not possible_paths:
         return []
 
-    # Shortest path picks the pyproject.toml in the root first
+    # Shortest path first
     possible_paths = sorted(possible_paths, key=lambda x: len(x))
     return possible_paths
 
 
+def get_pyproject_tomls(repo: Repo):
+    return checkout_and_read_file(repo, "pyproject.toml")
+
+
+def get_setup_configs(repo: Repo):
+    return checkout_and_read_file(repo, "setup.cfg")
+
+
+def get_setup_pys(repo: Repo):
+    return checkout_and_read_file(repo, "setup.py")
+
+
 def read_pypi_toml(repo: Repo, full_path: str):
+    def get_name(data):
+        name = data.get("project", {}).get("name")
+        if name:
+            return name
+        return data.get("tool", {}).get("poetry", {}).get("name")
+
     try:
         # Read and return the license type
-        with open(full_path, encoding="utf8", errors="ignore") as fd:
-            data = toml.load(fd)
+        with open(full_path, "rb") as fd:
+            data = tomli.load(fd)
     except FileNotFoundError:
         return None, None
-    except (toml.TomlDecodeError, IndexError, IOError) as err:
+    except (tomli.TOMLDecodeError, IndexError, IOError) as err:
         log.error(f"Error reading pyproject.toml: {err}")
         return None, None
-    name = data.get("project", {}).get("name")
+    name = get_name(data)
 
     if not name:
         return None, None
 
+    return pypi_normalize(name), full_path.replace(repo.working_dir, "")
+
+
+def read_setup_cfg(repo: Repo, full_path: str):
+    config = configparser.ConfigParser()
+    try:
+        # Read and return the license type
+        with open(full_path, encoding="utf8", errors="ignore") as fd:
+            config.read_file(fd)
+    except FileNotFoundError:
+        return None, None
+    except (configparser.Error, IndexError, IOError) as err:
+        log.error(f"Error reading setup.cfg: {err}")
+        return None, None
+
+    if not config.has_option("metadata", "name"):
+        return None, None
+
+    name = config.get("metadata", "name")
+
+    return pypi_normalize(name), full_path.replace(repo.working_dir, "")
+
+
+def read_setup_py(repo: Repo, full_path: str):
+    try:
+        # Read and return the license type
+        with open(full_path, encoding="utf8", errors="ignore") as fd:
+            setup_code = fd.read()
+    except FileNotFoundError:
+        return None, None
+
+    pattern = r"setup\(.*?name\s*=\s*(['\"])(.*?)\1"
+
+    match = re.search(pattern, setup_code, re.DOTALL)
+    if not match:
+        return None, None
+
+    name = match.group(2)
     return pypi_normalize(name), full_path.replace(repo.working_dir, "")
 
 
@@ -303,8 +359,31 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
 
 def get_all_pypackage_names(repo: Repo):
     full_paths = get_pyproject_tomls(repo)
-
+    found_names = False
+    log.info(f"Found {len(full_paths)} pyproject.toml files")
     for full_path in full_paths:
         name, source_file = read_pypi_toml(repo, full_path)
         if name:
+            found_names = True
             yield f"pypi/{name}", source_file
+
+    full_paths = get_setup_configs(repo)
+    log.info(f"Found {len(full_paths)} setup.cfg files")
+    for full_path in full_paths:
+        name, source_file = read_setup_cfg(repo, full_path)
+        if name:
+            found_names = True
+            yield f"pypi/{name}", source_file
+
+    if found_names:
+        return
+
+    full_paths = get_setup_pys(repo)
+    log.info(f"Found {len(full_paths)} setup.py files")
+    for full_path in full_paths:
+        name, source_file = read_setup_py(repo, full_path)
+        if name:
+            found_names = True
+            yield f"pypi/{name}", source_file
+
+    return
