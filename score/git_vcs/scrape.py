@@ -36,6 +36,7 @@ def pypi_normalize(name):
 
 @contextmanager
 def clone_repo(url):
+    metadata = {"package_destinations": [], "source_url": url}
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:
@@ -55,20 +56,17 @@ def clone_repo(url):
             # repo = Repo.clone_from(
             #     url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
             # )
-            yield repo, {"source_url": url}
+            yield repo, metadata
         except UnsafeProtocolError:
-            yield None, {
-                "error": Note.UNSAFE_GIT_PROTOCOL,
-                "source_url": url,
-            }
+            metadata["error"] = Note.UNSAFE_GIT_PROTOCOL
+            yield None, metadata
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr.lower():
-                yield None, {"error": Note.REPO_NOT_FOUND, "source_url": url}
+                metadata["error"] = Note.REPO_NOT_FOUND
+                yield None, metadata
             elif err.status == -9 and "timeout:" in err.stderr.lower():
-                yield None, {
-                    "error": Note.GIT_TIMEOUT,
-                    "source_url": url,
-                }
+                metadata["error"] = Note.GIT_TIMEOUT
+                yield None, metadata
 
             else:
                 log.error(f"{url}: {err.stderr}")

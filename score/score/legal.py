@@ -8,12 +8,17 @@ def score_license(git_info: dict):
     license = git_info.get("license", {})
     license_kind = license.get("kind")
     modified = license.get("modified")
-
     if git_info.get("error") and not pd.isna(git_info["error"]):
         note = git_info["error"]
         yield note
+        return
 
-    elif not license_kind or license_kind == "Unknown":
+    if license.get("error") and not pd.isna(license["error"]):
+        note = license["error"]
+        yield note
+        return
+
+    if not license_kind or license_kind == "Unknown":
         yield Note.NO_OS_LICENSE
 
     if license_kind in LESS_PERMISSIVE_LICENSES:

@@ -2,6 +2,7 @@ from typing import Optional
 from .license_name_to_kind import KIND_MAP
 
 common_license_names_to_kind = {
+    "BSD": "BSD",
     "BSD-2-Clause": "BSD",
     "BSD-3-Clause": "BSD",
     "The-Unlicense-(Unlicense)": "UNLICENSE",

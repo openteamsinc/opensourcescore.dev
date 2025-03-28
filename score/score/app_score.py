@@ -89,11 +89,6 @@ def build_score(source_url, source_data, package_data):
         "source_url": source_url,
         "packages": [],
         "last_updated": source_data and source_data.get("latest_commit"),
-        "ecosystem_destination": {
-            "pypi": source_data and source_data.get("py_package"),
-            "npm": None,
-            "conda": None,
-        },
     }
     if source_data is None:
         score["status"] = "not_found"
