@@ -1,5 +1,6 @@
 import pandas as pd
 
+import re
 from typing import Union
 from pathlib import Path
 from functools import lru_cache
@@ -13,14 +14,27 @@ CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9
 
 
-def remove_copyright_lines(content: str):
-    return "".join([line for line in content.splitlines() if not copyright_line(line)])
+def normalize(content: str):
+    content = "\n".join(
+        [line for line in content.splitlines() if not copyright_line(line)]
+    )
+
+    # Normalize bullet points (replace *, -, 1., 2., etc. with a standard marker)
+    content = re.sub(
+        r"^\s*(\d+[\.\):]|\([a-z0-9]+\)|[ivxIVX]+[\.\)])\s+",
+        " * ",
+        content,
+        flags=re.MULTILINE,
+    )
+
+    content = re.sub(r"[\s]+", " ", content)
+
+    return content.lower().strip()
 
 
-def identify_license(license_content: str) -> dict:
+def identify_license(source_url: str, license_content: str) -> dict:
 
-    license_content_without_copyright = remove_copyright_lines(license_content)
-
+    normalized_license_content = normalize(license_content)
     all_licenses = get_all_licenses()
     sd = SorensenDice()
     similarities = []
@@ -29,8 +43,8 @@ def identify_license(license_content: str) -> dict:
             {
                 "name": license_name,
                 "similarity": sd.similarity(
-                    license_content_without_copyright.strip(),
-                    remove_copyright_lines(ref_license).strip(),
+                    normalized_license_content,
+                    normalize(ref_license),
                 ),
             }
         )
@@ -53,10 +67,10 @@ def identify_license(license_content: str) -> dict:
     if modified:
         diff = "\n".join(
             unified_diff(
-                license_content.splitlines(),
                 all_licenses[best_match].splitlines(),
-                fromfile="Project Licence",
-                tofile="Open Source License",
+                license_content.splitlines(),
+                fromfile=f"https://opensource.org/license/{best_match}",
+                tofile=f"{source_url}",
             )
         )
 
@@ -78,10 +92,17 @@ license_dir = Path(__file__).parent / "licenses"
 
 
 def copyright_line(line: Union[bytes | str]):
-    copyright = b"copyright" if isinstance(line, bytes) else "copyright"
-    if line.strip().lower().startswith(copyright):
-        return True
-    return False
+
+    if isinstance(line, bytes):
+        line = line.decode("utf-8", errors="ignore")
+
+    # Pattern matches:
+    # - Optional leading characters like '-', '*', '•' and whitespace
+    # - "copyright" (case insensitive)
+    # - Optional "(c)" or "©" symbol
+    pattern = r"(?i)^[-\s*•]*copyright(\s+\([cC]\)|\s+©)?"
+
+    return bool(re.search(pattern, line.strip()))
 
 
 @lru_cache

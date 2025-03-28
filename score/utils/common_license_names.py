@@ -1,3 +1,4 @@
+from typing import Optional
 from .license_name_to_kind import KIND_MAP
 
 common_license_names_to_kind = {
@@ -16,7 +17,9 @@ common_license_names_to_kind = {
 }
 
 
-def get_kind_from_common_license_name(orig_license_name: str):
+def get_kind_from_common_license_name(orig_license_name: Optional[str]):
+    if not orig_license_name:
+        return None
 
     license_name = orig_license_name.lower()
     if license_name.endswith(" license"):
