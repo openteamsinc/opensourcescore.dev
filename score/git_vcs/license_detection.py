@@ -35,7 +35,6 @@ def normalize(content: str):
 def identify_license(source_url: str, license_content: str) -> dict:
 
     normalized_license_content = normalize(license_content)
-    print(repr(normalized_license_content))
     all_licenses = get_all_licenses()
     sd = SorensenDice()
     similarities = []
@@ -64,7 +63,6 @@ def identify_license(source_url: str, license_content: str) -> dict:
     kind = KIND_MAP.get(best_match, best_match)
 
     modified = similarity < CLOSE_ENOUGH  # type: ignore
-    print(repr(normalize(all_licenses[best_match])))
     diff = None
     if modified:
         diff = "\n".join(
