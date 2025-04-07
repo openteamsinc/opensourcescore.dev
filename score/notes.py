@@ -1,5 +1,4 @@
 import enum
-import pandas as pd
 
 HEALTHY = "Healthy"
 CAUTION_NEEDED = "Caution Needed"
@@ -53,7 +52,7 @@ FEW_MAX_MONTHLY_AUTHORS_CONST = 3
 
 class Note(enum.Enum):
 
-    def __new__(cls, *args, **kwds):
+    def __new__(cls, *args):
         value = len(cls.__members__) + 1
         obj = object.__new__(cls)
         obj._value_ = value
@@ -68,16 +67,6 @@ class Note(enum.Enum):
         self.description = description
         self.category = category
         self.group = group
-
-    @classmethod
-    def lookup(cls, note_id):
-        if not hasattr(cls, "_lookup"):
-
-            cls._lookup = {
-                v.value: k for k, v in vars(cls).items() if isinstance(v, Note)
-            }
-
-        return cls._lookup.get(note_id, f"UNKNOWN_{note_id}")
 
     NO_SOURCE_UNSAFE_GIT_PROTOCOL = ANY, UNKNOWN, "Unsafe Git Protocol"
     REPO_EMPTY = ANY, PLACEHOLDER, "Repository is empty"
@@ -197,14 +186,3 @@ def to_dict():
         for k, v in vars(Note).items()
         if isinstance(v, Note)
     }
-
-
-def to_df():
-    return pd.DataFrame.from_records(
-        [
-            (k, v.value, v.category, v.description)
-            for k, v in vars(Note).items()
-            if isinstance(v, Note)
-        ],
-        columns=["code", "id", "category", "description"],
-    ).set_index("id")

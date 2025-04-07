@@ -133,16 +133,6 @@ def read_npm_package_json(
     return data["name"], full_path.replace(str(repo.working_dir), "")
 
 
-def get_pypackage_name(repo: Repo) -> Optional[str]:
-    full_paths = get_pyproject_tomls(repo)
-    if len(full_paths) == 0:
-        return None
-
-    full_path = full_paths[0]
-    name, _ = read_pypi_toml(repo, full_path)
-    return name
-
-
 def get_npm_pypackage_names(repo: Repo):
     full_paths = get_npm_package_json(repo)
     log.info(f"Found {len(full_paths)} package.json files")
