@@ -7,8 +7,3 @@ strsimpy~=0.2.1
 tomli==2.2.1
 fastapi[standard]~=0.115.12
 
-# --- transitive dependencies - maybe specify versions later
-numpy
-cachetools
-dateutil
-pydantic
