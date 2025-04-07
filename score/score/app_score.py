@@ -1,8 +1,11 @@
+from typing import Optional
 from datetime import timedelta
 from hashlib import md5
 import re
 from score.utils.normalize_license_content import normalize_license_content
-from .score import safe_date_diff, Score
+from score.models import Package, Source, Score as ScoreType
+from .score_type import ScoreBuilder
+from .score import safe_date_diff
 from .maturity import build_maturity_score
 from .legal import build_legal_score
 from .health_risk import (
@@ -25,14 +28,17 @@ def package_normalize_name(ecosystem: str, name: str) -> str:
     return name
 
 
-def check_package_license(package_data: dict, source_data: dict):
-    package_license = package_data.get("license")
-    if not package_license:
+def check_package_license(pkg: Package, source_data: Source):
+
+    if not pkg.license:
         yield Note.PACKAGE_NO_LICENSE
         return
 
-    source_license_kind = source_data.get("license", {}).get("kind")
-    source_license_md5 = source_data.get("license", {}).get("md5")
+    if not source_data.license:
+        return
+
+    source_license_kind = source_data.license.kind
+    source_license_md5 = source_data.license.md5
 
     if not source_license_kind:
         return
@@ -40,11 +46,11 @@ def check_package_license(package_data: dict, source_data: dict):
     if source_license_kind.lower() == "unknown":
         return
 
-    if package_license == source_license_kind:
+    if pkg.license == source_license_kind:
         return
 
     package_license_md5 = md5(
-        normalize_license_content(package_license).encode("utf-8")
+        normalize_license_content(pkg.license).encode("utf-8")
     ).hexdigest()
 
     if package_license_md5 == source_license_md5:
@@ -54,19 +60,19 @@ def check_package_license(package_data: dict, source_data: dict):
     yield Note.PACKAGE_LICENSE_MISMATCH
 
 
-def score_python(package_data: dict, source_data: dict):
+def score_python(package_data: Package, source_data: Source):
 
     if not package_data:
         return
-    if source_data.get("error"):
+    if source_data.error:
         return
-    ecosystem = package_data["ecosystem"]
 
-    published_name = package_normalize_name(ecosystem, package_data.get("name"))
+    ecosystem = package_data.ecosystem
+    published_name = package_normalize_name(ecosystem, package_data.name)
 
     package_destinations_names = [
         name[len(ecosystem) + 1 :]
-        for name, _ in source_data.get("package_destinations", [])
+        for name, _ in source_data.package_destinations
         if name.startswith(f"{ecosystem}/")
     ]
 
@@ -76,9 +82,7 @@ def score_python(package_data: dict, source_data: dict):
         yield Note.PACKAGE_NAME_MISMATCH
 
     one_year = timedelta(days=365)
-    skew = safe_date_diff(
-        source_data.get("latest_commit"), package_data.get("release_date")
-    )
+    skew = safe_date_diff(source_data.latest_commit, package_data.release_date)
     if skew and skew > one_year:
         yield Note.PACKAGE_SKEW_NOT_UPDATED
 
@@ -90,24 +94,7 @@ def score_python(package_data: dict, source_data: dict):
     return
 
 
-def build_score(source_url, source_data, package_data):
-
-    score: dict = {
-        "source_url": source_url,
-        "packages": [],
-        "last_updated": source_data and source_data.get("latest_commit"),
-    }
-    if source_data is None:
-        score["status"] = "not_found"
-        score["notes"] = [Note.NO_SOURCE_URL.name]
-        return score
-
-    license = source_data.get("license")
-    if license and not license.get("error"):
-        score["license"] = license["license"]
-        score["license_kind"] = license["kind"]
-        score["license_modified"] = license["modified"]
-
+def build_notes(source_url, source_data: Source, package_data: Package) -> list[Note]:
     notes = []
     notes.extend(build_maturity_score(source_url, source_data))
 
@@ -117,11 +104,21 @@ def build_score(source_url, source_data, package_data):
 
     # -- Distribution + Language specific
     notes.extend(score_python(package_data, source_data))
+    return notes
 
-    score["notes"] = sorted({note.name for note in notes})
 
-    score["legal"] = Score.legal(notes).dict_string_notes()
-    score["health_risk"] = Score.health_risk(notes).dict_string_notes()
-    score["maturity"] = Score.maturity(notes).dict_string_notes()
+def build_score(
+    source_url, source_data: Optional[Source], package_data: Package
+) -> ScoreType:
 
-    return score
+    if source_data is None:
+        notes = [Note.NO_SOURCE_URL]
+    else:
+        notes = build_notes(source_url, source_data, package_data)
+
+    return ScoreType(
+        notes=sorted(notes, key=lambda x: x.name),
+        legal=ScoreBuilder.legal(notes).asmodel(),
+        health_risk=ScoreBuilder.health_risk(notes).asmodel(),
+        maturity=ScoreBuilder.maturity(notes).asmodel(),
+    )

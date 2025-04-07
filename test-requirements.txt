@@ -4,3 +4,25 @@ pytest~=8.3.5
 robotframework==7.2.2
 robotframework-requests==0.9.7
 sqlfluff==3.3.1
+mypy~=1.15.0
+
+# TYPES
+
+types-cachetools
+types-cffi
+types-colorama
+types-decorator
+types-docutils
+types-pexpect
+types-protobuf
+types-pyasn1
+types-Pygments
+types-pyOpenSSL
+types-python-dateutil
+types-pytz
+types-requests
+types-setuptools
+types-shapely
+types-six
+types-tqdm
+types-ujson

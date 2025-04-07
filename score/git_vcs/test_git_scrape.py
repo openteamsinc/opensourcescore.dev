@@ -1,17 +1,17 @@
-from .scrape import create_git_metadata
+from .scrape import create_git_metadata_str
 
 
 def test_scrape():
-    metadata = create_git_metadata("https://github.com/numpy/numpy")
+    metadata = create_git_metadata_str("https://github.com/numpy/numpy")
     assert metadata
     print(metadata)
-    assert metadata["license"]["kind"] == "BSD"
-    assert metadata["py_package"] == "numpy"
+    assert metadata.license.kind == "BSD"
+    assert metadata.package_destinations == [("pypi/numpy", "/pyproject.toml")]
 
 
 def test_scrape_flask():
-    metadata = create_git_metadata("https://github.com/pallets/flask")
+    metadata = create_git_metadata_str("https://github.com/pallets/flask")
     assert metadata
     print(metadata)
-    assert metadata["license"]["kind"] == "BSD"
-    assert metadata["py_package"] == "flask"
+    assert metadata.license.kind == "BSD"
+    assert metadata.package_destinations == [("pypi/flask", "/pyproject.toml")]

@@ -3,28 +3,16 @@ from typing import List, Optional, Dict, Tuple
 import logging
 
 import pandas as pd
-import pyarrow as pa
 from tqdm import tqdm
 from dateutil.parser import parse as parsedate
 
+from score.models import Package
 from ..utils.request_session import get_session
 from ..utils.map import do_map
 from ..utils.normalize_source_url import normalize_source_url
 from ..utils.common_license_names import get_kind_from_common_license_name
 
 log = logging.getLogger(__name__)
-
-pypi_schema = pa.schema(
-    [
-        ("partition", pa.int32()),
-        ("insert_ts", pa.timestamp("ns")),
-        ("name", pa.string()),
-        ("version", pa.string()),
-        ("source_url", pa.string()),
-        ("source_url_key", pa.string()),
-        ("release_date", pa.timestamp("ns")),
-    ]
-)
 
 
 def get_license_from_classifier(classifier: str) -> Optional[str]:
@@ -49,9 +37,10 @@ def get_license_from_classifiers(classifiers: List[str]) -> Optional[str]:
         license = get_license_from_classifier(classifier)
         if license:
             return license
+    return None
 
 
-def get_package_data(package_name: str):
+def get_package_data(package_name: str) -> Package:
     """
     Fetches package data from the PyPI JSON API for a given package name and filters out specific fields.
     Additionally fetches download counts from the PyPI Stats API.
@@ -67,7 +56,7 @@ def get_package_data(package_name: str):
     response = s.get(url)
     if response.status_code == 404:
         log.debug(f"Skipping package not found for package {package_name}")
-        return {"status": "not_found"}
+        return Package(name=package_name, ecosystem="pypi", status="not_found")
     response.raise_for_status()  # Raise an error for bad status codes
     package_data = response.json()  # Parse the JSON response
 
@@ -94,17 +83,16 @@ def get_package_data(package_name: str):
         license = get_license_from_classifiers(info.get("classifiers", []))
     license = get_kind_from_common_license_name(license)
 
-    filtered_data = {
-        "name": package_name,
-        "version": version,
-        "source_url": source_url,
-        "source_url_key": source_url_key,
-        "release_date": release_date,
-        "license": license,
-        "ecosystem": "pypi",
-    }
-
-    return filtered_data
+    package_data = Package(
+        name=package_name,
+        version=version,
+        source_url=source_url,
+        source_url_key=source_url_key,
+        release_date=release_date,
+        license=license,
+        ecosystem="pypi",
+    )
+    return package_data
 
 
 def extract_source_url(

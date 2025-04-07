@@ -2,16 +2,17 @@ from typing import List
 from dataclasses import dataclass, field
 import logging
 
-from ..notes import Note, SCORE_ORDER, ANY, HEALTHY, HEALTH, LEGAL, MATURE, MATURITY
+from score.models import CategorizedScore
+from score.notes import Note, SCORE_ORDER, ANY, HEALTHY, HEALTH, LEGAL, MATURE, MATURITY
 
 log = logging.getLogger(__name__)
 
 
 @dataclass
-class Score:
+class ScoreBuilder:
     value: str
     group: str
-    notes: List[int] = field(default_factory=list)
+    notes: List[Note] = field(default_factory=list)
 
     def __init__(self, initial_value: str, group: str):
         super().__init__()
@@ -49,6 +50,9 @@ class Score:
 
     def dict_string_notes(self):
         return {"value": self.value, "notes": [n.name for n in self.notes]}
+
+    def asmodel(self):
+        return CategorizedScore(value=self.value, notes=self.notes)
 
     @classmethod
     def legal(cls, notes):
