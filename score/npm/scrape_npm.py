@@ -1,7 +1,7 @@
 import logging
 
 log = logging.getLogger(__name__)
-
+from dateutil.parser import parse
 from ..utils.request_session import get_session
 from ..utils.normalize_source_url import normalize_source_url
 
@@ -25,9 +25,13 @@ def get_npm_package_data(package_name):
     # ndownloads = get_npm_package_downloads(package)
     version = package_data.get("dist-tags", {}).get("latest")
     release_date = package_data.get("time", {}).get(version)
+    license = package_data.get("license")
+
     return {
         "name": package_name,
         "version": version,
         "source_url": source_url,
-        "release_date": release_date,
+        "release_date": parse(release_date),
+        "ecosystem": "npm",
+        "license": license,
     }

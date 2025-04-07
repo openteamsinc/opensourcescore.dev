@@ -79,20 +79,22 @@ class Note(enum.Enum):
 
         return cls._lookup.get(note_id, f"UNKNOWN_{note_id}")
 
-    UNSAFE_GIT_PROTOCOL = ANY, UNKNOWN, "Unsafe Git Protocol"
-    REPO_NOT_FOUND = ANY, UNKNOWN, "Repo not found"
+    NO_SOURCE_UNSAFE_GIT_PROTOCOL = ANY, UNKNOWN, "Unsafe Git Protocol"
     REPO_EMPTY = ANY, PLACEHOLDER, "Repository is empty"
-    GIT_TIMEOUT = ANY, UNKNOWN, "Could not clone repo in a reasonable amount of time"
-    OTHER_GIT_ERROR = ANY, UNKNOWN, "Could not clone repo"
-    LICENSE_CHECKOUT_ERROR = LEGAL, MODERATE_RISK, "Could not checkout license"
+    NO_SOURCE_REPO_NOT_FOUND = ANY, UNKNOWN, "Repo not found"
+    NO_SOURCE_GIT_TIMEOUT = (
+        ANY,
+        UNKNOWN,
+        "Could not clone repo in a reasonable amount of time",
+    )
+    NO_SOURCE_OTHER_GIT_ERROR = ANY, UNKNOWN, "Could not clone repo"
     NO_LICENSE = LEGAL, MODERATE_RISK, "No License Found"
-    NO_LICENSE_INFO = LEGAL, MODERATE_RISK, "Could not retrieve licence information"
-    NO_OS_LICENSE = (
+    LICENSE_NOT_OSS = (
         LEGAL,
         MODERATE_RISK,
         "License may not comply with open source standards",
     )
-    LESS_PERMISSIVE_LICENSE = (
+    LICENSE_LESS_PERMISSIVE = (
         LEGAL,
         CAUTION_NEEDED,
         "License may have usage restrictions. Review terms before implementation",
@@ -103,9 +105,13 @@ class Note(enum.Enum):
         "License may have been modified from the original",
     )
 
-    INSECURE_CONNECTION = ANY, UNKNOWN, "Source code scheme 'http://' is not secure"
-    LOCALHOST_URL = ANY, UNKNOWN, "Source code location is a localhost url"
-    INVALID_URL = ANY, UNKNOWN, "Source code location is not a valid url"
+    NO_SOURCE_INSECURE_CONNECTION = (
+        ANY,
+        UNKNOWN,
+        "Source code scheme 'http://' is not secure",
+    )
+    NO_SOURCE_LOCALHOST_URL = ANY, UNKNOWN, "Source code location is a localhost url"
+    NO_SOURCE_INVALID_URL = ANY, UNKNOWN, "Source code location is not a valid url"
 
     FEW_MAX_MONTHLY_AUTHORS = (
         HEALTH,
@@ -172,9 +178,9 @@ class Note(enum.Enum):
         "Package was not published with a license",
     )
 
-    PACKAGE_SOURCE_NOT_FOUND = (
+    NO_SOURCE_URL = (
         ANY,
-        HIGH_RISK,
+        UNKNOWN,
         "The source code location could not be found",
     )
     HEALTHY = ANY, HEALTHY, "Healthy"

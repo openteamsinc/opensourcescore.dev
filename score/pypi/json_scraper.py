@@ -101,6 +101,7 @@ def get_package_data(package_name: str):
         "source_url_key": source_url_key,
         "release_date": release_date,
         "license": license,
+        "ecosystem": "pypi",
     }
 
     return filtered_data

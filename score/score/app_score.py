@@ -19,6 +19,12 @@ def pypi_normalize(name):
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+def package_normalize_name(ecosystem: str, name: str) -> str:
+    if ecosystem == "pypi":
+        return pypi_normalize(name)
+    return name
+
+
 def check_package_license(package_data: dict, source_data: dict):
     package_license = package_data.get("license")
     if not package_license:
@@ -54,14 +60,17 @@ def score_python(package_data: dict, source_data: dict):
         return
     if source_data.get("error"):
         return
+    ecosystem = package_data["ecosystem"]
 
-    published_name = pypi_normalize(package_data.get("name"))
-    # expected_name = pypi_normalize(source_data.get("py_package"))
+    published_name = package_normalize_name(ecosystem, package_data.get("name"))
+
     package_destinations_names = [
-        name[5:]
+        name[len(ecosystem) + 1 :]
         for name, _ in source_data.get("package_destinations", [])
-        if name.startswith("pypi/")
+        if name.startswith(f"{ecosystem}/")
     ]
+
+    print("package_destinations_names", package_destinations_names)
 
     if len(package_destinations_names) == 0:
         yield Note.NO_PROJECT_NAME
@@ -69,6 +78,7 @@ def score_python(package_data: dict, source_data: dict):
         yield Note.PACKAGE_NAME_MISMATCH
 
     one_year = timedelta(days=365)
+    print(package_data)
     skew = safe_date_diff(
         source_data.get("latest_commit"), package_data.get("release_date")
     )
@@ -92,7 +102,7 @@ def build_score(source_url, source_data, package_data):
     }
     if source_data is None:
         score["status"] = "not_found"
-        score["notes"] = [Note.PACKAGE_SOURCE_NOT_FOUND.name]
+        score["notes"] = [Note.NO_SOURCE_URL.name]
         return score
 
     license = source_data.get("license")
