@@ -1,0 +1,11 @@
+[[tool.mypy.overrides]]
+module = ["strsimpy.*"]
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = ["cvss.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
+ignore_missing_imports = true
