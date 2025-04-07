@@ -1,7 +1,16 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from pydantic import field_serializer
+from typing import Optional, List, Tuple
 from datetime import datetime
 from .notes import Note
+
+
+@dataclass
+class NoteDescr:
+    code: str
+    category: str
+    description: str
+    id: int
 
 
 @dataclass
@@ -35,7 +44,7 @@ class Source:
     error: Optional[Note] = None
     license: Optional[License] = None
 
-    package_destinations: list[list[str]] = field(default_factory=list)
+    package_destinations: List[Tuple[str, str]] = field(default_factory=list)
 
     recent_authors_count: Optional[int] = None
     max_monthly_authors_count: Optional[int] = None
@@ -45,19 +54,21 @@ class Source:
 
 @dataclass
 class CategorizedScore:
-    value: Optional[str] = None
+    value: str
     notes: list[Note] = field(default_factory=list)
+
+    @field_serializer("notes")
+    def serialize_notes(self, notes):
+        return [note.name for note in notes]
 
 
 @dataclass
 class Score:
+    legal: CategorizedScore
+    health_risk: CategorizedScore
+    maturity: CategorizedScore
     notes: list[Note] = field(default_factory=list)
-    legal: CategorizedScore = field(
-        default_factory=lambda: CategorizedScore(notes=[], value=None)
-    )
-    health_risk: CategorizedScore = field(
-        default_factory=lambda: CategorizedScore(notes=[], value=None)
-    )
-    maturity: CategorizedScore = field(
-        default_factory=lambda: CategorizedScore(notes=[], value=None)
-    )
+
+    @field_serializer("notes")
+    def serialize_notes(self, notes):
+        return [note.name for note in notes]

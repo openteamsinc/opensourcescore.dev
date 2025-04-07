@@ -1,7 +1,8 @@
 import os
+from dataclasses import dataclass
 from typing import Optional
 from fastapi import FastAPI, Request
-from score.models import Package, Source, Score
+from score.models import Package, Source, Score, NoteDescr
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
 from .app_utils import (
@@ -35,6 +36,23 @@ app = FastAPI(
 )
 
 
+@dataclass
+class NotesResponse:
+    notes: dict[str, NoteDescr]
+    categories: list[str]
+    groups: dict[str, list[str]]
+
+
+@dataclass
+class ScoreResponse:
+    ecosystem: str
+    package_name: str
+    package: Package
+    source: Optional[Source]
+    score: Score
+    status: str
+
+
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
@@ -61,7 +79,10 @@ async def notes():
 
 
 @app.get(
-    "/notes/categories", tags=["notes"], summary="Return notes in a dictionary format"
+    "/notes/categories",
+    tags=["notes"],
+    summary="Return notes in a dictionary format",
+    response_model=NotesResponse,
 )
 async def category_notes():
     return {
@@ -76,19 +97,6 @@ def pypi(package_name):
     data = get_pypi_package_data_cached(package_name)
 
     return {"ecosystem": "pypi", "package_name": package_name, "data": data}
-
-
-from dataclasses import dataclass
-
-
-@dataclass
-class ScoreResponse:
-    ecosystem: str
-    package_name: str
-    package: Package
-    source: Optional[Source]
-    score: Score
-    status: str
 
 
 @app.get(
