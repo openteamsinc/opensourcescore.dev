@@ -6,6 +6,7 @@ from pathlib import Path
 from functools import lru_cache
 from strsimpy import SorensenDice
 from difflib import unified_diff
+from score.models import License
 from score.utils.license_name_to_kind import KIND_MAP
 from score.utils.normalize_license_content import normalize_license_content
 from hashlib import md5
@@ -14,7 +15,7 @@ CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9
 
 
-def normalize(content: str):
+def normalize(content: str) -> str:
     content = "\n".join(
         [line for line in content.splitlines() if not copyright_line(line)]
     )
@@ -32,14 +33,14 @@ def normalize(content: str):
     return content.lower().strip()
 
 
-def identify_license(source_url: str, license_content: str) -> dict:
+def identify_license(source_url: str, license_content: str) -> License:
 
     normalized_license_content = normalize(license_content)
     all_licenses = get_all_licenses()
     sd = SorensenDice()
-    similarities = []
+    similarities_lst = []
     for license_name, ref_license in all_licenses.items():
-        similarities.append(
+        similarities_lst.append(
             {
                 "name": license_name,
                 "similarity": sd.similarity(
@@ -48,21 +49,21 @@ def identify_license(source_url: str, license_content: str) -> dict:
                 ),
             }
         )
-    similarities = pd.DataFrame(similarities).set_index("name")
+    similarities = pd.DataFrame(similarities_lst).set_index("name")
     best_match = similarities.idxmax().item()
     similarity = similarities.loc[best_match, "similarity"]
     if similarity < PROBABLY_NOT:  # type: ignore
-        return {
-            "license": "Unknown",
-            "kind": "Unknown",
-            "similarity": similarity,
-            "best_match": best_match,
-            "modified": False,
-        }
+        return License(
+            license="Unknown",
+            kind="Unknown",
+            similarity=similarity,
+            best_match=best_match,
+            modified=False,
+        )
 
     kind = KIND_MAP.get(best_match, best_match)
 
-    modified = similarity < CLOSE_ENOUGH  # type: ignore
+    modified = bool(similarity < CLOSE_ENOUGH)
     diff = None
     if modified:
         diff = "\n".join(
@@ -78,14 +79,14 @@ def identify_license(source_url: str, license_content: str) -> dict:
         normalize_license_content(license_content).encode("utf-8")
     ).hexdigest()
 
-    return {
-        "license": best_match,
-        "kind": kind,
-        "similarity": similarity,
-        "modified": modified,
-        "diff": diff,
-        "md5": md5hash,
-    }
+    return License(
+        license=best_match,
+        kind=kind,
+        similarity=similarity,
+        modified=modified,
+        diff=diff,
+        md5=md5hash,
+    )
 
 
 license_dir = Path(__file__).parent / "licenses"
