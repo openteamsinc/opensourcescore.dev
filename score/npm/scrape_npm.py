@@ -1,11 +1,24 @@
 import logging
+from typing import Optional
+from datetime import datetime
 
 log = logging.getLogger(__name__)
-from dateutil.parser import parse
+from dateutil.parser import parse as parse_date
 from ..utils.request_session import get_session
 from ..utils.normalize_source_url import normalize_source_url
 
 NPM_PACKAGE_TEMPLATE_URL = "https://registry.npmjs.org/{package_name}"
+
+
+def try_parse_date(release_date: Optional[str]) -> datetime:
+    if release_date is None:
+        return None
+
+    try:
+        return parse_date(release_date)
+    except Exception as e:
+        log.debug(f"Failed to parse date {release_date}: {e}")
+        return None
 
 
 def get_npm_package_data(package_name):
@@ -31,7 +44,7 @@ def get_npm_package_data(package_name):
         "name": package_name,
         "version": version,
         "source_url": source_url,
-        "release_date": parse(release_date),
+        "release_date": try_parse_date(release_date),
         "ecosystem": "npm",
         "license": license,
     }

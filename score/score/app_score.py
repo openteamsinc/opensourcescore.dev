@@ -70,15 +70,12 @@ def score_python(package_data: dict, source_data: dict):
         if name.startswith(f"{ecosystem}/")
     ]
 
-    print("package_destinations_names", package_destinations_names)
-
     if len(package_destinations_names) == 0:
         yield Note.NO_PROJECT_NAME
     elif published_name not in package_destinations_names:
         yield Note.PACKAGE_NAME_MISMATCH
 
     one_year = timedelta(days=365)
-    print(package_data)
     skew = safe_date_diff(
         source_data.get("latest_commit"), package_data.get("release_date")
     )
