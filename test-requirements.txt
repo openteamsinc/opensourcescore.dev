@@ -16,7 +16,6 @@ types-docutils
 types-pexpect
 types-protobuf
 types-pyasn1
-types-pandas-stubs
 types-Pygments
 types-pyOpenSSL
 types-python-dateutil
