@@ -1,14 +1,11 @@
-import click
 from typing import List, Optional, Dict, Tuple
 import logging
 
-import pandas as pd
-from tqdm import tqdm
+
 from dateutil.parser import parse as parsedate
 
 from score.models import Package
 from ..utils.request_session import get_session
-from ..utils.map import do_map
 from ..utils.normalize_source_url import normalize_source_url
 from ..utils.common_license_names import get_kind_from_common_license_name
 
@@ -111,44 +108,3 @@ def extract_source_url(
             return key, source_url
 
     return None, None
-
-
-def scrape_json(packages: List[str]) -> pd.DataFrame:
-    """
-    Initiates the scraping process using the JSON API based on the given configuration.
-
-    Args:
-        packages (List[str]): List of package names to scrape data for.
-
-    Returns:
-        pd.DataFrame: A DataFrame containing the scraped data. The DataFrame includes the following fields:
-
-        - `name` (str): The name of the package.
-        - `first_letter` (str): The first letter of the package name. (Used for partitioning)
-        - `bugtrack_url` (Optional[str]): URL for the package's bug tracker, if available.
-        - `classifiers` (List[str]): A list of classifiers associated with the package,
-                typically indicating its license, supported operating systems, and programming languages.
-        - `docs_url` (Optional[str]): URL for the package's documentation, if available.
-        - `download_url` (Optional[str]): URL where the package can be downloaded, if available.
-        - `home_page` (Optional[str]): The home page URL for the package, if available.
-        - `keywords` (Optional[str]): A comma-separated string of keywords related to the package.
-        - `maintainer` (Optional[str]): The name of the maintainer of the package.
-        - `maintainer_email` (Optional[str]): The email address of the maintainer of the package.
-        - `release_url` (Optional[str]): URL of the release page for the package on PyPI.
-        - `requires_python` (Optional[str]): The Python version requirements for the package.
-        - `version` (Optional[str]): The current version of the package.
-        - `yanked_reason` (Optional[str]): The reason why the package version was yanked, if applicable.
-        - `source_url` (Optional[str]): The normalized URL for the source code repository, if identified.
-        - `source_url_key` (Optional[str]): The key from the `project_urls` dictionary that was
-            identified as the source URL (e.g., "code", "repository", "source", "homepage").
-    """
-    all_package_data = list(
-        tqdm(do_map(get_package_data, packages), total=len(packages), disable=None)
-    )
-    failed_count = len([x for x in all_package_data if x is None])
-    all_package_data = [x for x in all_package_data if x is not None]
-
-    click.echo(
-        f"OK, Failed to fetch data for {failed_count} of {len(packages)} packages."
-    )
-    return pd.DataFrame(all_package_data)

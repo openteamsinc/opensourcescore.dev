@@ -13,7 +13,7 @@ from dataclasses import replace
 from score.models import Source, License
 from score.notes import Note
 from .license_detection import identify_license
-from .check_url import check_url_str
+from .check_url import get_source_from_url
 from .package_destinations import get_all_pypackage_names
 
 one_year_ago = datetime.now() - timedelta(days=365)
@@ -68,7 +68,7 @@ def clone_repo(url: str):
 
 
 def create_git_metadata_str(url: str) -> Source:
-    source = check_url_str(url)
+    source = get_source_from_url(url)
     if source.error is not None:
         return source
 

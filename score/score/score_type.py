@@ -48,9 +48,6 @@ class ScoreBuilder:
     def dict(self):
         return {"value": self.value, "notes": [n.value for n in self.notes]}
 
-    def dict_string_notes(self):
-        return {"value": self.value, "notes": [n.name for n in self.notes]}
-
     def asmodel(self):
         return CategorizedScore(value=self.value, notes=self.notes)
 

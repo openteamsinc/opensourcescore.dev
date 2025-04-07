@@ -9,7 +9,6 @@ log = logging.getLogger(__name__)
 
 
 ONE_YEAR_AGO = pd.Timestamp.now() - pd.DateOffset(years=1)
-THREE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=3)
 FIVE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=5)
 
 LICENSE_LESS_PERMISSIVES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
