@@ -66,6 +66,9 @@ def score_python(package_data: Package, source_data: Source):
         return
     if source_data.error:
         return
+    ecosystem = package_data["ecosystem"]
+
+    published_name = package_normalize_name(ecosystem, package_data.get("name"))
 
     ecosystem = package_data.ecosystem
 
