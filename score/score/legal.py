@@ -1,7 +1,7 @@
 import pandas as pd
 from ..notes import Note
 
-LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
+LICENSE_LESS_PERMISSIVES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 
 
 def score_license(git_info: dict):
@@ -19,10 +19,10 @@ def score_license(git_info: dict):
         return
 
     if not license_kind or license_kind == "Unknown":
-        yield Note.NO_OS_LICENSE
+        yield Note.LICENSE_NOT_OSS
 
-    if license_kind in LESS_PERMISSIVE_LICENSES:
-        yield Note.LESS_PERMISSIVE_LICENSE
+    if license_kind in LICENSE_LESS_PERMISSIVES:
+        yield Note.LICENSE_LESS_PERMISSIVE
 
     if modified:
         yield Note.LICENSE_MODIFIED

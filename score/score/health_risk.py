@@ -11,7 +11,7 @@ ONE_YEAR_AGO = pd.Timestamp.now() - pd.DateOffset(years=1)
 THREE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=3)
 FIVE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=5)
 
-LESS_PERMISSIVE_LICENSES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
+LICENSE_LESS_PERMISSIVES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 
 
 def score_contributors(git_info: dict):

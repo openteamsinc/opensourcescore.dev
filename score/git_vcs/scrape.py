@@ -1,6 +1,7 @@
 import pandas as pd
 import pyarrow as pa
 import tomli
+import json
 import configparser
 from typing import Optional
 from git import Repo
@@ -58,19 +59,19 @@ def clone_repo(url):
             # )
             yield repo, metadata
         except UnsafeProtocolError:
-            metadata["error"] = Note.UNSAFE_GIT_PROTOCOL
+            metadata["error"] = Note.NO_SOURCE_UNSAFE_GIT_PROTOCOL
             yield None, metadata
         except GitCommandError as err:
             if err.status == 128 and "not found" in err.stderr.lower():
-                metadata["error"] = Note.REPO_NOT_FOUND
+                metadata["error"] = Note.NO_SOURCE_REPO_NOT_FOUND
                 yield None, metadata
             elif err.status == -9 and "timeout:" in err.stderr.lower():
-                metadata["error"] = Note.GIT_TIMEOUT
+                metadata["error"] = Note.NO_SOURCE_GIT_TIMEOUT
                 yield None, metadata
 
             else:
                 log.error(f"{url}: {err.stderr}")
-                yield None, {"error": Note.OTHER_GIT_ERROR, "source_url": url}
+                yield None, {"error": Note.NO_SOURCE_OTHER_GIT_ERROR, "source_url": url}
 
         return
 
@@ -283,6 +284,10 @@ def get_setup_pys(repo: Repo):
     return checkout_and_read_file(repo, "setup.py")
 
 
+def get_npm_package_json(repo: Repo):
+    return checkout_and_read_file(repo, "package.json")
+
+
 def read_pypi_toml(repo: Repo, full_path: str):
     def get_name(data):
         name = data.get("project", {}).get("name")
@@ -345,6 +350,22 @@ def read_setup_py(repo: Repo, full_path: str):
     return pypi_normalize(name), full_path.replace(repo.working_dir, "")
 
 
+def read_npm_package_json(repo: Repo, full_path: str):
+    try:
+        # Read and return the license type
+        with open(full_path, encoding="utf8", errors="ignore") as fd:
+            data = json.load(fd)
+    except FileNotFoundError:
+        return None, None
+    except Exception:
+        log.error("Could not read json")
+        return None, None
+
+    if not data.get("name"):
+        return None, None
+    return data["name"], full_path.replace(repo.working_dir, "")
+
+
 def get_pypackage_name(repo: Repo) -> Optional[str]:
     full_paths = get_pyproject_tomls(repo)
     if len(full_paths) == 0:
@@ -355,7 +376,16 @@ def get_pypackage_name(repo: Repo) -> Optional[str]:
     return name
 
 
-def get_all_pypackage_names(repo: Repo):
+def get_npm_pypackage_names(repo: Repo):
+    full_paths = get_npm_package_json(repo)
+    log.info(f"Found {len(full_paths)} package.json files")
+    for full_path in full_paths:
+        name, source_file = read_npm_package_json(repo, full_path)
+        if name:
+            yield f"npm/{name}", source_file
+
+
+def get_pypi_pypackage_names(repo: Repo):
     full_paths = get_pyproject_tomls(repo)
     found_names = False
     log.info(f"Found {len(full_paths)} pyproject.toml files")
@@ -385,3 +415,8 @@ def get_all_pypackage_names(repo: Repo):
             yield f"pypi/{name}", source_file
 
     return
+
+
+def get_all_pypackage_names(repo: Repo):
+    yield from get_pypi_pypackage_names(repo)
+    yield from get_npm_pypackage_names(repo)
