@@ -2,12 +2,14 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 from fastapi import FastAPI, Request
-from score.models import Package, Source, Score, NoteDescr
+from score.models import Package, Source, Score, NoteDescr, Vulnerabilities
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
 from .app_utils import (
+    get_package_data_cached,
     get_conda_package_data_cached,
     get_pypi_package_data_cached,
+    get_vuln_data_cached,
     get_npm_package_data_cached,
     create_git_metadata_cached,
     convert_numpy_types,
@@ -51,6 +53,7 @@ class ScoreResponse:
     source: Optional[Source]
     score: Score
     status: str
+    vulnerabilities: Vulnerabilities
 
 
 @app.middleware("http")
@@ -100,29 +103,35 @@ def pypi(package_name):
 
 
 @app.get(
-    "/score/pypi/{package_name}",
-    tags=["score", "pypi"],
-    summary="get the score for a pypi package",
+    "/score/{ecosystem}/{package_name:path}",
+    tags=[
+        "score",
+    ],
+    summary="get the score for a package",
     response_model=ScoreResponse,
 )
-def pypi_score(package_name, source_url: Optional[str] = None):
-    package_data = get_pypi_package_data_cached(package_name)
+def any_score(ecosystem: str, package_name: str, source_url: Optional[str] = None):
+    print("package_name", package_name)
+    package_data = get_package_data_cached(ecosystem, package_name)
 
     if not source_url:
         source_url = package_data.source_url
     source_data = None
     if source_url:
         source_data = create_git_metadata_cached(source_url)
-        source_data = convert_numpy_types(source_data)
 
-    score = build_score(source_url, source_data, package_data)
+    vuln_data = get_vuln_data_cached(ecosystem, package_name)
+
+    score = build_score(source_url, source_data, package_data, vuln_data)
+
     return ScoreResponse(
-        ecosystem="pypi",
+        ecosystem=ecosystem,
         package_name=package_name,
         package=package_data,
         source=source_data,
         score=score,
         status=package_data.status,
+        vulnerabilities=vuln_data,
     )
 
 
@@ -131,33 +140,6 @@ def npm(package_name):
     data = get_npm_package_data_cached(package_name)
 
     return {"ecosystem": "pypi", "package_name": package_name, "data": data}
-
-
-@app.get(
-    "/score/npm/{package_name}",
-    tags=["score", "npm"],
-    summary="get the score for an npm package",
-    response_model=ScoreResponse,
-)
-def npm_score(package_name, source_url: Optional[str] = None):
-    package_data = get_npm_package_data_cached(package_name)
-
-    if not source_url:
-        source_url = package_data.source_url
-    source_data = None
-    if source_url:
-        source_data = create_git_metadata_cached(source_url)
-        source_data = convert_numpy_types(source_data)
-
-    score = build_score(source_url, source_data, package_data)
-    return ScoreResponse(
-        ecosystem="npm",
-        package_name=package_name,
-        package=package_data,
-        source=source_data,
-        score=score,
-        status=package_data.status,
-    )
 
 
 @app.get("/pkg/conda/{channel}/{package_name}", tags=["pkg", "conda"])
@@ -171,30 +153,30 @@ def conda(channel, package_name):
     }
 
 
-@app.get(
-    "/score/conda/{channel}/{package_name}",
-    tags=["score", "conda"],
-    summary="get the score for a conda package",
-)
-def conda_score(channel, package_name, source_url: Optional[str] = None):
-    package_data = get_conda_package_data_cached(channel, package_name)
+# @app.get(
+#     "/score/conda/{channel}/{package_name}",
+#     tags=["score", "conda"],
+#     summary="get the score for a conda package",
+# )
+# def conda_score(channel, package_name, source_url: Optional[str] = None):
+#     package_data = get_conda_package_data_cached(channel, package_name)
 
-    if not source_url:
-        source_url = package_data.get("source_url")
-    source_data = None
-    if source_url:
-        source_data = create_git_metadata_cached(source_url)
-        source_data = convert_numpy_types(source_data)
+#     if not source_url:
+#         source_url = package_data.get("source_url")
+#     source_data = None
+#     if source_url:
+#         source_data = create_git_metadata_cached(source_url)
+#         source_data = convert_numpy_types(source_data)
 
-    score = build_score(source_url, source_data, package_data)
-    return {
-        "ecosystem": "conda",
-        "package_name": package_name,
-        "package": package_data,
-        "source": source_data,
-        "score": score,
-        "status": package_data.get("status", "ok"),
-    }
+#     score = build_score(source_url, source_data, package_data)
+#     return {
+#         "ecosystem": "conda",
+#         "package_name": package_name,
+#         "package": package_data,
+#         "source": source_data,
+#         "score": score,
+#         "status": package_data.get("status", "ok"),
+#     }
 
 
 @app.get("/source/git/{source_url:path}", tags=["source", "git"])

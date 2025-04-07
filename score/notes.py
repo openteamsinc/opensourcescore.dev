@@ -23,10 +23,12 @@ ANY = "Any"
 HEALTH = "Health"
 LEGAL = "Legal"
 MATURITY = "Maturity"
+SECURITY = "Security"
 
 GROUPS = {
     HEALTH: RISKS,
     LEGAL: RISKS,
+    SECURITY: RISKS,
     MATURITY: [
         HEALTHY,
         CAUTION_NEEDED,
@@ -48,6 +50,7 @@ SCORE_ORDER = [
 ]
 
 FEW_MAX_MONTHLY_AUTHORS_CONST = 3
+LONG_TIME_TO_FIX = 600
 
 
 class Note(enum.Enum):
@@ -172,6 +175,25 @@ class Note(enum.Enum):
         UNKNOWN,
         "The source code location could not be found",
     )
+
+    VULNERABILITIES_CHECK_FAILED = (
+        SECURITY,
+        UNKNOWN,
+        "Vulnerability check failed",
+    )
+
+    VULNERABILITIES_LONG_TIME_TO_FIX = (
+        SECURITY,
+        CAUTION_NEEDED,
+        f"Vulnerabilities don't typically get fixed within {LONG_TIME_TO_FIX} days",
+    )
+
+    VULNERABILITIES_RECENT = (
+        SECURITY,
+        MODERATE_RISK,
+        f"Multiple vulnerabilities have been reported in the last {LONG_TIME_TO_FIX} days",
+    )
+
     HEALTHY = ANY, HEALTHY, "Healthy"
 
 

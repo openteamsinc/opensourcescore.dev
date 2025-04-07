@@ -13,3 +13,9 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["pyarrow.*"]
 ignore_missing_imports = true
+
+
+[tool.vulture]
+# exclude = ["*file*.py", "dir/"]
+ignore_decorators = ["@app.middleware", "@app.get", "@field_serializer"]
+paths = ["score", "whitelist.py"]

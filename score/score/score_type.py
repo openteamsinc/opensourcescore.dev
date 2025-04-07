@@ -3,7 +3,17 @@ from dataclasses import dataclass, field
 import logging
 
 from score.models import CategorizedScore
-from score.notes import Note, SCORE_ORDER, ANY, HEALTHY, HEALTH, LEGAL, MATURE, MATURITY
+from score.notes import (
+    Note,
+    SCORE_ORDER,
+    ANY,
+    HEALTHY,
+    HEALTH,
+    LEGAL,
+    MATURE,
+    MATURITY,
+    SECURITY,
+)
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +78,13 @@ class ScoreBuilder:
     @classmethod
     def maturity(cls, notes):
         score = cls(MATURE, MATURITY)
+        for note in notes:
+            score.add_note(note)
+        return score
+
+    @classmethod
+    def security(cls, notes):
+        score = cls(HEALTHY, SECURITY)
         for note in notes:
             score.add_note(note)
         return score

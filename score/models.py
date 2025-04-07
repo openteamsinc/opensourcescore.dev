@@ -63,10 +63,26 @@ class CategorizedScore:
 
 
 @dataclass
+class Vulnerability:
+    id: str
+    published_on: datetime
+    fixed_on: Optional[datetime]
+    severity: str
+    days_to_fix: Optional[int]
+
+
+@dataclass
+class Vulnerabilities:
+    error: Optional[Note] = None
+    vulns: list[Vulnerability] = field(default_factory=list)
+
+
+@dataclass
 class Score:
     legal: CategorizedScore
     health_risk: CategorizedScore
     maturity: CategorizedScore
+    security: CategorizedScore
     notes: list[Note] = field(default_factory=list)
 
     @field_serializer("notes")
