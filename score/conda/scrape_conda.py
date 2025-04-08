@@ -1,10 +1,23 @@
+from fastapi import HTTPException
 from dateutil.parser import parse as parsedate
+from score.models import Package
 from ..utils.request_session import get_session
 
 CONDA_PACKAGE_URL_TEMPLATE = "https://api.anaconda.org/package/{channel}/{package}"
 
 
-def get_conda_package_data(channel, package_name: str):
+def get_conda_package_data(channel_package_name: str) -> Package:
+
+    if "/" not in channel_package_name:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Invalid conda package name. Expected format: "
+                f"<channel>/<package_name> (got {channel_package_name})"
+            ),
+        )
+    channel, package_name = channel_package_name.split("/", 1)
+
     s = get_session()
     url = CONDA_PACKAGE_URL_TEMPLATE.format(channel=channel, package=package_name)
     res = s.get(url)
@@ -15,11 +28,10 @@ def get_conda_package_data(channel, package_name: str):
     for f in package_data["files"]:
         ndownloads += f["ndownloads"]
     source_url = package_data.get("dev_url") or package_data.get("source_git_url")
-    return {
-        "name": package_data["name"],
-        "full_name": package_data["full_name"],
-        "source_url": source_url,
-        "latest_version": package_data["latest_version"],
-        "ndownloads": ndownloads,
-        "release_date": parsedate(package_data["modified_at"]),
-    }
+    return Package(
+        name=package_data["full_name"],
+        ecosystem="conda",
+        source_url=source_url,
+        version=package_data["latest_version"],
+        release_date=parsedate(package_data["modified_at"]),
+    )
