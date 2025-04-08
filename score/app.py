@@ -142,6 +142,6 @@ def any_score(
 
 
 @app.get("/source/git/{source_url:path}", tags=["source", "git"], response_model=Source)
-def git(source_url):
-    data = create_git_metadata_cached(source_url)
+def git(response: Response, source_url: str):
+    data = create_git_metadata_cached(source_url, response.headers.append)
     return data
