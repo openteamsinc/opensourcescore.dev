@@ -21,7 +21,10 @@ def get_conda_package_data(channel_package_name: str) -> Package:
     s = get_session()
     url = CONDA_PACKAGE_URL_TEMPLATE.format(channel=channel, package=package_name)
     res = s.get(url)
+    if res.status_code == 404:
+        return Package(name=channel_package_name, ecosystem="conda", status="not_found")
     res.raise_for_status()
+
     package_data = res.json()
 
     ndownloads = 0

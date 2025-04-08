@@ -1,8 +1,10 @@
 import os
 import logging
+from uuid import uuid4
 from dataclasses import dataclass
 from typing import Optional
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 from score.models import Package, Source, Score, NoteDescr, Vulnerabilities
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
@@ -14,7 +16,9 @@ from .app_utils import (
 )
 
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
 
 TITLE = "opensourcescore.dev"
 VERSION = os.environ.get("K_REVISION", "¿dev?")
@@ -148,3 +152,25 @@ def any_score(
 def git(response: Response, source_url: str):
     data = create_git_metadata_cached(source_url, response.headers.append)
     return data
+
+
+@app.exception_handler(Exception)
+async def exception_handler(request: Request, exc: Exception):
+    # Generate a unique reference ID
+    reference_id = str(uuid4())
+
+    # Log the exception with reference ID
+    log.error(f"Exception occurred - Reference ID: {reference_id}", exc_info=exc)
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Oops! Something went wrong - Reference ID: {reference_id}",
+            "reference_id": reference_id,
+        },
+    )
+
+
+@app.get("/error")
+def test_error():
+    raise ValueError("test error")
