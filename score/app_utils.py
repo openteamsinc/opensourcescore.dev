@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Callable
 from urllib.parse import quote_plus
 from .models import Source, Package, Vulnerabilities
 from .pypi.json_scraper import get_package_data as get_pypi_package_data
@@ -12,19 +12,21 @@ from .utils.caching import save_to_cache, cache_hit, load_from_cache, cache_path
 max_age = 60 * 60
 log = logging.getLogger(__name__)
 
+AppendHeader = Callable[[str, str], None]
 
-def create_git_metadata_cached(url: str, extra_headers: Any) -> Source:
+
+def create_git_metadata_cached(url: str, append_header: AppendHeader) -> Source:
 
     cache_filename = cache_path(f"/git/{quote_plus(url)}.json")
-    extra_headers["git-cache-file"] = cache_filename
+    append_header("git-cache-file", cache_filename)
 
     if cache_hit(cache_filename, days=1):
         cached_git = load_from_cache(Source, cache_filename)
         if cached_git is not None:
-            extra_headers["git-cache-hit"] = "true"
+            append_header("git-cache-hit", "true")
             return cached_git
 
-    extra_headers["git-cache-hit"] = "false"
+    append_header("git-cache-hit", "false")
     git = create_git_metadata_str(url)
 
     save_to_cache(git, cache_filename)
@@ -33,19 +35,19 @@ def create_git_metadata_cached(url: str, extra_headers: Any) -> Source:
 
 
 def get_vuln_data_cached(
-    ecosystem: str, package_name: str, extra_headers: Any
+    ecosystem: str, package_name: str, append_header: AppendHeader
 ) -> Vulnerabilities:
     cache_filename = cache_path(f"vuln/{ecosystem}/{package_name}.json")
-    extra_headers["vuln-cache-file"] = cache_filename
+    append_header("vuln-cache-file", cache_filename)
 
     if cache_hit(cache_filename, days=7):
         cached_vuln = load_from_cache(Vulnerabilities, cache_filename)
         if cached_vuln is not None:
-            extra_headers["vuln-cache-hit"] = "true"
+            append_header("vuln-cache-hit", "true")
             return cached_vuln
 
     log.info(f"Cache miss for {ecosystem}/{package_name}")
-    extra_headers["vuln-cache-hit"] = "false"
+    append_header("vuln-cache-hit", "false")
     vuln = scrape_vulnerability(ecosystem, package_name)
 
     save_to_cache(vuln, cache_filename)
@@ -65,20 +67,20 @@ def get_package_data(ecosystem: str, package_name: str) -> Package:
 
 
 def get_package_data_cached(
-    ecosystem: str, package_name: str, extra_headers: Any
+    ecosystem: str, package_name: str, append_header: AppendHeader
 ) -> Package:
 
     cache_filename = cache_path(f"packages/{ecosystem}/{package_name}.json")
-    extra_headers["pkg-cache-file"] = cache_filename
+    append_header("pkg-cache-file", cache_filename)
 
     if cache_hit(cache_filename, days=1):
         cached_pkg = load_from_cache(Package, cache_filename)
         if cached_pkg is not None:
-            extra_headers["pkg-cache-hit"] = "true"
+            append_header("pkg-cache-hit", "true")
             return cached_pkg
 
     log.info(f"Cache miss for {ecosystem}/{package_name}")
-    extra_headers["pkg-cache-hit"] = "false"
+    append_header("pkg-cache-hit", "false")
     pkg = get_package_data(ecosystem, package_name)
 
     save_to_cache(pkg, cache_filename)

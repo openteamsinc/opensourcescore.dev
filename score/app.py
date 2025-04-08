@@ -97,7 +97,8 @@ async def category_notes():
 
 @app.get("/pkg/{ecosystem}/{package_name:path}", tags=["pkg"], response_model=Package)
 def get_pkg(response: Response, ecosystem: str, package_name: str):
-    data = get_package_data_cached(ecosystem, package_name, response.headers)
+
+    data = get_package_data_cached(ecosystem, package_name, response.headers.append)
 
     return data
 
@@ -115,20 +116,20 @@ def any_score(
     source_url: Optional[str] = None,
 ):
 
-    headers: dict[str, str] = {}
-    package_data = get_package_data_cached(ecosystem, package_name, headers)
+    package_data = get_package_data_cached(
+        ecosystem, package_name, response.headers.append
+    )
 
     if not source_url:
         source_url = package_data.source_url
     source_data = None
     if source_url:
-        source_data = create_git_metadata_cached(source_url, headers)
+        source_data = create_git_metadata_cached(source_url, response.headers.append)
 
-    vuln_data = get_vuln_data_cached(ecosystem, package_name, headers)
+    vuln_data = get_vuln_data_cached(ecosystem, package_name, response.headers.append)
 
     score = build_score(source_url, source_data, package_data, vuln_data)
 
-    response.headers.update(headers)
     return ScoreResponse(
         ecosystem=ecosystem,
         package_name=package_name,
