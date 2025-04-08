@@ -27,3 +27,7 @@ ignore_missing_imports = true
 # exclude = ["*file*.py", "dir/"]
 ignore_decorators = ["@app.middleware", "@app.get", "@field_serializer"]
 paths = ["score", "whitelist.py"]
+
+
+[tool.pytest.ini_options]
+env = ["CACHE_LOCATION = /tmp", "K_REVISION = test"]

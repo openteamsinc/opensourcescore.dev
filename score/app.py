@@ -59,9 +59,12 @@ class ScoreResponse:
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
+
     response.headers["Cache-control"] = f"max-age={max_age}, public"
     response.headers["Content-Language"] = "en-US"
-    response.headers["App"] = f"{TITLE} {VERSION}"
+    response.headers["App"] = f"{TITLE} {VERSION}".encode(
+        "ascii", errors="ignore"
+    ).decode(errors="ignore")
     return response
 
 

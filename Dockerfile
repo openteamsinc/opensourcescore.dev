@@ -24,5 +24,6 @@ RUN --mount=type=cache,target=/var/cache/pip \
 
 COPY score/ /usr/src/app/score/
 RUN python -m compileall score
+RUN env CACHE_LOCATION=/tmp python -m score.app
 
 CMD ["sh", "-c", "fastapi run score/app.py --port ${PORT}"]
