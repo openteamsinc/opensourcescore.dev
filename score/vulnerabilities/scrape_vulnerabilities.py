@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 from cvss import CVSS2, CVSS3, CVSS4
 import logging
 from score.models import Vulnerabilities, Vulnerability
@@ -56,9 +56,9 @@ def extract_severity_number(vuln) -> Optional[float]:
     return None
 
 
-def extract_severity(vuln) -> str:
+def extract_severity(vuln) -> Tuple[Optional[float], str]:
     num = extract_severity_number(vuln)
-    return categorize_severity(num)
+    return num, categorize_severity(num)
 
 
 ecosystems = {"pypi": "PyPI", "npm": "npm"}
@@ -94,10 +94,7 @@ def scrape_vulnerability(package_ecosystem: str, package: str) -> Vulnerabilitie
         if have_seen:
             continue
 
-        severity = extract_severity(vuln)
-        if severity is None:
-            # Duplicate
-            continue
+        severity_num, severity = extract_severity(vuln)
         published = try_parse_date(vuln.get("published"))
 
         if published is None:
@@ -118,6 +115,7 @@ def scrape_vulnerability(package_ecosystem: str, package: str) -> Vulnerabilitie
             Vulnerability(
                 id=vuln["id"],
                 severity=severity,
+                severity_num=severity_num,
                 published_on=published,
                 fixed_on=modified,
                 days_to_fix=days_to_fix,

@@ -190,8 +190,13 @@ class Note(enum.Enum):
 
     VULNERABILITIES_RECENT = (
         SECURITY,
-        MODERATE_RISK,
+        CAUTION_NEEDED,
         f"Multiple vulnerabilities have been reported in the last {LONG_TIME_TO_FIX} days",
+    )
+    VULNERABILITIES_SEVERE = (
+        SECURITY,
+        CAUTION_NEEDED,
+        f"At least one high or critical severity vulnerability has been reported in the last {LONG_TIME_TO_FIX}",
     )
 
     HEALTHY = ANY, HEALTHY, "Healthy"

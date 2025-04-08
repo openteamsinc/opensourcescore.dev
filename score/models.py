@@ -68,6 +68,7 @@ class Vulnerability:
     published_on: datetime
     fixed_on: Optional[datetime]
     severity: str
+    severity_num: Optional[float]
     days_to_fix: Optional[int]
 
 

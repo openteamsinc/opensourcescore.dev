@@ -32,9 +32,12 @@ def score_security(vulns: Vulnerabilities) -> Iterator[Note]:
         yield Note.VULNERABILITIES_LONG_TIME_TO_FIX
 
     recent_cutoff = datetime.now(tz=timezone.utc) - timedelta(days=LONG_TIME_TO_FIX)
-    recent_count = len([v for v in vulns.vulns if v.published_on > recent_cutoff])
+    recent = [v for v in vulns.vulns if v.published_on > recent_cutoff]
 
-    if recent_count > 2:
+    if len(recent) > 2:
         yield Note.VULNERABILITIES_RECENT
+
+    if len([v for v in recent if v.severity_num and v.severity_num >= 7]):
+        yield Note.VULNERABILITIES_SEVERE
 
     return None
