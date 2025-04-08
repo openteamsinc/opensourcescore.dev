@@ -32,6 +32,10 @@ jobs:
       - name: Typecheck with mypy
         run: |
           mypy score/
+      - name: Sanity Check
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          env CACHE_LOCATION=/tmp python -m score.app
       - name: Test
         run: |
           # stop the build if there are Python syntax errors or undefined names
