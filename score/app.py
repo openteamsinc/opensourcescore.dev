@@ -1,5 +1,6 @@
 import os
 import logging
+from uuid import uuid4
 from dataclasses import dataclass
 from typing import Optional
 from fastapi import FastAPI, Request, Response
@@ -154,10 +155,19 @@ def git(response: Response, source_url: str):
 
 
 @app.exception_handler(Exception)
-async def unicorn_exception_handler(request: Request, exc: Exception):
+async def exception_handler(request: Request, exc: Exception):
+    # Generate a unique reference ID
+    reference_id = str(uuid4())
+
+    # Log the exception with reference ID
+    log.error(f"Exception occurred - Reference ID: {reference_id}", exc_info=exc)
+
     return JSONResponse(
         status_code=500,
-        content={"detail": "Oops! Something went wrong"},
+        content={
+            "detail": f"Oops! Something went wrong - Reference ID: {reference_id}",
+            "reference_id": reference_id,
+        },
     )
 
 
