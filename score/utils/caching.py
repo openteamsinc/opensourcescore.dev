@@ -12,7 +12,7 @@ from score.notes import Note
 CACHE_LOCATION = os.environ.get("CACHE_LOCATION", "gs://openteams-score-data/cache")
 
 protocol = CACHE_LOCATION.split("://")[0] if "://" in CACHE_LOCATION else "file"
-# fs = fsspec.filesystem(protocol)
+fs = fsspec.filesystem(protocol)
 
 log = logging.getLogger(__name__)
 
