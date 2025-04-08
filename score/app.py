@@ -1,20 +1,20 @@
 import os
+import logging
 from dataclasses import dataclass
 from typing import Optional
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from score.models import Package, Source, Score, NoteDescr, Vulnerabilities
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
 from .app_utils import (
     get_package_data_cached,
-    get_conda_package_data_cached,
-    get_pypi_package_data_cached,
     get_vuln_data_cached,
-    get_npm_package_data_cached,
     create_git_metadata_cached,
-    convert_numpy_types,
     max_age,
 )
+
+
+logging.basicConfig(level=logging.INFO)
 
 TITLE = "opensourcescore.dev"
 VERSION = os.environ.get("K_REVISION", "¿dev?")
@@ -95,35 +95,40 @@ async def category_notes():
     }
 
 
-@app.get("/pkg/pypi/{package_name}", tags=["pkg", "pypi"])
-def pypi(package_name):
-    data = get_pypi_package_data_cached(package_name)
+@app.get("/pkg/{ecosystem}/{package_name:path}", tags=["pkg"], response_model=Package)
+def get_pkg(response: Response, ecosystem: str, package_name: str):
+    data = get_package_data_cached(ecosystem, package_name, response.headers)
 
-    return {"ecosystem": "pypi", "package_name": package_name, "data": data}
+    return data
 
 
 @app.get(
     "/score/{ecosystem}/{package_name:path}",
-    tags=[
-        "score",
-    ],
+    tags=["score"],
     summary="get the score for a package",
     response_model=ScoreResponse,
 )
-def any_score(ecosystem: str, package_name: str, source_url: Optional[str] = None):
-    print("package_name", package_name)
-    package_data = get_package_data_cached(ecosystem, package_name)
+def any_score(
+    response: Response,
+    ecosystem: str,
+    package_name: str,
+    source_url: Optional[str] = None,
+):
+
+    headers: dict[str, str] = {}
+    package_data = get_package_data_cached(ecosystem, package_name, headers)
 
     if not source_url:
         source_url = package_data.source_url
     source_data = None
     if source_url:
-        source_data = create_git_metadata_cached(source_url)
+        source_data = create_git_metadata_cached(source_url, headers)
 
-    vuln_data = get_vuln_data_cached(ecosystem, package_name)
+    vuln_data = get_vuln_data_cached(ecosystem, package_name, headers)
 
     score = build_score(source_url, source_data, package_data, vuln_data)
 
+    response.headers.update(headers)
     return ScoreResponse(
         ecosystem=ecosystem,
         package_name=package_name,
@@ -135,65 +140,7 @@ def any_score(ecosystem: str, package_name: str, source_url: Optional[str] = Non
     )
 
 
-@app.get("/pkg/npm/{package_name}", tags=["pkg", "npm"])
-def npm(package_name):
-    data = get_npm_package_data_cached(package_name)
-
-    return {"ecosystem": "pypi", "package_name": package_name, "data": data}
-
-
-@app.get("/pkg/conda/{channel}/{package_name}", tags=["pkg", "conda"])
-def conda(channel, package_name):
-    data = get_conda_package_data_cached(channel, package_name)
-    return {
-        "ecosystem": "conda",
-        "channel": channel,
-        "package_name": package_name,
-        "data": data,
-    }
-
-
-# @app.get(
-#     "/score/conda/{channel}/{package_name}",
-#     tags=["score", "conda"],
-#     summary="get the score for a conda package",
-# )
-# def conda_score(channel, package_name, source_url: Optional[str] = None):
-#     package_data = get_conda_package_data_cached(channel, package_name)
-
-#     if not source_url:
-#         source_url = package_data.get("source_url")
-#     source_data = None
-#     if source_url:
-#         source_data = create_git_metadata_cached(source_url)
-#         source_data = convert_numpy_types(source_data)
-
-#     score = build_score(source_url, source_data, package_data)
-#     return {
-#         "ecosystem": "conda",
-#         "package_name": package_name,
-#         "package": package_data,
-#         "source": source_data,
-#         "score": score,
-#         "status": package_data.get("status", "ok"),
-#     }
-
-
-@app.get("/source/git/{source_url:path}", tags=["source", "git"])
+@app.get("/source/git/{source_url:path}", tags=["source", "git"], response_model=Source)
 def git(source_url):
     data = create_git_metadata_cached(source_url)
-    data = convert_numpy_types(data)
-    return {"source_url": source_url, "data": data}
-
-
-@app.get(
-    "/score/{ecosystem}/{package_name:path}",
-    status_code=404,
-    tags=["score", "errors"],
-    summary="Return 404 error for unsupported ecosystem",
-)
-def invalid_ecosystem(ecosystem):
-    return {
-        "detail": f"Ecosystem {ecosystem} not supported",
-        "error": "invalid_ecosystem",
-    }
+    return data

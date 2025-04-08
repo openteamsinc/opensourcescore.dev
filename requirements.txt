@@ -7,3 +7,5 @@ strsimpy~=0.2.1
 tomli==2.2.1
 fastapi[standard]~=0.115.12
 
+gcsfs==2025.3.1
+fsspec==2025.3.1
