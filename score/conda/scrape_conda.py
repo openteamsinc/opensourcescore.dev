@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from dateutil.parser import parse as parsedate
 from score.models import Package
 from ..utils.request_session import get_session
@@ -5,13 +6,17 @@ from ..utils.request_session import get_session
 CONDA_PACKAGE_URL_TEMPLATE = "https://api.anaconda.org/package/{channel}/{package}"
 
 
-def get_conda_package_data(cannel_package_name: str) -> Package:
+def get_conda_package_data(channel_package_name: str) -> Package:
 
-    if "/" not in cannel_package_name:
-        raise ValueError(
-            "Invalid conda package name. Expected format: <channel>/<package_name>"
+    if "/" not in channel_package_name:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Invalid conda package name. Expected format: "
+                f"<channel>/<package_name> (got {channel_package_name})"
+            ),
         )
-    channel, package_name = cannel_package_name.split("/", 1)
+    channel, package_name = channel_package_name.split("/", 1)
 
     s = get_session()
     url = CONDA_PACKAGE_URL_TEMPLATE.format(channel=channel, package=package_name)

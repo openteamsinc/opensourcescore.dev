@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 import logging
 from typing import Callable
 from urllib.parse import quote_plus
@@ -63,7 +64,7 @@ def get_package_data(ecosystem: str, package_name: str) -> Package:
     if ecosystem == "npm":
         return get_npm_package_data(package_name)
 
-    raise ValueError(f"Unsupported ecosystem: {ecosystem}")
+    raise HTTPException(status_code=404, detail=f"Unsupported ecosystem: {ecosystem}")
 
 
 def get_package_data_cached(
