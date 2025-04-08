@@ -1,13 +1,14 @@
-from typing import Optional
+from typing import Optional, Iterator
 from datetime import timedelta
 from hashlib import md5
 import re
 from score.utils.normalize_license_content import normalize_license_content
-from score.models import Package, Source, Score as ScoreType
+from score.models import Package, Source, Vulnerabilities, Score as ScoreType
 from .score_type import ScoreBuilder
 from .score import safe_date_diff
 from .maturity import build_maturity_score
 from .legal import build_legal_score
+from .security import score_security
 from .health_risk import (
     build_health_risk_score,
 )
@@ -15,10 +16,7 @@ from .health_risk import (
 from ..notes import Note
 
 
-def pypi_normalize(name):
-    if not name:
-        return None
-
+def pypi_normalize(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
@@ -28,7 +26,7 @@ def package_normalize_name(ecosystem: str, name: str) -> str:
     return name
 
 
-def check_package_license(pkg: Package, source_data: Source):
+def check_package_license(pkg: Package, source_data: Source) -> Iterator[Note]:
 
     if not pkg.license:
         yield Note.PACKAGE_NO_LICENSE
@@ -60,7 +58,7 @@ def check_package_license(pkg: Package, source_data: Source):
     yield Note.PACKAGE_LICENSE_MISMATCH
 
 
-def score_python(package_data: Package, source_data: Source):
+def score_python(package_data: Package, source_data: Source) -> Iterator[Note]:
 
     if not package_data:
         return
@@ -94,8 +92,13 @@ def score_python(package_data: Package, source_data: Source):
     return
 
 
-def build_notes(source_url, source_data: Source, package_data: Package) -> list[Note]:
-    notes = []
+def build_notes(
+    source_url,
+    source_data: Source,
+    package_data: Package,
+    vuln_data: Vulnerabilities,
+) -> list[Note]:
+    notes: list[Note] = []
     notes.extend(build_maturity_score(source_url, source_data))
 
     notes.extend(build_health_risk_score(source_data))
@@ -104,21 +107,27 @@ def build_notes(source_url, source_data: Source, package_data: Package) -> list[
 
     # -- Distribution + Language specific
     notes.extend(score_python(package_data, source_data))
+
+    notes.extend(score_security(vuln_data))
     return notes
 
 
 def build_score(
-    source_url, source_data: Optional[Source], package_data: Package
+    source_url,
+    source_data: Optional[Source],
+    package_data: Package,
+    vuln_data: Vulnerabilities,
 ) -> ScoreType:
 
     if source_data is None:
         notes = [Note.NO_SOURCE_URL]
     else:
-        notes = build_notes(source_url, source_data, package_data)
+        notes = build_notes(source_url, source_data, package_data, vuln_data)
 
     return ScoreType(
         notes=sorted(notes, key=lambda x: x.name),
         legal=ScoreBuilder.legal(notes).asmodel(),
         health_risk=ScoreBuilder.health_risk(notes).asmodel(),
         maturity=ScoreBuilder.maturity(notes).asmodel(),
+        security=ScoreBuilder.security(notes).asmodel(),
     )

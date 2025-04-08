@@ -1,12 +1,13 @@
-import pandas as pd
+from datetime import datetime, timedelta
+from typing import Iterator
 from score.notes import Note
 from score.models import Source
 
-ONE_YEAR_AGO = pd.Timestamp.now() - pd.DateOffset(years=1)
-FIVE_YEARS_AGO = pd.Timestamp.now() - pd.DateOffset(years=5)
+ONE_YEAR_AGO = datetime.now() - timedelta(days=365)
+FIVE_YEARS_AGO = datetime.now() - timedelta(days=365 * 5)
 
 
-def build_maturity_score(source_url: str, git_info: Source):
+def build_maturity_score(source_url: str, git_info: Source) -> Iterator[Note]:
 
     if git_info.error:
         yield git_info.error

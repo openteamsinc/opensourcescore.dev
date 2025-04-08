@@ -1,25 +1,14 @@
 import logging
-from typing import Optional
-from datetime import datetime
 
-log = logging.getLogger(__name__)
-from dateutil.parser import parse as parse_date
+
 from score.models import Package
+from score.utils.safe_time import try_parse_date
 from ..utils.request_session import get_session
 from ..utils.normalize_source_url import normalize_source_url
 
+log = logging.getLogger(__name__)
+
 NPM_PACKAGE_TEMPLATE_URL = "https://registry.npmjs.org/{package_name}"
-
-
-def try_parse_date(release_date: Optional[str]) -> Optional[datetime]:
-    if release_date is None:
-        return None
-
-    try:
-        return parse_date(release_date)
-    except Exception as e:
-        log.debug(f"Failed to parse date {release_date}: {e}")
-        return None
 
 
 def get_npm_package_data(package_name: str) -> Package:
