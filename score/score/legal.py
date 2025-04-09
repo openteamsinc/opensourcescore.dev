@@ -7,6 +7,9 @@ LICENSE_LESS_PERMISSIVES = ["GPL", "AGPL", "LGPL", "Artistic", "CDDL", "MPL"]
 def score_license(git_info: Source):
 
     license = git_info.license
+    if git_info.error is not None:
+        return
+
     if license is None:
         raise ValueError("License information is missing")
 

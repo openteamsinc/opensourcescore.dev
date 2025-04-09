@@ -124,6 +124,7 @@ def build_score(
     else:
         notes = build_notes(source_url, source_data, package_data, vuln_data)
 
+    notes = set(notes)
     return ScoreType(
         notes=sorted(notes, key=lambda x: x.name),
         legal=ScoreBuilder.legal(notes).asmodel(),
