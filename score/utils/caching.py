@@ -26,7 +26,15 @@ def cache_hit(filename, days=1):
         stat = fs.stat(filename)
     except FileNotFoundError:
         return False
-    age = datetime.now(tz=timezone.utc) - stat["mtime"]
+
+    mtime = stat["mtime"]
+    if isinstance(stat["mtime"], float):
+        mtime = datetime.fromtimestamp(mtime, tz=timezone.utc)
+
+    if not isinstance(mtime, datetime):
+        raise ValueError(f"mtime is not a datetime: {type(mtime)}{mtime}")
+
+    age = datetime.now(tz=timezone.utc) - mtime
     return age.days <= days
 
 
@@ -58,6 +66,7 @@ def load_from_cache(datacls: Type[T], cache_filename: str) -> Optional[T]:
 
 def save_to_cache(data: Any, cache_filename: str) -> None:
     dict_data = asdict(data)
+    fs.makedirs(os.path.dirname(cache_filename), exist_ok=True)
     with fs.open(cache_filename, "w") as fp:
         json.dump(dict_data, fp, default=default_with_datetime)
 
