@@ -1,4 +1,4 @@
-from typing import Optional, Iterator
+from typing import Optional, Iterator, Collection
 from datetime import timedelta
 from hashlib import md5
 import re
@@ -119,6 +119,7 @@ def build_score(
     vuln_data: Vulnerabilities,
 ) -> ScoreType:
 
+    notes: Collection[Note]
     if source_data is None:
         notes = [Note.NO_SOURCE_URL]
     else:
