@@ -1,4 +1,4 @@
-import contextvars
+from contextvars import ContextVar
 import sys
 
 from fastapi.logger import logger
@@ -6,8 +6,10 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response, JSONResponse
 
-cloud_trace_context = contextvars.ContextVar("cloud_trace_context", default="")
-http_request_context = contextvars.ContextVar("http_request_context", default=dict({}))
+cloud_trace_context: ContextVar[str] = ContextVar("cloud_trace_context", default="")
+http_request_context: ContextVar[dict] = ContextVar(
+    "http_request_context", default=dict({})
+)
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
