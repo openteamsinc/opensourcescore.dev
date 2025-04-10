@@ -1,7 +1,7 @@
 import logging
 import re
 
-from google.cloud.logging_v2.handlers import CloudLoggingFilter
+from google.cloud.logging_v2.handlers import CloudLoggingFilter  # type: ignore
 
 from .middleware import http_request_context, cloud_trace_context
 
