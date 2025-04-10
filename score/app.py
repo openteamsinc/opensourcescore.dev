@@ -10,6 +10,8 @@ from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
 from .cloud_logging.setup import setup_logging
 from .cloud_logging.middleware import LoggingMiddleware
+from .cloud_logging.search import get_recent_packages
+
 from .app_utils import (
     get_package_data_cached,
     get_vuln_data_cached,
@@ -176,6 +178,17 @@ async def exception_handler(request: Request, exc: Exception):
             "reference_id": reference_id,
         },
     )
+
+
+@app.get(
+    "/recent/packages",
+    tags=["recent", "search"],
+    summary="get recent packages ",
+)
+def recent_packages():
+
+    pkgs = get_recent_packages()
+    return {"recent_packages": pkgs}
 
 
 @app.get("/error")
