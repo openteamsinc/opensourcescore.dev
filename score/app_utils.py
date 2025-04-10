@@ -78,9 +78,25 @@ def get_package_data_cached(
         cached_pkg = load_from_cache(Package, cache_filename)
         if cached_pkg is not None:
             append_header("pkg-cache-hit", "true")
+            log.info(
+                f"Cache hit for {ecosystem}/{package_name}",
+                extra={
+                    "package_lookup": "yes",
+                    "ecosystem": ecosystem,
+                    "package_name": package_name,
+                },
+            )
+
             return cached_pkg
 
-    log.info(f"Cache miss for {ecosystem}/{package_name}")
+    log.info(
+        f"Cache miss for {ecosystem}/{package_name}",
+        extra={
+            "package_lookup": "yes",
+            "ecosystem": ecosystem,
+            "package_name": package_name,
+        },
+    )
     append_header("pkg-cache-hit", "false")
     pkg = get_package_data(ecosystem, package_name)
 

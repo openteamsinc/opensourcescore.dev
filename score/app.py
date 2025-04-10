@@ -8,6 +8,10 @@ from fastapi.responses import JSONResponse
 from score.models import Package, Source, Score, NoteDescr, Vulnerabilities
 from .score.app_score import build_score
 from .notes import SCORE_ORDER, GROUPS, to_dict
+from .cloud_logging.setup import setup_logging
+from .cloud_logging.middleware import LoggingMiddleware
+from .cloud_logging.search import get_recent_packages
+
 from .app_utils import (
     get_package_data_cached,
     get_vuln_data_cached,
@@ -40,6 +44,11 @@ app = FastAPI(
     description=DESCRIPTION,
     version=VERSION,
 )
+
+RUN_ENV = os.environ.get("RUN_ENV", "development")
+if RUN_ENV == "production":
+    setup_logging()
+    app.add_middleware(LoggingMiddleware)
 
 
 @dataclass
@@ -74,7 +83,7 @@ async def add_process_time_header(request: Request, call_next):
 
 @app.get("/")
 async def root():
-
+    log.info(f"version {VERSION}", extra={"hello": "world"})
     return {
         "version": VERSION,
         "html_docs_url": "https://opensourcescore.dev/docs",
@@ -169,6 +178,17 @@ async def exception_handler(request: Request, exc: Exception):
             "reference_id": reference_id,
         },
     )
+
+
+@app.get(
+    "/recent/packages",
+    tags=["recent", "search"],
+    summary="get recent packages ",
+)
+def recent_packages():
+
+    pkgs = get_recent_packages()
+    return {"recent_packages": pkgs}
 
 
 @app.get("/error")
