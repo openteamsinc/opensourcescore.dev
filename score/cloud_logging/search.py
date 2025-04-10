@@ -44,6 +44,7 @@ def get_location():
         response = requests.get(location_url, headers=headers)
         response.raise_for_status()
         zone = response.text
+        print("zone", zone)
         location = zone.split("/")[1]
     except requests.RequestException as e:
         log.error(f"Failed to fetch location: {e}")
