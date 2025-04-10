@@ -52,14 +52,19 @@ def get_location():
 def get_client():
 
     logging_client = logging.Client(project=get_project_id())
+
+    service_account_email = getattr(
+        logging_client._credentials, "_service_account_email"
+    )
+    log.info(f"Service Account Email for logging client: {service_account_email}")
     return logging_client
 
 
 K_SERVICE = os.environ.get("K_SERVICE", "score")
 
 
-def get_recent_packages(limit=10):
-
+@lru_cache
+def make_filter():
     filter_ = f"""
     resource.type = "cloud_run_revision"
     resource.labels.service_name = "{K_SERVICE}"
@@ -67,9 +72,14 @@ def get_recent_packages(limit=10):
     severity>=DEFAULT
     jsonPayload.package_lookup="yes"
     """
+    log.debug(f"Filter: {filter_}")
+    return filter_
+
+
+def get_recent_packages(limit=10):
 
     results = set()
-    for entry in get_client().list_entries(filter_=filter_, page_size=20):
+    for entry in get_client().list_entries(filter_=make_filter(), page_size=20):
         ecosystem = entry.payload.get("ecosystem", None)
         package_name = entry.payload.get("package_name", None)
         if ecosystem and package_name:
