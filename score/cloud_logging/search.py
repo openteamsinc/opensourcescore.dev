@@ -76,7 +76,7 @@ def make_filter():
     resource.labels.service_name = "{K_SERVICE}"
     resource.labels.location = "{get_location()}"
     severity>=DEFAULT
-    jsonPayload.package_lookup="yes"
+    jsonPayload.package_status="ok"
     """
     log.info(f"Filter: {filter_}")
     return filter_
