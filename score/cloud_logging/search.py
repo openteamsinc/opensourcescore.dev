@@ -44,8 +44,9 @@ def get_location():
         response = requests.get(location_url, headers=headers)
         response.raise_for_status()
         zone = response.text
-        print("zone", zone)
-        location = zone.split("/")[1]
+        location_zone = zone.rsplit("/", 1)[-1]
+        location = location_zone.rsplit("-", 1)[0]
+
     except requests.RequestException as e:
         log.error(f"Failed to fetch location: {e}")
         return DEFAULT_LOCATION
