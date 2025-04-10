@@ -72,7 +72,7 @@ def make_filter():
     severity>=DEFAULT
     jsonPayload.package_lookup="yes"
     """
-    log.debug(f"Filter: {filter_}")
+    log.info(f"Filter: {filter_}")
     return filter_
 
 
