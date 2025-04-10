@@ -76,13 +76,13 @@ def make_filter():
     resource.labels.service_name = "{K_SERVICE}"
     resource.labels.location = "{get_location()}"
     severity>=DEFAULT
-    jsonPayload.package_lookup="yes"
+    jsonPayload.package_status="ok"
     """
     log.info(f"Filter: {filter_}")
     return filter_
 
 
-def get_recent_packages(limit=10):
+def get_recent_packages(limit=8):
 
     results = set()
     for entry in get_client().list_entries(filter_=make_filter(), page_size=20):
