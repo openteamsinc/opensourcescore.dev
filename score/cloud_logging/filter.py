@@ -18,6 +18,4 @@ class GoogleCloudLogFilter(CloudLoggingFilter):
             header_suffix = split_header[1]
             record.span_id = re.findall(r"^\w+", header_suffix)[0]
 
-        super().filter(record)
-
-        return True
+        return super().filter(record)
