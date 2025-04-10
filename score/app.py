@@ -185,9 +185,9 @@ async def exception_handler(request: Request, exc: Exception):
     tags=["recent", "search"],
     summary="get recent packages ",
 )
-def recent_packages():
+def recent_packages(limit: int = 8):
 
-    pkgs = get_recent_packages()
+    pkgs = get_recent_packages(limit=limit)
     return {"recent_packages": pkgs}
 
 

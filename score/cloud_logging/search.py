@@ -82,7 +82,7 @@ def make_filter():
     return filter_
 
 
-def get_recent_packages(limit=10):
+def get_recent_packages(limit=8):
 
     results = set()
     for entry in get_client().list_entries(filter_=make_filter(), page_size=20):
