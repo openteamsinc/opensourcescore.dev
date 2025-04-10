@@ -86,7 +86,7 @@ def scrape_vulnerability(package_ecosystem: str, package: str) -> Vulnerabilitie
     for vuln in vulns_list:
 
         known_ids = set([vuln["id"]])
-        known_ids.update(vuln["aliases"])
+        known_ids.update(vuln.get("aliases", []))
 
         have_seen = len(seen.intersection(known_ids)) > 0
         seen.update(known_ids)
