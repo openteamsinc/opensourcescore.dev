@@ -14,6 +14,7 @@ DEFAULT_LOCATION = "us-west1"
 def get_project_id():
     project_id = os.environ.get("GOOGLE_PROJECT_ID")
     if project_id:
+        log.info(f"Using project ID from environment: {project_id}")
         return project_id
 
     metadata_url = "http://metadata.google.internal"
@@ -26,6 +27,7 @@ def get_project_id():
     except requests.RequestException as e:
         log.error(f"Failed to fetch project ID: {e}")
         return DEFAULT_PROJECT
+    log.info(f"Using project ID from metadata: {project_id}")
     return project_id
 
 
@@ -33,6 +35,7 @@ def get_project_id():
 def get_location():
     location = os.environ.get("GOOGLE_LOCATION")
     if location:
+        log.info(f"Using location from environment: {location}")
         return location
     metadata_url = "http://metadata.google.internal"
     location_url = f"{metadata_url}/computeMetadata/v1/instance/zone"
@@ -45,6 +48,7 @@ def get_location():
     except requests.RequestException as e:
         log.error(f"Failed to fetch location: {e}")
         return DEFAULT_LOCATION
+    log.info(f"Using location from metadata: {location}")
     return location
 
 
