@@ -3,6 +3,7 @@ FROM python:3.10-slim-bullseye
 WORKDIR /usr/src/app
 ENV PYTHONPATH=/usr/src/app
 ENV GIT_TERMINAL_PROMPT=0
+ENV RUN_ENV=production
 # Cloud Run default port
 ENV PORT=8080   
 

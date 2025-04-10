@@ -86,4 +86,12 @@ def get_package_data_cached(
 
     save_to_cache(pkg, cache_filename)
 
+    log.info(
+        f"Getting package data for {ecosystem}/{package_name}",
+        extra={
+            "ecosystem": ecosystem,
+            "package_name": package_name,
+        },
+    )
+
     return pkg
