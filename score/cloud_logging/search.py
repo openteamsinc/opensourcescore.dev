@@ -91,7 +91,7 @@ def get_recent_packages(limit=8):
         if ecosystem and package_name:
             results.add((ecosystem, package_name))
         if len(results) >= limit:
-            log.info("Found all!")
+            log.info(f"Found all {len(results)} results, reaching the limit of {limit}.")
             break
 
     return list(results)
