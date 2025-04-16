@@ -85,12 +85,13 @@ def make_filter():
 def get_recent_packages(limit=8):
 
     results = set()
-    for entry in get_client().list_entries(filter_=make_filter(), page_size=20):
+    for entry in get_client().list_entries(filter_=make_filter(), page_size=200):
         ecosystem = entry.payload.get("ecosystem", None)
         package_name = entry.payload.get("package_name", None)
         if ecosystem and package_name:
             results.add((ecosystem, package_name))
         if len(results) >= limit:
+            log.info("Found all!")
             break
 
     return list(results)
