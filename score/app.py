@@ -46,8 +46,8 @@ app = FastAPI(
 )
 
 RUN_ENV = os.environ.get("RUN_ENV", "development")
+setup_logging(RUN_ENV == "production")
 if RUN_ENV == "production":
-    setup_logging()
     app.add_middleware(LoggingMiddleware)
 
 

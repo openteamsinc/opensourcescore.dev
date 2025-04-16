@@ -206,6 +206,7 @@ def to_dict():
     return {
         v.value: {
             "code": k,
+            "group": v.group,
             "category": v.category,
             "description": v.description,
             "id": v.value,

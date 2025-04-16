@@ -10,6 +10,7 @@ class NoteDescr:
     code: str
     category: str
     description: str
+    group: str
     id: int
 
 
