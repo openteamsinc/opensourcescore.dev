@@ -23,11 +23,11 @@ def checkout_and_read_file(repo: Repo, suffix: str):
     try:
         repo.git.checkout(repo.active_branch, "--", suffix)
     except GitCommandError:
-        pass
+        log.debug(f"no files found with suffix {suffix} in git root")
     try:
         repo.git.checkout(repo.active_branch, "--", f"**/{suffix}")
     except GitCommandError:
-        pass
+        log.debug(f"no files found with suffix {suffix} in any subdirectories")
 
     possible_paths = glob.glob(f"{repo.working_dir}/**/{suffix}", recursive=True)
     if not possible_paths:
