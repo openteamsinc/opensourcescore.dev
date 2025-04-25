@@ -22,6 +22,8 @@ def cache_path(suffix: str):
 
 
 def cache_hit(filename, days=1):
+    if CACHE_LOCATION == "0":
+        return False
     try:
         stat = fs.stat(filename)
     except FileNotFoundError:
@@ -42,6 +44,9 @@ T = TypeVar("T")
 
 
 def load_from_cache(datacls: Type[T], cache_filename: str) -> Optional[T]:
+    if CACHE_LOCATION == "0":
+        return None
+
     try:
         with fs.open(cache_filename, "r") as fp:
             data = json.load(fp)
@@ -65,6 +70,9 @@ def load_from_cache(datacls: Type[T], cache_filename: str) -> Optional[T]:
 
 
 def save_to_cache(data: Any, cache_filename: str) -> None:
+    if CACHE_LOCATION == "0":
+        return None
+
     dict_data = asdict(data)
     fs.makedirs(os.path.dirname(cache_filename), exist_ok=True)
     with fs.open(cache_filename, "w") as fp:

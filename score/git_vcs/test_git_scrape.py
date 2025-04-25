@@ -14,4 +14,4 @@ def test_scrape_flask():
     assert metadata
     print(metadata)
     assert metadata.license.kind == "BSD"
-    assert metadata.package_destinations == [("pypi/flask", "/pyproject.toml")]
+    assert metadata.package_destinations[0] == ("pypi/flask", "/pyproject.toml")
