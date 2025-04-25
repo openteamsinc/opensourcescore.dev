@@ -23,10 +23,11 @@ def checkout_and_read_file(repo: Repo, suffix: str):
     try:
         repo.git.checkout(repo.active_branch, "--", suffix)
     except GitCommandError:
-        try:
-            repo.git.checkout(repo.active_branch, "--", f"**/{suffix}")
-        except GitCommandError:
-            pass
+        pass
+    try:
+        repo.git.checkout(repo.active_branch, "--", f"**/{suffix}")
+    except GitCommandError:
+        pass
 
     possible_paths = glob.glob(f"{repo.working_dir}/**/{suffix}", recursive=True)
     if not possible_paths:
