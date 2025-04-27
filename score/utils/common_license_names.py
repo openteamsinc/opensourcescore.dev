@@ -8,6 +8,7 @@ common_license_names_to_kind = {
     "The-Unlicense-(Unlicense)": "UNLICENSE",
     "Mozilla-Public-License-2.0-(MPL-2.0)": "MPL",
     "apache-2": "Apache",
+    "apache-license-2.0": "Apache",
     "apache-license,-version-2.0": "Apache",
     "apache-software": "Apache",
 }

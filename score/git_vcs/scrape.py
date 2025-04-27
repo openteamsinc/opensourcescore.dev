@@ -1,5 +1,5 @@
 import pandas as pd
-
+import time
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
 from git.cmd import Git
@@ -23,32 +23,61 @@ log = logging.getLogger(__name__)
 
 MAX_CLONE_TIME = 30
 
+sparse_checkout = """
+**/package.json
+**/pyproject.toml
+**/setup.cfg
+**/setup.py
+**/requirements.txt
+**/LICENSE
+**/LICENSE.txt
+**/LICENSE.md
+**/LICENSE.rst
+**/COPYING
+**/LICENCE
+**/LICENCE.txt
+**/LICENCE.md
+**/LICENCE.rst
+
+"""
+
 
 @contextmanager
 def clone_repo(url: str):
-
+    log.info(f"Cloning {url}")
     source = Source(package_destinations=[], source_url=url)
 
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
     ) as tmpdir:
         try:
+            s = time.time()
             mygit = Git(os.getcwd())
             mygit.clone(
                 Git.polish_url(url),
                 tmpdir,
                 single_branch=True,
                 no_checkout=True,
+                sparse=True,
                 filter="tree:0",
+                # depth=1,
                 # https://github.com/gitpython-developers/GitPython/issues/892
                 # See issue for why we cant use clone_from
                 kill_after_timeout=MAX_CLONE_TIME,
             )
             repo = Repo(tmpdir)
-            # repo = Repo.clone_from(
-            #     url, tmpdir, single_branch=True, no_checkout=True, filter="tree:0"
-            # )
+            log.info(f"Cloned to {tmpdir} in {time.time() - s:.2f} seconds")
+
+            repo.git.execute(["git", "sparse-checkout", "init", "--no-cone"])
+
+            with open(f"{repo.git_dir}/info/sparse-checkout", "w") as fp:
+                fp.write(sparse_checkout)
+
+            s = time.time()
+            repo.git.checkout("HEAD")
+            log.info(f"Checked out in {time.time() - s:.2f} seconds")
             yield repo, source
+
         except UnsafeProtocolError:
             source.error = Note.NO_SOURCE_UNSAFE_GIT_PROTOCOL
             yield None, source
@@ -120,14 +149,6 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
 
 
 def get_license_type(repo: Repo, url: str) -> License:
-
-    PATTERNS = ["LICENSE*", "LICENCE*", "COPYING"]
-    for PATTERN in PATTERNS:
-        try:
-            # Check out the LICENSE file(s)
-            repo.git.checkout(repo.active_branch, "--", PATTERN)
-        except GitCommandError as e:
-            log.debug(f"{url}: Could not checkout license file: {PATTERN} {e.stderr}")
 
     # Check if LICENSE or LICENSE.txt exists in the root directory
     paths = [
