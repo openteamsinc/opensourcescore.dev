@@ -1,13 +1,14 @@
 import tomli
+import os
 import json
 import configparser
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Iterable
 from git import Repo
-from git.exc import GitCommandError
+
 import logging
 
 import re
-import glob
+
 
 log = logging.getLogger(__name__)
 
@@ -19,39 +20,34 @@ def pypi_normalize(name):
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
-def checkout_and_read_file(repo: Repo, suffix: str):
-    try:
-        repo.git.checkout(repo.active_branch, "--", suffix)
-    except GitCommandError:
-        log.debug(f"no files found with suffix {suffix} in git root")
-    try:
-        repo.git.checkout(repo.active_branch, "--", f"**/{suffix}")
-    except GitCommandError:
-        log.debug(f"no files found with suffix {suffix} in any subdirectories")
+def checkout_suffix(repo: Repo, suffix: str):
 
-    possible_paths = glob.glob(f"{repo.working_dir}/**/{suffix}", recursive=True)
-    if not possible_paths:
+    all_files_output: str = repo.git.ls_tree("-r", "--name-only", "--full-name", "HEAD")
+    all_filespaths = [f.strip() for f in all_files_output.split("\n")]
+    filepaths = [f for f in all_filespaths if f == suffix or f.endswith(f"/{suffix}")]
+    log.info(f"Found {len(filepaths)} files with suffix {suffix}")
+    if not filepaths:
         return []
 
-    # Shortest path first
-    possible_paths = sorted(possible_paths, key=lambda x: len(x))
-    return possible_paths
+    filepaths.sort(key=len)
+
+    return [os.path.join(repo.working_dir, f) for f in filepaths]
 
 
 def get_pyproject_tomls(repo: Repo):
-    return checkout_and_read_file(repo, "pyproject.toml")
+    return checkout_suffix(repo, "pyproject.toml")
 
 
 def get_setup_configs(repo: Repo):
-    return checkout_and_read_file(repo, "setup.cfg")
+    return checkout_suffix(repo, "setup.cfg")
 
 
 def get_setup_pys(repo: Repo):
-    return checkout_and_read_file(repo, "setup.py")
+    return checkout_suffix(repo, "setup.py")
 
 
 def get_npm_package_json(repo: Repo):
-    return checkout_and_read_file(repo, "package.json")
+    return checkout_suffix(repo, "package.json")
 
 
 def read_pypi_toml(repo: Repo, full_path: str) -> Tuple[Optional[str], Optional[str]]:
@@ -139,7 +135,7 @@ def get_npm_pypackage_names(repo: Repo):
     log.info(f"Found {len(full_paths)} package.json files")
     for full_path in full_paths:
         name, source_file = read_npm_package_json(repo, full_path)
-        if name:
+        if name and source_file:
             yield f"npm/{name}", source_file
 
 
@@ -149,7 +145,7 @@ def get_pypi_pypackage_names(repo: Repo):
     log.info(f"Found {len(full_paths)} pyproject.toml files")
     for full_path in full_paths:
         name, source_file = read_pypi_toml(repo, full_path)
-        if name:
+        if name and source_file:
             found_names = True
             yield f"pypi/{name}", source_file
 
@@ -157,7 +153,7 @@ def get_pypi_pypackage_names(repo: Repo):
     log.info(f"Found {len(full_paths)} setup.cfg files")
     for full_path in full_paths:
         name, source_file = read_setup_cfg(repo, full_path)
-        if name:
+        if name and source_file:
             found_names = True
             yield f"pypi/{name}", source_file
 
@@ -168,13 +164,13 @@ def get_pypi_pypackage_names(repo: Repo):
     log.info(f"Found {len(full_paths)} setup.py files")
     for full_path in full_paths:
         name, source_file = read_setup_py(repo, full_path)
-        if name:
+        if name and source_file:
             found_names = True
             yield f"pypi/{name}", source_file
 
     return
 
 
-def get_all_pypackage_names(repo: Repo):
+def get_all_pypackage_names(repo: Repo) -> Iterable[Tuple[str, str]]:
     yield from get_pypi_pypackage_names(repo)
     yield from get_npm_pypackage_names(repo)
