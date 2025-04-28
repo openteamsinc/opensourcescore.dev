@@ -12,5 +12,5 @@ fsspec==2025.3.2
 
 # --
 
-google-cloud-logging~=3.11.4
+google-cloud-logging~=3.12.1
 python-json-logger~=3.3.0
