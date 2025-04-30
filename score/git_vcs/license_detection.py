@@ -51,7 +51,7 @@ def identify_license(source_url: str, license_content: str) -> License:
         )
     similarities = pd.DataFrame(similarities_lst).set_index("name")
     best_match = similarities.idxmax().item()
-    similarity = similarities.loc[best_match, "similarity"]
+    similarity: float = similarities.loc[best_match, "similarity"].item()  # type: ignore
     if similarity < PROBABLY_NOT:
         return License(
             license="Unknown",
@@ -92,7 +92,7 @@ def identify_license(source_url: str, license_content: str) -> License:
 license_dir = Path(__file__).parent / "licenses"
 
 
-def copyright_line(line: Union[bytes | str]):
+def copyright_line(line: Union[bytes, str]):
 
     if isinstance(line, bytes):
         line = line.decode("utf-8", errors="ignore")
