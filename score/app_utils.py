@@ -16,12 +16,14 @@ log = logging.getLogger(__name__)
 AppendHeader = Callable[[str, str], None]
 
 
-def create_git_metadata_cached(url: str, append_header: AppendHeader) -> Source:
+def create_git_metadata_cached(
+    url: str, append_header: AppendHeader, invalidate_cache=False
+) -> Source:
 
     cache_filename = cache_path(f"/git/{quote_plus(url)}.json")
     append_header("git-cache-file", cache_filename)
 
-    if cache_hit(cache_filename, days=1):
+    if not invalidate_cache and cache_hit(cache_filename, days=1):
         cached_git = load_from_cache(Source, cache_filename)
         if cached_git is not None:
             append_header("git-cache-hit", "true")
@@ -36,12 +38,15 @@ def create_git_metadata_cached(url: str, append_header: AppendHeader) -> Source:
 
 
 def get_vuln_data_cached(
-    ecosystem: str, package_name: str, append_header: AppendHeader
+    ecosystem: str,
+    package_name: str,
+    append_header: AppendHeader,
+    invalidate_cache=False,
 ) -> Vulnerabilities:
     cache_filename = cache_path(f"vuln/{ecosystem}/{package_name}.json")
     append_header("vuln-cache-file", cache_filename)
 
-    if cache_hit(cache_filename, days=7):
+    if not invalidate_cache and cache_hit(cache_filename, days=7):
         cached_vuln = load_from_cache(Vulnerabilities, cache_filename)
         if cached_vuln is not None:
             append_header("vuln-cache-hit", "true")
@@ -68,13 +73,16 @@ def get_package_data(ecosystem: str, package_name: str) -> Package:
 
 
 def get_package_data_cached(
-    ecosystem: str, package_name: str, append_header: AppendHeader
+    ecosystem: str,
+    package_name: str,
+    append_header: AppendHeader,
+    invalidate_cache=False,
 ) -> Package:
 
     cache_filename = cache_path(f"packages/{ecosystem}/{package_name}.json")
     append_header("pkg-cache-file", cache_filename)
 
-    if cache_hit(cache_filename, days=1):
+    if not invalidate_cache and cache_hit(cache_filename, days=1):
         cached_pkg = load_from_cache(Package, cache_filename)
         if cached_pkg is not None:
             append_header("pkg-cache-hit", "true")

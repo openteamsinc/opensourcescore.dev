@@ -130,19 +130,30 @@ def any_score(
     ecosystem: str,
     package_name: str,
     source_url: Optional[str] = None,
+    invalidate_cache: bool = False,
 ):
 
     package_data = get_package_data_cached(
-        ecosystem, package_name, response.headers.append
+        ecosystem,
+        package_name,
+        response.headers.append,
+        invalidate_cache=invalidate_cache,
     )
 
     if not source_url:
         source_url = package_data.source_url
     source_data = None
     if source_url:
-        source_data = create_git_metadata_cached(source_url, response.headers.append)
+        source_data = create_git_metadata_cached(
+            source_url, response.headers.append, invalidate_cache=invalidate_cache
+        )
 
-    vuln_data = get_vuln_data_cached(ecosystem, package_name, response.headers.append)
+    vuln_data = get_vuln_data_cached(
+        ecosystem,
+        package_name,
+        response.headers.append,
+        invalidate_cache=invalidate_cache,
+    )
 
     score = build_score(source_url, source_data, package_data, vuln_data)
 
