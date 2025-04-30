@@ -3,17 +3,8 @@ from dataclasses import dataclass, field
 import logging
 
 from score.models import CategorizedScore
-from score.notes import (
-    Note,
-    SCORE_ORDER,
-    ANY,
-    HEALTHY,
-    HEALTH,
-    LEGAL,
-    MATURE,
-    MATURITY,
-    SECURITY,
-)
+from score.notes import Note, ScoreCategories, ScoreGroups
+
 
 log = logging.getLogger(__name__)
 
@@ -37,13 +28,14 @@ class ScoreBuilder:
         if self.value == "Unknown":
             return
 
+        SCORE_ORDER = ScoreCategories._member_names_
         current_numeric_score = SCORE_ORDER.index(self.value)
         new_numeric_score = SCORE_ORDER.index(new_score)
         self.value = SCORE_ORDER[max(current_numeric_score, new_numeric_score)]
 
     def is_in_group(self, note: str):
         group = Note._data[note]["group"]
-        return group == ANY or group == self.group
+        return group == ScoreGroups.ANY.name or group == self.group
 
     def add_note(self, note: str):
         assert isinstance(
@@ -62,35 +54,35 @@ class ScoreBuilder:
         self.notes.append(note)
 
     def dict(self):
-        return {"value": self.value, "notes": [n.value for n in self.notes]}
+        return {"value": self.value, "notes": self.notes}
 
     def asmodel(self):
         return CategorizedScore(value=self.value, notes=self.notes)
 
     @classmethod
     def legal(cls, notes):
-        score = cls(HEALTHY, LEGAL)
+        score = cls(ScoreCategories.HEALTHY.name, ScoreGroups.LEGAL.name)
         for note in notes:
             score.add_note(note)
         return score
 
     @classmethod
     def health_risk(cls, notes):
-        score = cls(HEALTHY, HEALTH)
+        score = cls(ScoreCategories.HEALTHY.name, ScoreGroups.HEALTH.name)
         for note in notes:
             score.add_note(note)
         return score
 
     @classmethod
     def maturity(cls, notes):
-        score = cls(MATURE, MATURITY)
+        score = cls(ScoreCategories.MATURE.name, ScoreGroups.MATURITY.name)
         for note in notes:
             score.add_note(note)
         return score
 
     @classmethod
     def security(cls, notes):
-        score = cls(HEALTHY, SECURITY)
+        score = cls(ScoreCategories.HEALTHY.name, ScoreGroups.SECURITY.name)
         for note in notes:
             score.add_note(note)
         return score
