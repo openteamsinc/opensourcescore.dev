@@ -124,7 +124,7 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
 
     except ValueError as err:
         log.error(f"{url}: {err}")
-        return {"error": Note.REPO_EMPTY.value}
+        return {"error": Note.REPO_EMPTY}
 
     # Filter out commits from GitHub's email domain
     commits = commits[~commits.email.str.endswith("github.com")]
