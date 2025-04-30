@@ -16,6 +16,10 @@ class ScoreGroups(Enum):
     MATURITY = "Maturity"
     SECURITY = "Security"
 
+    @classmethod
+    def values(cls):
+        return [member.value for member in cls]
+
 
 class ScoreCategories(Enum):
     HEALTHY = "Healthy"
@@ -29,6 +33,10 @@ class ScoreCategories(Enum):
     PLACEHOLDER = "Placeholder"
     UNKNOWN = "Unknown"
 
+    @classmethod
+    def values(cls):
+        return [member.value for member in cls]
+
 
 FEW_MAX_MONTHLY_AUTHORS_CONST = 3
 LONG_TIME_TO_FIX = 600
@@ -39,3 +47,16 @@ def to_dict():
         Note.load_csv()
 
     return Note._data
+
+
+def _validate_data():
+    for key, value in Note._data.items():
+        assert (
+            value["group"] in ScoreGroups.values()
+        ), f"Invalid group '{value['group']}' for note '{key}'"
+        assert (
+            value["category"] in ScoreCategories.values()
+        ), f"Invalid category '{value['category']}' for note '{key}'"
+
+
+_validate_data()

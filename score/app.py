@@ -106,8 +106,8 @@ async def notes():
 async def category_notes():
     return {
         "notes": {v["code"]: v for k, v in to_dict().items()},
-        "categories": ScoreCategories._member_names_,
-        "groups": ScoreGroups._member_names_,
+        "categories": ScoreCategories.values(),
+        "groups": ScoreGroups.values(),
     }
 
 

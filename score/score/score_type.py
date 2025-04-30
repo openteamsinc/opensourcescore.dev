@@ -28,7 +28,7 @@ class ScoreBuilder:
         if self.value == "Unknown":
             return
 
-        SCORE_ORDER = ScoreCategories._member_names_
+        SCORE_ORDER = ScoreCategories.values()
         current_numeric_score = SCORE_ORDER.index(self.value)
         new_numeric_score = SCORE_ORDER.index(new_score)
         self.value = SCORE_ORDER[max(current_numeric_score, new_numeric_score)]
