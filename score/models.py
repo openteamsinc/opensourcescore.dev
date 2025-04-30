@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
-from pydantic import field_serializer
+
 from typing import Optional, List, Tuple
 from datetime import datetime
-from .notes import Note
 
 
 @dataclass
@@ -11,7 +10,7 @@ class NoteDescr:
     category: str
     description: str
     group: str
-    id: int
+    oss_risk: Optional[str]
 
 
 @dataclass
@@ -28,7 +27,7 @@ class Package:
 
 @dataclass
 class License:
-    error: Optional[Note] = None
+    error: Optional[str] = None
     license: Optional[str] = None
     kind: Optional[str] = None
     best_match: Optional[str] = None
@@ -42,7 +41,7 @@ class License:
 class Source:
     source_url: str
 
-    error: Optional[Note] = None
+    error: Optional[str] = None
     license: Optional[License] = None
 
     package_destinations: List[Tuple[str, str]] = field(default_factory=list)
@@ -56,11 +55,7 @@ class Source:
 @dataclass
 class CategorizedScore:
     value: str
-    notes: list[Note] = field(default_factory=list)
-
-    @field_serializer("notes")
-    def serialize_notes(self, notes):
-        return [note.name for note in notes]
+    notes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -75,7 +70,7 @@ class Vulnerability:
 
 @dataclass
 class Vulnerabilities:
-    error: Optional[Note] = None
+    error: Optional[str] = None
     vulns: list[Vulnerability] = field(default_factory=list)
 
 
@@ -85,8 +80,4 @@ class Score:
     health_risk: CategorizedScore
     maturity: CategorizedScore
     security: CategorizedScore
-    notes: list[Note] = field(default_factory=list)
-
-    @field_serializer("notes")
-    def serialize_notes(self, notes):
-        return [note.name for note in notes]
+    notes: list[str] = field(default_factory=list)

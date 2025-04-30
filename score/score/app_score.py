@@ -26,7 +26,7 @@ def package_normalize_name(ecosystem: str, name: str) -> str:
     return name
 
 
-def check_package_license(pkg: Package, source_data: Source) -> Iterator[Note]:
+def check_package_license(pkg: Package, source_data: Source) -> Iterator[str]:
 
     if not pkg.license:
         yield Note.PACKAGE_NO_LICENSE
@@ -58,7 +58,7 @@ def check_package_license(pkg: Package, source_data: Source) -> Iterator[Note]:
     yield Note.PACKAGE_LICENSE_MISMATCH
 
 
-def score_python(package_data: Package, source_data: Source) -> Iterator[Note]:
+def score_python(package_data: Package, source_data: Source) -> Iterator[str]:
 
     if not package_data:
         return
@@ -97,8 +97,8 @@ def build_notes(
     source_data: Source,
     package_data: Package,
     vuln_data: Vulnerabilities,
-) -> list[Note]:
-    notes: list[Note] = []
+) -> list[str]:
+    notes: list[str] = []
     notes.extend(build_maturity_score(source_url, source_data))
 
     notes.extend(build_health_risk_score(source_data))
@@ -119,7 +119,7 @@ def build_score(
     vuln_data: Vulnerabilities,
 ) -> ScoreType:
 
-    notes: Collection[Note]
+    notes: Collection[str]
     if source_data is None:
         notes = [Note.NO_SOURCE_URL]
     else:
@@ -127,7 +127,7 @@ def build_score(
 
     notes = set(notes)
     return ScoreType(
-        notes=sorted(notes, key=lambda x: x.name),
+        notes=sorted(notes),
         legal=ScoreBuilder.legal(notes).asmodel(),
         health_risk=ScoreBuilder.health_risk(notes).asmodel(),
         maturity=ScoreBuilder.maturity(notes).asmodel(),

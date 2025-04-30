@@ -23,7 +23,7 @@ def median(lst: list[int]) -> Optional[int]:
         return sorted_lst[mid]
 
 
-def score_security(vulns: Vulnerabilities) -> Iterator[Note]:
+def score_security(vulns: Vulnerabilities) -> Iterator[str]:
     days_to_fix = [v.days_to_fix for v in vulns.vulns if v.days_to_fix is not None]
 
     median_days_to_fix = median(days_to_fix)

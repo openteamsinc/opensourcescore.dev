@@ -7,7 +7,7 @@ ONE_YEAR_AGO = datetime.now() - timedelta(days=365)
 FIVE_YEARS_AGO = datetime.now() - timedelta(days=365 * 5)
 
 
-def build_maturity_score(source_url: str, git_info: Source) -> Iterator[Note]:
+def build_maturity_score(source_url: str, git_info: Source) -> Iterator[str]:
 
     if git_info.error:
         yield git_info.error
