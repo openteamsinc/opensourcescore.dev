@@ -31,3 +31,6 @@ paths = ["score", "whitelist.py"]
 
 [tool.pytest.ini_options]
 env = ["CACHE_LOCATION = /tmp", "K_REVISION = test"]
+
+
+[tool.pyright]

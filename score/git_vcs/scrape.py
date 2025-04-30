@@ -1,4 +1,5 @@
 import pandas as pd
+from glob import glob
 import time
 from git import Repo
 from git.exc import GitCommandError, UnsafeProtocolError
@@ -23,22 +24,25 @@ log = logging.getLogger(__name__)
 
 MAX_CLONE_TIME = 30
 
+LICENSE_PATTERNS = [
+    "**/LICEN[CS]E",
+    "**/LICEN[CS]E.*",
+    "**/licen[cs]e",
+    "**/licen[cs]e.*",
+    "**/COPYING",
+    "**/copying",
+]
+
 sparse_checkout = """
 **/package.json
 **/pyproject.toml
 **/setup.cfg
 **/setup.py
 **/requirements.txt
-**/LICENSE
-**/LICENSE.txt
-**/LICENSE.md
-**/LICENSE.rst
+**/LICEN?E*
+**/licen?e*
 **/COPYING
-**/LICENCE
-**/LICENCE.txt
-**/LICENCE.md
-**/LICENCE.rst
-
+**/copying
 """
 
 
@@ -149,24 +153,13 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
 
 
 def get_license_type(repo: Repo, url: str) -> License:
+    # Use a glob pattern to match license files more flexibly
 
-    # Check if LICENSE or LICENSE.txt exists in the root directory
-    paths = [
-        "LICENSE",
-        "LICENSE.txt",
-        "LICENSE.md",
-        "LICENSE.rst",
-        "COPYING",
-        "LICENCE",
-        "LICENCE.txt",
-        "LICENCE.md",
-        "LICENCE.rst",
-    ]
     license_file_path = None
-    for path in paths:
-        full_path = os.path.join(repo.working_dir, path)
-        if os.path.isfile(full_path):
-            license_file_path = full_path
+    for pattern in LICENSE_PATTERNS:
+        matching_files = glob(os.path.join(repo.working_dir, pattern), recursive=True)
+        if matching_files:
+            license_file_path = matching_files[0]  # Take the first match
             break
 
     if not license_file_path:
