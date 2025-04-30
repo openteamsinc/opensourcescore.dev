@@ -60,7 +60,6 @@ class ScoreBuilder:
         return {"value": self.value, "notes": self.notes}
 
     def asmodel(self):
-        print("asmodel", self.value, self.notes)
         return CategorizedScore(value=self.value, notes=self.notes)
 
     @classmethod
