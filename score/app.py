@@ -55,7 +55,7 @@ if RUN_ENV == "production":
 class NotesResponse:
     notes: dict[str, NoteDescr]
     categories: list[str]
-    groups: dict[str, list[str]]
+    groups: list[str]
 
 
 @dataclass

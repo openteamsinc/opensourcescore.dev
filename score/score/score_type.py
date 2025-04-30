@@ -16,6 +16,9 @@ class ScoreBuilder:
     notes: List[str] = field(default_factory=list)
 
     def __init__(self, initial_value: str, group: str):
+        assert (
+            initial_value in ScoreCategories.values()
+        ), f"Invalid initial value: '{initial_value}'"
         super().__init__()
         self.value = initial_value
         self.group = group
@@ -35,7 +38,7 @@ class ScoreBuilder:
 
     def is_in_group(self, note: str):
         group = Note._data[note]["group"]
-        return group == ScoreGroups.ANY.name or group == self.group
+        return group == ScoreGroups.ANY.value or group == self.group
 
     def add_note(self, note: str):
         assert isinstance(
@@ -57,32 +60,33 @@ class ScoreBuilder:
         return {"value": self.value, "notes": self.notes}
 
     def asmodel(self):
+        print("asmodel", self.value, self.notes)
         return CategorizedScore(value=self.value, notes=self.notes)
 
     @classmethod
     def legal(cls, notes):
-        score = cls(ScoreCategories.HEALTHY.name, ScoreGroups.LEGAL.name)
+        score = cls(ScoreCategories.HEALTHY.value, ScoreGroups.LEGAL.value)
         for note in notes:
             score.add_note(note)
         return score
 
     @classmethod
     def health_risk(cls, notes):
-        score = cls(ScoreCategories.HEALTHY.name, ScoreGroups.HEALTH.name)
+        score = cls(ScoreCategories.HEALTHY.value, ScoreGroups.HEALTH.value)
         for note in notes:
             score.add_note(note)
         return score
 
     @classmethod
     def maturity(cls, notes):
-        score = cls(ScoreCategories.MATURE.name, ScoreGroups.MATURITY.name)
+        score = cls(ScoreCategories.MATURE.value, ScoreGroups.MATURITY.value)
         for note in notes:
             score.add_note(note)
         return score
 
     @classmethod
     def security(cls, notes):
-        score = cls(ScoreCategories.HEALTHY.name, ScoreGroups.SECURITY.name)
+        score = cls(ScoreCategories.HEALTHY.value, ScoreGroups.SECURITY.value)
         for note in notes:
             score.add_note(note)
         return score
