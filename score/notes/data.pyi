@@ -1,7 +1,6 @@
 # This file was auto-generated
 from typing import Dict, TypedDict, ClassVar
 
-
 class NoteData(TypedDict):
     code: str
     group: str
@@ -9,13 +8,11 @@ class NoteData(TypedDict):
     description: str
     oss_risk: str
 
-
 class Note:
     _data: ClassVar[Dict[str, NoteData]]
 
     @classmethod
-    def load_csv(cls) -> None:
-        ...
+    def load_csv(cls) -> None: ...
     NO_SOURCE_UNSAFE_GIT_PROTOCOL: ClassVar[str]
     REPO_EMPTY: ClassVar[str]
     NO_SOURCE_REPO_NOT_FOUND: ClassVar[str]
