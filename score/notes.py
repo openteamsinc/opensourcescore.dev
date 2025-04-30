@@ -1,4 +1,7 @@
-import enum
+import os
+import csv
+from pathlib import Path
+from typing import Dict, TypedDict, Optional
 
 HEALTHY = "Healthy"
 CAUTION_NEEDED = "Caution Needed"
@@ -53,164 +56,113 @@ FEW_MAX_MONTHLY_AUTHORS_CONST = 3
 LONG_TIME_TO_FIX = 600
 
 
-class Note(enum.Enum):
+class Note:
+    # Type annotation for _data as a list of dictionaries
+    class NoteData(TypedDict):
+        code: str
+        group: str
+        category: str
+        description: str
+        oss_risk: Optional[str]
 
-    def __new__(cls, *args):
-        value = len(cls.__members__) + 1
-        obj = object.__new__(cls)
-        obj._value_ = value
-        return obj
+    _data: Dict[str, NoteData] = {}
 
-    def __init__(self, *dd):
-        if len(dd) != 3:
-            raise ValueError(
-                f"Note must be initialized with 3 parameters, got {len(dd)}"
-            )
-        group, category, description = dd
-        self.description = description
-        self.category = category
-        self.group = group
+    @classmethod
+    def load_csv(cls):
+        current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+        csv_path = current_dir / "notes.csv"
 
-    NO_SOURCE_UNSAFE_GIT_PROTOCOL = ANY, UNKNOWN, "Unsafe Git Protocol"
-    REPO_EMPTY = ANY, PLACEHOLDER, "Repository is empty"
-    NO_SOURCE_REPO_NOT_FOUND = ANY, UNKNOWN, "Repo not found"
-    NO_SOURCE_GIT_TIMEOUT = (
-        ANY,
-        UNKNOWN,
-        "Could not clone repo in a reasonable amount of time",
-    )
-    NO_SOURCE_OTHER_GIT_ERROR = ANY, UNKNOWN, "Could not clone repo"
-    NO_LICENSE = LEGAL, MODERATE_RISK, "No License Found"
-    LICENSE_NOT_OSS = (
-        LEGAL,
-        MODERATE_RISK,
-        "License may not comply with open source standards",
-    )
-    LICENSE_LESS_PERMISSIVE = (
-        LEGAL,
-        CAUTION_NEEDED,
-        "License may have usage restrictions. Review terms before implementation",
-    )
-    LICENSE_MODIFIED = (
-        LEGAL,
-        CAUTION_NEEDED,
-        "License may have been modified from the original",
-    )
+        with open(csv_path, "r") as csvfile:
+            reader = csv.DictReader(csvfile)
+            csv_content = {}
 
-    NO_SOURCE_INSECURE_CONNECTION = (
-        ANY,
-        UNKNOWN,
-        "Source code scheme 'http://' is not secure",
-    )
-    NO_SOURCE_LOCALHOST_URL = ANY, UNKNOWN, "Source code location is a localhost url"
-    NO_SOURCE_INVALID_URL = ANY, UNKNOWN, "Source code location is not a valid url"
+            for row in reader:
+                if row["oss_risk"] == "":
+                    row["oss_risk"] = None
+                csv_content[row["code"]] = row
 
-    FEW_MAX_MONTHLY_AUTHORS = (
-        HEALTH,
-        MODERATE_RISK,
-        f"Fewer than {FEW_MAX_MONTHLY_AUTHORS_CONST} authors have contributed to this repository",
-    )
-
-    ONE_AUTHOR_THIS_YEAR = (
-        HEALTH,
-        CAUTION_NEEDED,
-        "Only one author has contributed to this repository in the last year",
-    )
-
-    LAST_COMMIT_OVER_5_YEARS = (
-        MATURITY,
-        LEGACY,
-        "The last commit to source control was over 5 years ago",
-    )
-
-    NO_PROJECT_NAME = (
-        HEALTH,
-        CAUTION_NEEDED,
-        "Could not confirm the published package name from the source code",
-    )
-    PROJECT_NOT_PUBLISHED = (
-        HEALTH,
-        CAUTION_NEEDED,
-        "The Python package name from the source code is not a published package",
-    )
-
-    PACKAGE_NAME_MISMATCH = (
-        HEALTH,
-        HIGH_RISK,
-        "published package has a different name than specified in the source code",
-    )
-
-    NO_COMMITS = ANY, PLACEHOLDER, "There are no human commits in this repository"
-
-    FIRST_COMMIT_THIS_YEAR = MATURITY, EXPERIMENTAL, "First commit in the last year"
-
-    LAST_COMMIT_OVER_A_YEAR = MATURITY, STALE, "The last commit was over a year ago"
-
-    PACKAGE_SKEW_NOT_UPDATED = (
-        HEALTH,
-        MODERATE_RISK,
-        "Package is at least a year behind the the source code",
-    )
-
-    PACKAGE_SKEW_NOT_RELEASED = (
-        HEALTH,
-        MODERATE_RISK,
-        "Package is at least a year ahead of the source code",
-    )
-
-    PACKAGE_LICENSE_MISMATCH = (
-        LEGAL,
-        MODERATE_RISK,
-        "Package license does not match the source code license",
-    )
-
-    PACKAGE_NO_LICENSE = (
-        LEGAL,
-        MODERATE_RISK,
-        "Package was not published with a license",
-    )
-
-    NO_SOURCE_URL = (
-        ANY,
-        UNKNOWN,
-        "The source code location could not be found",
-    )
-
-    VULNERABILITIES_CHECK_FAILED = (
-        SECURITY,
-        UNKNOWN,
-        "Vulnerability check failed",
-    )
-
-    VULNERABILITIES_LONG_TIME_TO_FIX = (
-        SECURITY,
-        CAUTION_NEEDED,
-        f"Vulnerabilities don't typically get fixed within {LONG_TIME_TO_FIX} days",
-    )
-
-    VULNERABILITIES_RECENT = (
-        SECURITY,
-        CAUTION_NEEDED,
-        f"Multiple vulnerabilities have been reported in the last {LONG_TIME_TO_FIX} days",
-    )
-    VULNERABILITIES_SEVERE = (
-        SECURITY,
-        CAUTION_NEEDED,
-        f"At least one high or critical severity vulnerability has been reported in the last {LONG_TIME_TO_FIX}",
-    )
-
-    HEALTHY = ANY, HEALTHY, "Healthy"
+        cls._data = csv_content
 
 
 def to_dict():
-    return {
-        v.value: {
-            "code": k,
-            "group": v.group,
-            "category": v.category,
-            "description": v.description,
-            "id": v.value,
-        }
-        for k, v in vars(Note).items()
-        if isinstance(v, Note)
-    }
+    if not Note._data:
+        Note.load_csv()
+
+    return Note._data
+
+
+# Load CSV data when module is imported
+Note.load_csv()
+
+# Add static attributes to Note class for all note codes
+for code in Note._data.keys():
+    setattr(Note, code, code)
+
+
+if __name__ == "__main__":
+    # Generate notes.pyi stub file for better type checking
+
+    # Load the CSV to get all note codes
+    Note.load_csv()
+
+    # Generate the stub file content
+    stub_content = """# This file was auto-generated
+from typing import Dict, TypedDict, ClassVar
+
+SCORE_ORDER: list[str]
+GROUPS: Dict[str, list[str]]
+RISKS: list[str]
+
+ANY: str
+HEALTH: str
+LEGAL: str
+MATURITY: str
+SECURITY: str
+
+
+PLACEHOLDER: str
+HEALTHY: str
+MATURE: str
+CAUTION_NEEDED: str
+MODERATE_RISK: str
+HIGH_RISK: str
+EXPERIMENTAL: str
+STALE: str
+UNKNOWN: str
+LEGACY: str
+
+FEW_MAX_MONTHLY_AUTHORS_CONST: int
+LONG_TIME_TO_FIX: int
+
+def to_dict() -> Dict[str, NoteData]:
+    pass
+
+
+class NoteData(TypedDict):
+    code: str
+    group: str
+    category: str
+    description: str
+    oss_risk: str
+
+
+class Note:
+    _data: ClassVar[Dict[str, NoteData]]
+
+    @classmethod
+    def load_csv(cls) -> None:
+        ...
+"""
+
+    # Add all note codes as class variables
+    for code in Note._data.keys():
+        stub_content += f"    {code}: ClassVar[str]\n"
+
+    # Write the stub file next to the current file
+    current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+    stub_path = current_dir / "notes.pyi"
+
+    with open(stub_path, "w") as f:
+        f.write(stub_content)
+
+    print(f"Generated type stub file at: {stub_path}")
