@@ -1,33 +1,6 @@
 # This file was auto-generated
 from typing import Dict, TypedDict, ClassVar
 
-SCORE_ORDER: list[str]
-GROUPS: Dict[str, list[str]]
-RISKS: list[str]
-
-ANY: str
-HEALTH: str
-LEGAL: str
-MATURITY: str
-SECURITY: str
-
-PLACEHOLDER: str
-HEALTHY: str
-MATURE: str
-CAUTION_NEEDED: str
-MODERATE_RISK: str
-HIGH_RISK: str
-EXPERIMENTAL: str
-STALE: str
-UNKNOWN: str
-LEGACY: str
-
-FEW_MAX_MONTHLY_AUTHORS_CONST: int
-LONG_TIME_TO_FIX: int
-
-def to_dict() -> Dict[str, NoteData]:
-    pass
-
 class NoteData(TypedDict):
     code: str
     group: str

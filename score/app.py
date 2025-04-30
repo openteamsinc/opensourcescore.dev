@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from score.models import Package, Source, Score, NoteDescr, Vulnerabilities
 from .score.app_score import build_score
-from .notes import SCORE_ORDER, GROUPS, to_dict
+from .notes.notes import ScoreCategories, ScoreGroups, to_dict
 from .cloud_logging.setup import setup_logging
 from .cloud_logging.middleware import LoggingMiddleware
 from .cloud_logging.search import get_recent_packages
@@ -55,7 +55,7 @@ if RUN_ENV == "production":
 class NotesResponse:
     notes: dict[str, NoteDescr]
     categories: list[str]
-    groups: dict[str, list[str]]
+    groups: list[str]
 
 
 @dataclass
@@ -106,8 +106,8 @@ async def notes():
 async def category_notes():
     return {
         "notes": {v["code"]: v for k, v in to_dict().items()},
-        "categories": list(SCORE_ORDER),
-        "groups": GROUPS,
+        "categories": ScoreCategories.values(),
+        "groups": ScoreGroups.values(),
     }
 
 
