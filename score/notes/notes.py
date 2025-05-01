@@ -32,6 +32,7 @@ class ScoreCategories(Enum):
     LEGACY = "Legacy"
     PLACEHOLDER = "Placeholder"
     UNKNOWN = "Unknown"
+    PENDING = "Pending"
 
     @classmethod
     def values(cls):

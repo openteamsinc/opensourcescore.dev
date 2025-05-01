@@ -30,3 +30,4 @@ VULNERABILITIES_LONG_TIME_TO_FIX,Security,Caution Needed,"Vulnerabilities don't 
 VULNERABILITIES_RECENT,Security,Caution Needed,"Multiple vulnerabilities have been reported in the last 600 days",
 VULNERABILITIES_SEVERE,Security,Caution Needed,"At least one high or critical severity vulnerability has been reported in the last 600",
 HEALTHY,Any,Healthy,Healthy,
+PENDING,Any,Pending,"Analysis is still in progress and results will be available soon",
