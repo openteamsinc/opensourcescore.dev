@@ -49,14 +49,12 @@ if __name__ == "__main__":
     stub_content = """# This file was auto-generated
 from typing import Dict, TypedDict, ClassVar
 
-
 class NoteData(TypedDict):
     code: str
     group: str
     category: str
     description: str
     oss_risk: str
-
 
 class Note:
     _data: ClassVar[Dict[str, NoteData]]
