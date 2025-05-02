@@ -62,8 +62,7 @@ class Note:
     _data: ClassVar[Dict[str, NoteData]]
 
     @classmethod
-    def load_csv(cls) -> None:
-        ...
+    def load_csv(cls) -> None: ...
 """
 
     # Add all note codes as class variables

@@ -32,3 +32,4 @@ VULNERABILITIES_RECENT,Security,Caution Needed,"Multiple vulnerabilities have be
 VULNERABILITIES_SEVERE,Security,Caution Needed,"At least one high or critical severity vulnerability has been reported in the last 600",
 HEALTHY,Any,Healthy,Healthy,
 PENDING,Any,Pending,"Analysis is still in progress and results will be available soon",
+ERROR,Any,Error,"Processing error occurred during analysis",

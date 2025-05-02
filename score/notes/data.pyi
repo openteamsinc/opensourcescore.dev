@@ -46,3 +46,4 @@ class Note:
     VULNERABILITIES_SEVERE: ClassVar[str]
     HEALTHY: ClassVar[str]
     PENDING: ClassVar[str]
+    ERROR: ClassVar[str]
