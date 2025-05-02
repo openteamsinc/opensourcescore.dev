@@ -47,3 +47,4 @@ class Note:
     HEALTHY: ClassVar[str]
     PENDING: ClassVar[str]
     ERROR: ClassVar[str]
+    NOT_OPEN_SOURCE: ClassVar[str]

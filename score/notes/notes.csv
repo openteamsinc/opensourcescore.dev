@@ -33,3 +33,4 @@ VULNERABILITIES_SEVERE,Security,Caution Needed,"At least one high or critical se
 HEALTHY,Any,Healthy,Healthy,
 PENDING,Any,Pending,"Analysis is still in progress and results will be available soon",
 ERROR,Any,Error,"Processing error occurred during analysis",
+NOT_OPEN_SOURCE,Any,Not Open Source,"Not an open source project",
