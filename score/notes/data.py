@@ -49,7 +49,6 @@ if __name__ == "__main__":
     stub_content = """# This file was auto-generated
 from typing import Dict, TypedDict, ClassVar
 
-
 class NoteData(TypedDict):
     code: str
     group: str
@@ -57,13 +56,11 @@ class NoteData(TypedDict):
     description: str
     oss_risk: str
 
-
 class Note:
     _data: ClassVar[Dict[str, NoteData]]
 
     @classmethod
-    def load_csv(cls) -> None:
-        ...
+    def load_csv(cls) -> None: ...
 """
 
     # Add all note codes as class variables

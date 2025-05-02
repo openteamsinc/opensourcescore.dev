@@ -166,7 +166,10 @@ def get_license_type(repo: Repo, url: str) -> License:
         return License(error=Note.NO_LICENSE)
 
     # Read and return the license type
-    with open(license_file_path, encoding="utf8", errors="ignore") as license_file:
-        license_content = license_file.read().strip()
+    try:
+        with open(license_file_path, encoding="utf8", errors="ignore") as license_file:
+            license_content = license_file.read().strip()
+    except IsADirectoryError:
+        return License(error=Note.COMPLEX_LICENSE)
 
     return identify_license(url, license_content)

@@ -5,6 +5,7 @@ NO_SOURCE_REPO_NOT_FOUND,Any,Unknown,"Repo not found",OSS-RISK-9
 NO_SOURCE_GIT_TIMEOUT,Any,Unknown,"Could not clone repo in a reasonable amount of time",OSS-RISK-9
 NO_SOURCE_OTHER_GIT_ERROR,Any,Unknown,"Could not clone repo",OSS-RISK-9
 NO_LICENSE,Legal,Moderate Risk,"No License Found",OSS-RISK-7
+COMPLEX_LICENSE,Legal,Moderate Risk,"License has complex terms that require careful review before use",OSS-RISK-7
 LICENSE_NOT_OSS,Legal,Moderate Risk,"License may not comply with open source standards",OSS-RISK-7
 LICENSE_LESS_PERMISSIVE,Legal,Caution Needed,"License may have usage restrictions. Review terms before implementation",OSS-RISK-7
 LICENSE_MODIFIED,Legal,Caution Needed,"License may have been modified from the original",
@@ -31,3 +32,5 @@ VULNERABILITIES_RECENT,Security,Caution Needed,"Multiple vulnerabilities have be
 VULNERABILITIES_SEVERE,Security,Caution Needed,"At least one high or critical severity vulnerability has been reported in the last 600",
 HEALTHY,Any,Healthy,Healthy,
 PENDING,Any,Pending,"Analysis is still in progress and results will be available soon",
+ERROR,Any,Error,"Processing error occurred during analysis",
+NOT_OPEN_SOURCE,Any,Not Open Source,"Not an open source project",

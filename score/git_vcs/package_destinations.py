@@ -125,7 +125,11 @@ def read_npm_package_json(
         log.error("Could not read json")
         return None, None
 
+    if not isinstance(data, dict):
+        log.error("Invalid json format")
+        return None, None
     if not data.get("name"):
+        log.error("Invalid package.json no key 'name'")
         return None, None
     return data["name"], full_path.replace(str(repo.working_dir), "")
 

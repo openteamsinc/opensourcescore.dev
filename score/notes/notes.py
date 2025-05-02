@@ -33,6 +33,8 @@ class ScoreCategories(Enum):
     PLACEHOLDER = "Placeholder"
     UNKNOWN = "Unknown"
     PENDING = "Pending"
+    ERROR = "Error"
+    NOT_OPEN_SOURCE = "Not Open Source"
 
     @classmethod
     def values(cls):
