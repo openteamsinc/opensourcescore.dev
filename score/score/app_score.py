@@ -121,7 +121,11 @@ def build_score(
 
     notes: Collection[str]
     if source_data is None:
-        notes = [Note.NO_SOURCE_URL]
+        if package_data.status == "not_found":
+            notes = [Note.NOT_OPEN_SOURCE]
+        else:
+            notes = [Note.NO_SOURCE_REPO_NOT_FOUND]
+
     else:
         notes = build_notes(source_url, source_data, package_data, vuln_data)
 
