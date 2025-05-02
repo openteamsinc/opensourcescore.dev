@@ -40,3 +40,9 @@ jobs:
         run: |
           # stop the build if there are Python syntax errors or undefined names
           py.test score/ -v
+      - name: Check pyi
+        run: |
+          python -m score.notes.data
+          git diff --exit-code score/notes || ( \
+            echo "Error: Running drizzle-kit generate produced changes. Please run locally and commit changes." && exit 1 \
+          )
