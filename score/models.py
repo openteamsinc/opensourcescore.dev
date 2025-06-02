@@ -14,6 +14,13 @@ class NoteDescr:
 
 
 @dataclass
+class Dependency:
+    name: str
+    specifiers: List[str]
+    include_check: Optional[str] = None
+
+
+@dataclass
 class Package:
     name: str
     ecosystem: str
@@ -23,6 +30,7 @@ class Package:
     source_url_key: Optional[str] = None
     release_date: Optional[datetime] = None
     status: str = "ok"
+    dependencies: Optional[List[Dependency]] = None
 
 
 @dataclass
@@ -35,6 +43,12 @@ class License:
     modified: bool = False
     diff: Optional[str] = None
     md5: Optional[str] = None
+    # Additional fields for license metadata
+    name: Optional[str] = None
+    restrictions: List[str] = field(default_factory=list)
+    additional_text: Optional[str] = None
+    spdx_id: Optional[str] = None
+    is_osi_approved: Optional[bool] = None
 
 
 @dataclass

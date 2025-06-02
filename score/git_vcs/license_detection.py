@@ -1,5 +1,5 @@
 import pandas as pd
-
+from spdx_license_matcher.find import find_license
 import re
 from typing import Union
 from pathlib import Path
@@ -34,6 +34,31 @@ def normalize(content: str) -> str:
 
 
 def identify_license(source_url: str, license_content: str) -> License:
+
+    print("find...")
+    print(repr(license_content))
+    spdx_licenses = find_license(license_content)
+    if spdx_licenses:
+        data = spdx_licenses[0]
+        spdx_id = data["spdx_id"]
+        name = data["name"]
+        extra_characters: str = data["extra_characters"]
+        restrictions = data["restrictions"]
+        kind = data["kind"]
+        is_osi_approved = data["is_osi_approved"]
+
+        return License(
+            license=spdx_id,
+            kind=kind or "n/a",
+            similarity=1,
+            modified=False,
+            # --- new fields
+            spdx_id=spdx_id,
+            name=name,
+            additional_text=extra_characters,
+            restrictions=restrictions,
+            is_osi_approved=is_osi_approved,
+        )
 
     normalized_license_content = normalize(license_content)
     all_licenses = get_all_licenses()
@@ -79,7 +104,7 @@ def identify_license(source_url: str, license_content: str) -> License:
         normalize_license_content(license_content).encode("utf-8")
     ).hexdigest()
 
-    return License(
+    matched = License(
         license=best_match,
         kind=kind,
         similarity=similarity,
@@ -87,6 +112,8 @@ def identify_license(source_url: str, license_content: str) -> License:
         diff=diff,
         md5=md5hash,
     )
+    print(matched)
+    return matched
 
 
 license_dir = Path(__file__).parent / "licenses"
