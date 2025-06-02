@@ -35,8 +35,6 @@ def normalize(content: str) -> str:
 
 def identify_license(source_url: str, license_content: str) -> License:
 
-    print("find...")
-    print(repr(license_content))
     spdx_licenses = find_license(license_content)
     if spdx_licenses:
         data = spdx_licenses[0]
@@ -112,7 +110,6 @@ def identify_license(source_url: str, license_content: str) -> License:
         diff=diff,
         md5=md5hash,
     )
-    print(matched)
     return matched
 
 
