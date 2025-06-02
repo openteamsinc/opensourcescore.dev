@@ -49,7 +49,7 @@ def identify_license(source_url: str, license_content: str) -> License:
 
         return License(
             license=spdx_id,
-            kind=kind or "n/a",
+            kind=kind or spdx_id.split("-", 1)[0] if spdx_id else "n/a",
             similarity=1,
             modified=False,
             # --- new fields

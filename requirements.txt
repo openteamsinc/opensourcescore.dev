@@ -9,7 +9,7 @@ fastapi[standard]~=0.115.12
 dacite~=1.9.2
 gcsfs==2025.3.2
 fsspec==2025.3.2
-
+spdx_license_matcher~=1.0.0
 # --
 
 google-cloud-logging~=3.12.1

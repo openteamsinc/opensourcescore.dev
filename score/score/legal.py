@@ -18,7 +18,7 @@ def score_license(git_info: Source):
         yield note
         return
 
-    if not license.license == "Unknown":
+    if license.license == "Unknown":
         yield Note.LICENSE_UNKNOWN
 
     if license.additional_text:
@@ -32,8 +32,10 @@ def score_license(git_info: Source):
 
     if "derivative-work-copyleft" in license.restrictions:
         yield Note.LICENSE_DERIVATIVE_WORK_COPYLEFT
+
     if "network-copyleft" in license.restrictions:
         yield Note.LICENSE_NETWORK_COPYLEFT
+
     if "patent-grant" in license.restrictions:
         yield Note.LICENSE_PATENT_GRANT
 
@@ -42,6 +44,7 @@ def score_license(git_info: Source):
 
     if "user-data-access" in license.restrictions:
         yield Note.LICENSE_USER_DATA_ACCESS
+
     if "cryptographic-autonomy" in license.restrictions:
         yield Note.LICENSE_CRYPTOGRAPHIC_AUTONOMY
 
