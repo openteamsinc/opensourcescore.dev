@@ -25,12 +25,12 @@ log = logging.getLogger(__name__)
 MAX_CLONE_TIME = 30
 
 LICENSE_PATTERNS = [
-    "**/LICEN[CS]E",
-    "**/LICEN[CS]E.*",
-    "**/licen[cs]e",
-    "**/licen[cs]e.*",
-    "**/COPYING",
-    "**/copying",
+    "LICEN[CS]E",
+    "LICEN[CS]E.*",
+    "licen[cs]e",
+    "licen[cs]e.*",
+    "COPYING",
+    "copying",
 ]
 
 sparse_checkout = """
@@ -39,10 +39,10 @@ sparse_checkout = """
 **/setup.cfg
 **/setup.py
 **/requirements.txt
-**/LICEN?E*
-**/licen?e*
-**/COPYING
-**/copying
+LICEN?E*
+licen?e*
+COPYING
+copying
 """
 
 
@@ -100,7 +100,7 @@ def clone_repo(url: str):
         return
 
 
-def create_git_metadata_str(url: str) -> Source:
+def create_git_metadata(url: str) -> Source:
     source = get_source_from_url(url)
     if source.error is not None:
         return source
@@ -136,6 +136,7 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
 
     # Calculate recent authors count
     recent_authors_count = commits[commits.when > one_year_ago].email.nunique()
+    print(commits[commits.when > one_year_ago].email.unique())
 
     # Calculate max monthly authors count
     commits_by_when = commits.sort_values("when").set_index("when")
@@ -164,7 +165,7 @@ def get_license_type(repo: Repo, url: str) -> License:
 
     if not license_file_path:
         return License(error=Note.NO_LICENSE)
-
+    log.info(f"Found license file: {license_file_path}")
     # Read and return the license type
     try:
         with open(license_file_path, encoding="utf8", errors="ignore") as license_file:

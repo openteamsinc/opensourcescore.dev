@@ -6,7 +6,7 @@ from .models import Source, Package, Vulnerabilities
 from .pypi.json_scraper import get_package_data as get_pypi_package_data
 from .conda.scrape_conda import get_conda_package_data
 from .npm.scrape_npm import get_npm_package_data
-from .git_vcs.scrape import create_git_metadata_str
+from .git_vcs.scrape import create_git_metadata
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerability
 from .utils.caching import save_to_cache, cache_hit, load_from_cache, cache_path
 
@@ -30,7 +30,7 @@ def create_git_metadata_cached(
             return cached_git
 
     append_header("git-cache-hit", "false")
-    git = create_git_metadata_str(url)
+    git = create_git_metadata(url)
 
     save_to_cache(git, cache_filename)
 
