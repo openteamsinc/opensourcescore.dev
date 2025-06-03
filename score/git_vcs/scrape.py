@@ -176,4 +176,6 @@ def get_license_type(repo: Repo, url: str) -> Iterator[License]:
         except IsADirectoryError:
             continue
 
-        yield identify_license(url, license_content, license_file_path)
+        yield identify_license(
+            url, license_content, license_file_path[len(str(repo.working_dir)) + 1 :]
+        )
