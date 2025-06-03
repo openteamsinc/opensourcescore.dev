@@ -10,6 +10,10 @@ def score_license(git_info: Source):
     if git_info.error is not None:
         return
 
+    if not licenses:
+        yield Note.NO_LICENSE
+        return
+
     for license in licenses:
 
         if license.error:

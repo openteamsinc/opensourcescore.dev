@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     # Generate the stub file content
     stub_content = """# This file was auto-generated
-from typing import Dict, TypedDict, ClassVar
+from typing import ClassVar, Dict, TypedDict
 
 class NoteData(TypedDict):
     code: str
