@@ -1,5 +1,7 @@
 import logging
+
 from pythonjsonlogger.json import JsonFormatter  # type: ignore
+
 from .filter import GoogleCloudLogFilter
 
 

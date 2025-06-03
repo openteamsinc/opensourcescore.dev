@@ -1,9 +1,9 @@
-import pandas as pd
 import logging
 
-from score.models import Source
-from score.notes import Note, FEW_MAX_MONTHLY_AUTHORS_CONST
+import pandas as pd
 
+from score.models import Source
+from score.notes import FEW_MAX_MONTHLY_AUTHORS_CONST, Note
 
 log = logging.getLogger(__name__)
 

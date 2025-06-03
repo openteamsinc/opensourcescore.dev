@@ -1,8 +1,9 @@
-from functools import lru_cache
-from google.cloud import logging
-import os
-import requests
 import logging as normal_logging
+import os
+from functools import lru_cache
+
+import requests
+from google.cloud import logging
 
 log = normal_logging.getLogger(__name__)
 

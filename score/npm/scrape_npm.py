@@ -1,10 +1,10 @@
 import logging
 
-
 from score.models import Package
 from score.utils.safe_time import try_parse_date
-from ..utils.request_session import get_session
+
 from ..utils.normalize_source_url import normalize_source_url
+from ..utils.request_session import get_session
 
 log = logging.getLogger(__name__)
 

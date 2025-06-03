@@ -1,5 +1,6 @@
-import pandas as pd
 from typing import Optional
+
+import pandas as pd
 
 
 def safe_date_diff(a, b) -> Optional[pd.Timedelta]:

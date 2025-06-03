@@ -1,6 +1,8 @@
 from datetime import datetime
-from score.app import ScoreResponse, NotesResponse
+
+from score.app import NotesResponse, ScoreResponse
 from score.notes import Note
+
 from .generate import TypescriptGenerator
 
 generator = TypescriptGenerator()

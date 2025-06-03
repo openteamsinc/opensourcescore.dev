@@ -1,10 +1,12 @@
-from typing import Optional, Tuple
-from cvss import CVSS2, CVSS3, CVSS4
 import logging
+from typing import Optional, Tuple
+
+from cvss import CVSS2, CVSS3, CVSS4
+
 from score.models import Vulnerabilities, Vulnerability
-from score.utils.safe_time import try_parse_date
-from score.utils.request_session import get_session
 from score.notes import Note
+from score.utils.request_session import get_session
+from score.utils.safe_time import try_parse_date
 
 log = logging.getLogger(__name__)
 

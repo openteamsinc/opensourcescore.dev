@@ -1,6 +1,8 @@
-from fastapi import HTTPException
 from dateutil.parser import parse as parsedate
+from fastapi import HTTPException
+
 from score.models import Package
+
 from ..utils.request_session import get_session
 
 CONDA_PACKAGE_URL_TEMPLATE = "https://api.anaconda.org/package/{channel}/{package}"

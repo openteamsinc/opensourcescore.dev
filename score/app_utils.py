@@ -1,14 +1,16 @@
-from fastapi import HTTPException
 import logging
 from typing import Callable
 from urllib.parse import quote_plus
-from .models import Source, Package, Vulnerabilities
-from .pypi.json_scraper import get_package_data as get_pypi_package_data
+
+from fastapi import HTTPException
+
 from .conda.scrape_conda import get_conda_package_data
-from .npm.scrape_npm import get_npm_package_data
 from .git_vcs.scrape import create_git_metadata
+from .models import Package, Source, Vulnerabilities
+from .npm.scrape_npm import get_npm_package_data
+from .pypi.json_scraper import get_package_data as get_pypi_package_data
+from .utils.caching import cache_hit, cache_path, load_from_cache, save_to_cache
 from .vulnerabilities.scrape_vulnerabilities import scrape_vulnerability
-from .utils.caching import save_to_cache, cache_hit, load_from_cache, cache_path
 
 max_age = 60 * 60
 log = logging.getLogger(__name__)

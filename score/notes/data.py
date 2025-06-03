@@ -1,7 +1,7 @@
-import os
 import csv
+import os
 from pathlib import Path
-from typing import Dict, TypedDict, Optional
+from typing import Dict, Optional, TypedDict
 
 
 class Note:

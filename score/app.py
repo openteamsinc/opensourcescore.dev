@@ -1,24 +1,25 @@
-import os
 import logging
-from uuid import uuid4
+import os
 from dataclasses import dataclass
 from typing import Optional
+from uuid import uuid4
+
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
-from score.models import Package, Source, Score, NoteDescr, Vulnerabilities
-from .score.app_score import build_score
-from .notes.notes import ScoreCategories, ScoreGroups, to_dict
-from .cloud_logging.setup import setup_logging
-from .cloud_logging.middleware import LoggingMiddleware
-from .cloud_logging.search import get_recent_packages
+
+from score.models import NoteDescr, Package, Score, Source, Vulnerabilities
 
 from .app_utils import (
+    create_git_metadata_cached,
     get_package_data_cached,
     get_vuln_data_cached,
-    create_git_metadata_cached,
     max_age,
 )
-
+from .cloud_logging.middleware import LoggingMiddleware
+from .cloud_logging.search import get_recent_packages
+from .cloud_logging.setup import setup_logging
+from .notes.notes import ScoreCategories, ScoreGroups, to_dict
+from .score.app_score import build_score
 
 # logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)

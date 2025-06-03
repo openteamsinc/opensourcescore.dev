@@ -1,14 +1,12 @@
-import tomli
-import os
-import json
 import configparser
-from typing import Optional, Tuple, Iterable
-from git import Repo
-
+import json
 import logging
-
+import os
 import re
+from typing import Iterable, Optional, Tuple
 
+import tomli
+from git import Repo
 
 log = logging.getLogger(__name__)
 

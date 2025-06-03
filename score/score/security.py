@@ -1,8 +1,8 @@
-from typing import Iterator, Optional
 from datetime import datetime, timedelta, timezone
-from score.notes import Note, LONG_TIME_TO_FIX
-from score.models import Vulnerabilities
+from typing import Iterator, Optional
 
+from score.models import Vulnerabilities
+from score.notes import LONG_TIME_TO_FIX, Note
 
 ONE_YEAR_AGO = datetime.now(tz=timezone.utc) - timedelta(days=365)
 
