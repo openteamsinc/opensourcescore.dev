@@ -28,6 +28,7 @@ jobs:
         run: |
           # stop the build if there are Python syntax errors or undefined names
           flake8 score/
+          isort --check --diff score/
           black score/ --check
       - name: Typecheck with mypy
         run: |
