@@ -1,5 +1,7 @@
-from fastapi.testclient import TestClient
 from unittest.mock import ANY
+
+from fastapi.testclient import TestClient
+
 from .app import app
 
 client = TestClient(app)

@@ -1,7 +1,8 @@
-from typing import Optional
-from datetime import datetime
-from dateutil.parser import parse as parse_date
 import logging
+from datetime import datetime
+from typing import Optional
+
+from dateutil.parser import parse as parse_date
 
 log = logging.getLogger(__name__)
 

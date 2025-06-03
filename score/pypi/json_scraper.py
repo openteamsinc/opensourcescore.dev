@@ -1,13 +1,13 @@
-from typing import List, Optional, Dict, Tuple
 import logging
-
+from typing import Dict, List, Optional, Tuple
 
 from dateutil.parser import parse as parsedate
 
 from score.models import Package
-from ..utils.request_session import get_session
-from ..utils.normalize_source_url import normalize_source_url
+
 from ..utils.common_license_names import get_kind_from_common_license_name
+from ..utils.normalize_source_url import normalize_source_url
+from ..utils.request_session import get_session
 
 log = logging.getLogger(__name__)
 

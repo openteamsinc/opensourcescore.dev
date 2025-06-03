@@ -1,19 +1,20 @@
-from typing import Optional, Iterator, Collection
+import re
 from datetime import timedelta
 from hashlib import md5
-import re
+from typing import Collection, Iterator, Optional
+
+from score.models import Package
+from score.models import Score as ScoreType
+from score.models import Source, Vulnerabilities
 from score.utils.normalize_license_content import normalize_license_content
-from score.models import Package, Source, Vulnerabilities, Score as ScoreType
-from .score_type import ScoreBuilder
-from .score import safe_date_diff
-from .maturity import build_maturity_score
-from .legal import build_legal_score
-from .security import score_security
-from .health_risk import (
-    build_health_risk_score,
-)
 
 from ..notes import Note
+from .health_risk import build_health_risk_score
+from .legal import build_legal_score
+from .maturity import build_maturity_score
+from .score import safe_date_diff
+from .score_type import ScoreBuilder
+from .security import score_security
 
 
 def pypi_normalize(name: str) -> str:
@@ -32,30 +33,37 @@ def check_package_license(pkg: Package, source_data: Source) -> Iterator[str]:
         yield Note.PACKAGE_NO_LICENSE
         return
 
-    if not source_data.license:
-        return
+    # if not source_data.license:
+    #     return
+    for license in source_data.licenses:
 
-    source_license_kind = source_data.license.kind
-    source_license_md5 = source_data.license.md5
+        source_license_kind = license.kind
+        source_license_md5 = license.md5
 
-    if not source_license_kind:
-        return
+        if not source_license_kind:
+            # check next
+            continue
 
-    if source_license_kind.lower() == "unknown":
-        return
+        if source_license_kind.lower() == "unknown":
+            # check next
+            continue
 
-    if pkg.license == source_license_kind:
-        return
+        if pkg.license == source_license_kind:
+            # No mismatch
+            return
 
-    package_license_md5 = md5(
-        normalize_license_content(pkg.license).encode("utf-8")
-    ).hexdigest()
+        package_license_md5 = md5(
+            normalize_license_content(pkg.license).encode("utf-8")
+        ).hexdigest()
 
-    if package_license_md5 == source_license_md5:
-        # The package license is the exact same as the source file contents
-        return
+        if package_license_md5 == source_license_md5:
+            # The package license is the exact same as the source file contents
+            return
 
-    yield Note.PACKAGE_LICENSE_MISMATCH
+    if len(pkg.license) > 100:
+        yield Note.PACKAGE_LICENSE_NOT_SPDX_ID
+    else:
+        yield Note.PACKAGE_LICENSE_MISMATCH
 
 
 def score_python(package_data: Package, source_data: Source) -> Iterator[str]:

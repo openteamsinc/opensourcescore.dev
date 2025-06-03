@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
-
-from typing import Optional, List, Tuple
 from datetime import datetime
+from typing import List, Optional, Tuple
 
 
 @dataclass
@@ -36,6 +35,7 @@ class Package:
 @dataclass
 class License:
     error: Optional[str] = None
+    path: Optional[str] = None
     license: Optional[str] = None
     kind: Optional[str] = None
     best_match: Optional[str] = None
@@ -56,8 +56,7 @@ class Source:
     source_url: str
 
     error: Optional[str] = None
-    license: Optional[License] = None
-
+    licenses: List[License] = field(default_factory=list)
     package_destinations: List[Tuple[str, str]] = field(default_factory=list)
 
     recent_authors_count: Optional[int] = None

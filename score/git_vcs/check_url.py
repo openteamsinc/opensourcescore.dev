@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
-from score.notes import Note
+
 from score.models import Source
+from score.notes import Note
 
 
 def is_valid_hostname(hostname):

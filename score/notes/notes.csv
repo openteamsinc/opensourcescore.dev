@@ -41,7 +41,8 @@ LICENSE_NOT_OSI_APPROVED,Legal,Caution Needed,"License is not approved by the Op
 LICENSE_DERIVATIVE_WORK_COPYLEFT,Legal,Caution Needed,"License allows derivative works but with certain conditions",
 LICENSE_NETWORK_COPYLEFT,Legal,Caution Needed,"License requires sharing of modifications over a network",
 LICENSE_PATENT_GRANT,Legal,Caution Needed,"License includes a patent grant clause",
-LICENSE_COMMERCIAL_RESTRICTIONS,Legal,Caution Needed,"License has restrictions on commercial use",
-LICENSE_USER_DATA_ACCESS,Legal,Caution Needed,"License requires access to user data",
-LICENSE_CRYPTOGRAPHIC_AUTONOMY,Legal,Caution Needed,"License includes a cryptographic autonomy clause",
-LICENSE_WEAK_COPYLEFT,Legal,Caution Needed,"License has weak copyleft provisions",
+LICENSE_RESTRICTION_COMMERCIAL,Legal,Caution Needed,"License has restrictions on commercial use",
+LICENSE_RESTRICTION_USER_DATA_ACCESS,Legal,Caution Needed,"License requires access to user data",
+LICENSE_RESTRICTION_CRYPTOGRAPHIC_AUTONOMY,Legal,Caution Needed,"License includes a cryptographic autonomy clause",
+LICENSE_RESTRICTION_WEAK_COPYLEFT,Legal,Caution Needed,"License has weak copyleft provisions",
+PACKAGE_LICENSE_NOT_SPDX_ID,Legal,Caution Needed,"Package license is not listed in the SPDX license list",OSS-RISK-7

@@ -33,4 +33,5 @@ paths = ["score", "whitelist.py"]
 env = ["CACHE_LOCATION = /tmp", "K_REVISION = test"]
 
 
-[tool.pyright]
+[tool.isort]
+profile = "black"

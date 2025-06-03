@@ -1,13 +1,14 @@
-import os
 import json
 import logging
+import os
 from dataclasses import asdict
-from dacite import from_dict, Config
-from typing import Optional, TypeVar, Type, Any, Tuple
 from datetime import datetime, timezone
-import fsspec
-from score.notes import Note
+from typing import Any, Optional, Tuple, Type, TypeVar
 
+import fsspec
+from dacite import Config, from_dict
+
+from score.notes import Note
 
 CACHE_LOCATION = os.environ.get("CACHE_LOCATION", "gs://openteams-score-data/cache")
 

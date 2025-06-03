@@ -1,10 +1,9 @@
-from typing import List
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
+from typing import List
 
 from score.models import CategorizedScore
 from score.notes import Note, ScoreCategories, ScoreGroups
-
 
 log = logging.getLogger(__name__)
 

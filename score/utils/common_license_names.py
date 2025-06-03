@@ -1,4 +1,5 @@
 from typing import Optional
+
 from .license_name_to_kind import KIND_MAP
 
 common_license_names_to_kind = {

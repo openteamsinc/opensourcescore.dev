@@ -1,6 +1,6 @@
 from enum import Enum
-from .data import Note
 
+from .data import Note
 
 ANY = "Any"
 HEALTH = "Health"

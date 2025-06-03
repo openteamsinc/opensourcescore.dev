@@ -1,20 +1,23 @@
-import pandas as pd
-from glob import glob
-import time
-from git import Repo
-from git.exc import GitCommandError, UnsafeProtocolError
-from git.cmd import Git
-
-import tempfile
-from datetime import datetime, timedelta
 import logging
 import os
+import tempfile
+import time
 from contextlib import contextmanager
 from dataclasses import replace
-from score.models import Source, License
+from datetime import datetime, timedelta
+from glob import glob
+from typing import Iterator
+
+import pandas as pd
+from git import Repo
+from git.cmd import Git
+from git.exc import GitCommandError, UnsafeProtocolError
+
+from score.models import License, Source
 from score.notes import Note
-from .license_detection import identify_license
+
 from .check_url import get_source_from_url
+from .license_detection import identify_license
 from .package_destinations import get_all_pypackage_names
 
 one_year_ago = datetime.now() - timedelta(days=365)
@@ -25,12 +28,14 @@ log = logging.getLogger(__name__)
 MAX_CLONE_TIME = 30
 
 LICENSE_PATTERNS = [
-    "LICEN[CS]E",
-    "LICEN[CS]E.*",
-    "licen[cs]e",
-    "licen[cs]e.*",
-    "COPYING",
-    "copying",
+    "**/LICEN[CS]E",
+    "**/LICEN[CS]E.*",
+    "**/licen[cs]e",
+    "**/licen[cs]e.*",
+    "**/COPYING",
+    "**/copying",
+    "**/COPYING.*",
+    "**/copying.*",
 ]
 
 sparse_checkout = """
@@ -39,10 +44,10 @@ sparse_checkout = """
 **/setup.cfg
 **/setup.py
 **/requirements.txt
-LICEN?E*
-licen?e*
-COPYING
-copying
+**/LICEN?E*
+**/licen?e*
+**/COPYING*
+**/copying*
 """
 
 
@@ -109,7 +114,7 @@ def create_git_metadata(url: str) -> Source:
         if repo is None:
             return metadata
         metadata = replace(metadata, **get_commit_metadata(repo, url))
-        metadata.license = get_license_type(repo, url)
+        metadata.licenses = list(get_license_type(repo, url))
         metadata.package_destinations.extend(get_all_pypackage_names(repo))
 
         return metadata
@@ -153,24 +158,22 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
     }
 
 
-def get_license_type(repo: Repo, url: str) -> License:
-    # Use a glob pattern to match license files more flexibly
+def get_license_type(repo: Repo, url: str) -> Iterator[License]:
 
-    license_file_path = None
-    for pattern in LICENSE_PATTERNS:
-        matching_files = glob(os.path.join(repo.working_dir, pattern), recursive=True)
-        if matching_files:
-            license_file_path = matching_files[0]  # Take the first match
-            break
+    license_file_paths = [
+        path
+        for pattern in LICENSE_PATTERNS
+        for path in glob(os.path.join(repo.working_dir, pattern), recursive=True)
+    ]
 
-    if not license_file_path:
-        return License(error=Note.NO_LICENSE)
-    log.info(f"Found license file: {license_file_path}")
-    # Read and return the license type
-    try:
-        with open(license_file_path, encoding="utf8", errors="ignore") as license_file:
-            license_content = license_file.read().strip()
-    except IsADirectoryError:
-        return License(error=Note.COMPLEX_LICENSE)
+    for license_file_path in license_file_paths:
+        log.info(f"Found license file: {license_file_path}")
+        try:
+            with open(
+                license_file_path, encoding="utf8", errors="ignore"
+            ) as license_file:
+                license_content = license_file.read().strip()
+        except IsADirectoryError:
+            continue
 
-    return identify_license(url, license_content)
+        yield identify_license(url, license_content, license_file_path)

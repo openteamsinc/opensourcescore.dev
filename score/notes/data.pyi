@@ -1,5 +1,5 @@
 # This file was auto-generated
-from typing import Dict, TypedDict, ClassVar
+from typing import ClassVar, Dict, TypedDict
 
 class NoteData(TypedDict):
     code: str
@@ -55,7 +55,8 @@ class Note:
     LICENSE_DERIVATIVE_WORK_COPYLEFT: ClassVar[str]
     LICENSE_NETWORK_COPYLEFT: ClassVar[str]
     LICENSE_PATENT_GRANT: ClassVar[str]
-    LICENSE_COMMERCIAL_RESTRICTIONS: ClassVar[str]
-    LICENSE_USER_DATA_ACCESS: ClassVar[str]
-    LICENSE_CRYPTOGRAPHIC_AUTONOMY: ClassVar[str]
-    LICENSE_WEAK_COPYLEFT: ClassVar[str]
+    LICENSE_RESTRICTION_COMMERCIAL: ClassVar[str]
+    LICENSE_RESTRICTION_USER_DATA_ACCESS: ClassVar[str]
+    LICENSE_RESTRICTION_CRYPTOGRAPHIC_AUTONOMY: ClassVar[str]
+    LICENSE_RESTRICTION_WEAK_COPYLEFT: ClassVar[str]
+    PACKAGE_LICENSE_NOT_SPDX_ID: ClassVar[str]

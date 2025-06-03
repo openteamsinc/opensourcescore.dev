@@ -1,15 +1,17 @@
+import re
+from difflib import unified_diff
+from functools import lru_cache
+from hashlib import md5
+from pathlib import Path
+from typing import Union
+
 import pandas as pd
 from spdx_license_matcher.find import find_license
-import re
-from typing import Union
-from pathlib import Path
-from functools import lru_cache
 from strsimpy import SorensenDice
-from difflib import unified_diff
+
 from score.models import License
 from score.utils.license_name_to_kind import KIND_MAP
 from score.utils.normalize_license_content import normalize_license_content
-from hashlib import md5
 
 CLOSE_ENOUGH = 0.95
 PROBABLY_NOT = 0.9
@@ -33,7 +35,9 @@ def normalize(content: str) -> str:
     return content.lower().strip()
 
 
-def identify_license(source_url: str, license_content: str) -> License:
+def identify_license(
+    source_url: str, license_content: str, license_file_path: str
+) -> License:
 
     spdx_licenses = find_license(license_content)
     if spdx_licenses:
@@ -47,6 +51,7 @@ def identify_license(source_url: str, license_content: str) -> License:
 
         return License(
             license=spdx_id,
+            path=license_file_path,
             kind=kind or spdx_id.split("-", 1)[0] if spdx_id else "n/a",
             similarity=1,
             modified=False,
@@ -79,6 +84,7 @@ def identify_license(source_url: str, license_content: str) -> License:
         return License(
             license="Unknown",
             kind="Unknown",
+            path=license_file_path,
             similarity=similarity,
             best_match=best_match,
             modified=False,
@@ -104,6 +110,7 @@ def identify_license(source_url: str, license_content: str) -> License:
 
     matched = License(
         license=best_match,
+        path=license_file_path,
         kind=kind,
         similarity=similarity,
         modified=modified,

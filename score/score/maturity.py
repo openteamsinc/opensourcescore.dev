@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Iterator
-from score.notes import Note
+
 from score.models import Source
+from score.notes import Note
 
 ONE_YEAR_AGO = datetime.now() - timedelta(days=365)
 FIVE_YEARS_AGO = datetime.now() - timedelta(days=365 * 5)
