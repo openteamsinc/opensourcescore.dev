@@ -60,7 +60,10 @@ def check_package_license(pkg: Package, source_data: Source) -> Iterator[str]:
             # The package license is the exact same as the source file contents
             return
 
-    yield Note.PACKAGE_LICENSE_MISMATCH
+    if len(pkg.license) > 100:
+        yield Note.PACKAGE_LICENSE_NOT_SPDX_ID
+    else:
+        yield Note.PACKAGE_LICENSE_MISMATCH
 
 
 def score_python(package_data: Package, source_data: Source) -> Iterator[str]:

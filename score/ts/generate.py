@@ -1,6 +1,15 @@
 from dataclasses import fields, is_dataclass
-from typing import (Any, Dict, List, Optional, Tuple, Union, get_args,
-                    get_origin, get_type_hints)
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 
 class TypescriptGenerator:
