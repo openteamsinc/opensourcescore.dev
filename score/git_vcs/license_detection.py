@@ -92,17 +92,15 @@ def identify_license(
 
     kind = KIND_MAP.get(best_match, best_match)
 
-    modified = bool(similarity < CLOSE_ENOUGH)
-    diff = None
-    if modified:
-        diff = "\n".join(
-            unified_diff(
-                all_licenses[best_match].splitlines(),
-                license_content.splitlines(),
-                fromfile=f"https://opensource.org/license/{best_match}",
-                tofile=f"{source_url}",
-            )
+    modified = True
+    diff = "\n".join(
+        unified_diff(
+            all_licenses[best_match].splitlines(),
+            license_content.splitlines(),
+            fromfile=f"https://opensource.org/license/{best_match}",
+            tofile=f"{source_url}",
         )
+    )
 
     md5hash = md5(
         normalize_license_content(license_content).encode("utf-8")

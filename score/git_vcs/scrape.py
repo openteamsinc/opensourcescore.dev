@@ -167,15 +167,16 @@ def is_valid_license_filename(path: str) -> bool:
 
 def is_valid_license(path: str, content: str) -> bool:
     path = path.lower()
-    # This is documentation including a license file
-    if "docs/license.rst" in path and (
-        ".. literalinclude::" in content or ".. include::" in content
-    ):
-        log.info(f"Skipping {path} due to literalinclude directive")
-        return False
-    if "docs/license.md" in path and ("{include} ../LICENSE" in content):
-        log.info(f"Skipping {path} due to literalinclude directive")
-        return False
+    if path.startswith("docs"):
+        # This is documentation including a license file
+        if path.endswith("license.rst") and (
+            ".. literalinclude::" in content or ".. include::" in content
+        ):
+            log.info(f"Skipping {path} due to literalinclude directive")
+            return False
+        if path.endswith("license.md") and ("{include} ../LICENSE" in content):
+            log.info(f"Skipping {path} due to literalinclude directive")
+            return False
     return True
 
 
