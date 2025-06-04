@@ -23,6 +23,7 @@ def score_license(git_info: Source):
 
         if license.license == "Unknown":
             yield Note.LICENSE_UNKNOWN
+            return
 
         if license.additional_text:
             yield Note.LICENSE_ADDITIONAL_TEXT
@@ -30,7 +31,7 @@ def score_license(git_info: Source):
         if not license.spdx_id:
             yield Note.LICENSE_NOT_IN_SPDX
 
-        if license.is_osi_approved is not True:
+        if license.spdx_id and license.is_osi_approved is not True:
             yield Note.LICENSE_NOT_OSI_APPROVED
 
         if "derivative-work-copyleft" in license.restrictions:
