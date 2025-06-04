@@ -27,6 +27,7 @@ log = logging.getLogger(__name__)
 
 MAX_CLONE_TIME = 30
 
+NOT_A_LICENSE_FILE_EXT = [".json", ".csv", ".svg", ".jpg", ".jpeg"]
 LICENSE_PATTERNS = [
     "**/LICEN[CS]E",
     "**/LICEN[CS]E.*",
@@ -157,12 +158,34 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
     }
 
 
+def is_valid_license_filename(path: str) -> bool:
+    _, ext = os.path.splitext(path)
+    if ext in NOT_A_LICENSE_FILE_EXT:
+        return False
+    return True
+
+
+def is_valid_license(path: str, content: str) -> bool:
+    path = path.lower()
+    # This is documentation including a license file
+    if "docs/license.rst" in path and (
+        ".. literalinclude::" in content or ".. include::" in content
+    ):
+        log.info(f"Skipping {path} due to literalinclude directive")
+        return False
+    if "docs/license.md" in path and ("{include} ../LICENSE" in content):
+        log.info(f"Skipping {path} due to literalinclude directive")
+        return False
+    return True
+
+
 def get_license_type(repo: Repo, url: str) -> Iterator[License]:
 
     license_file_paths = [
         path
         for pattern in LICENSE_PATTERNS
         for path in glob(os.path.join(repo.working_dir, pattern), recursive=True)
+        if is_valid_license_filename(path)
     ]
 
     for license_file_path in license_file_paths:
@@ -176,11 +199,8 @@ def get_license_type(repo: Repo, url: str) -> Iterator[License]:
             continue
 
         rel_path = license_file_path[len(str(repo.working_dir)) + 1 :]
-        if (
-            "license.rst" in rel_path.lower()
-            and ".. literalinclude::" in license_content
-        ):
-            log.info(f"Skipping {rel_path} due to literalinclude directive")
+
+        if not is_valid_license(rel_path, license_content):
             continue
 
         yield identify_license(url, license_content, rel_path)
