@@ -22,7 +22,7 @@ def create_git_metadata_cached(
     url: str, append_header: AppendHeader, invalidate_cache=False
 ) -> Source:
 
-    cache_filename = cache_path(f"/git/{quote_plus(url)}.json")
+    cache_filename = cache_path(f"git/{quote_plus(url)}.json")
     append_header("git-cache-file", cache_filename)
 
     if not invalidate_cache and cache_hit(cache_filename, days=1):

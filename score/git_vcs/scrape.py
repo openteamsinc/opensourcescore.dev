@@ -141,7 +141,6 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
 
     # Calculate recent authors count
     recent_authors_count = commits[commits.when > one_year_ago].email.nunique()
-    print(commits[commits.when > one_year_ago].email.unique())
 
     # Calculate max monthly authors count
     commits_by_when = commits.sort_values("when").set_index("when")
@@ -176,6 +175,12 @@ def get_license_type(repo: Repo, url: str) -> Iterator[License]:
         except IsADirectoryError:
             continue
 
-        yield identify_license(
-            url, license_content, license_file_path[len(str(repo.working_dir)) + 1 :]
-        )
+        rel_path = license_file_path[len(str(repo.working_dir)) + 1 :]
+        if (
+            "license.rst" in rel_path.lower()
+            and ".. literalinclude::" in license_content
+        ):
+            log.info(f"Skipping {rel_path} due to literalinclude directive")
+            continue
+
+        yield identify_license(url, license_content, rel_path)
