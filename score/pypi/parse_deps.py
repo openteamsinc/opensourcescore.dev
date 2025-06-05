@@ -15,7 +15,9 @@ def parse_dep(dep_string: str) -> Dependency:
 
     # Parse name and extras
     # Match name followed by optional extras in brackets
-    match = re.match(r"^([a-zA-Z_][a-zA-Z0-9._-]*)\s*(?:\[([^\]]+)\])?\s*(.*)", main_part)
+    match = re.match(
+        r"^([a-zA-Z_][a-zA-Z0-9._-]*)\s*(?:\[([^\]]+)\])?\s*(.*)", main_part
+    )
     if not match:
         raise ValueError(f"Invalid dependency string: {dep_string}")
 
