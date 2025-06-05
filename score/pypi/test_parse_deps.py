@@ -1,5 +1,6 @@
 import pytest
-from .parse_deps import parse_deps, parse_dep
+
+from .parse_deps import parse_dep, parse_deps
 
 
 def test_parse_dep_simple_name_only():

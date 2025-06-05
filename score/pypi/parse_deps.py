@@ -1,6 +1,6 @@
 import logging
-from typing import List, Optional
 import re
+from typing import List, Optional
 
 from score.models import Dependency
 

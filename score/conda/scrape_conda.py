@@ -1,7 +1,7 @@
 from dateutil.parser import parse as parsedate
 from fastapi import HTTPException
 
-from score.models import Package, Dependency
+from score.models import Dependency, Package
 
 from ..utils.request_session import get_session
 
