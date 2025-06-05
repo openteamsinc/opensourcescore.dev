@@ -1,5 +1,5 @@
 import logging
-
+from typing import Dict
 from score.models import Dependency, Package
 from score.utils.safe_time import try_parse_date
 
@@ -32,11 +32,11 @@ def get_npm_package_data(package_name: str) -> Package:
     release_date = package_data.get("time", {}).get(version)
     license = package_data.get("license")
 
-    dependencies_dict = (
+    dependencies_dict: Dict[str, str] = (
         package_data.get("versions", {}).get(version, {}).get("dependencies", {})
     )
     dependencies = [
-        Dependency(name=name, specifiers=specifiers)
+        Dependency(name=name, specifiers=[specifiers])
         for name, specifiers in dependencies_dict.items()
     ]
     return Package(
