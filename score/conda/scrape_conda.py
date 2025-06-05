@@ -1,9 +1,10 @@
+from typing import Dict
+
 from dateutil.parser import parse as parsedate
 from fastapi import HTTPException
 
 from score.models import Dependency, Package
 
-from typing import Dict
 from ..utils.request_session import get_session
 
 CONDA_PACKAGE_URL_TEMPLATE = "https://api.anaconda.org/package/{channel}/{package}"

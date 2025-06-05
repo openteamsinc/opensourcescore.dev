@@ -1,5 +1,6 @@
 import logging
 from typing import Dict
+
 from score.models import Dependency, Package
 from score.utils.safe_time import try_parse_date
 
