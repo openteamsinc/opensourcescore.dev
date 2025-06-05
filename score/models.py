@@ -23,13 +23,13 @@ class Dependency:
 class Package:
     name: str
     ecosystem: str
+    dependencies: List[Dependency]
     version: Optional[str] = None
     license: Optional[str] = None
     source_url: Optional[str] = None
     source_url_key: Optional[str] = None
     release_date: Optional[datetime] = None
     status: str = "ok"
-    dependencies: Optional[List[Dependency]] = None
 
 
 @dataclass

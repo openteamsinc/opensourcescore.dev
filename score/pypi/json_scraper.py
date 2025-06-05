@@ -8,6 +8,7 @@ from score.models import Package
 from ..utils.common_license_names import get_kind_from_common_license_name
 from ..utils.normalize_source_url import normalize_source_url
 from ..utils.request_session import get_session
+from .parse_deps import parse_deps
 
 log = logging.getLogger(__name__)
 
@@ -53,13 +54,19 @@ def get_package_data(package_name: str) -> Package:
     response = s.get(url)
     if response.status_code == 404:
         log.debug(f"Skipping package not found for package {package_name}")
-        return Package(name=package_name, ecosystem="pypi", status="not_found")
+        return Package(
+            name=package_name,
+            ecosystem="pypi",
+            status="not_found",
+            dependencies=[],
+        )
     response.raise_for_status()  # Raise an error for bad status codes
     package_data = response.json()  # Parse the JSON response
 
     # Extract the 'info' section
     info = package_data.get("info", {})
 
+    dependencies = parse_deps(info.get("requires_dist"))
     source_url_key, source_url = extract_source_url(info.get("project_urls", {}))
 
     version = info.get("version", None)
@@ -82,6 +89,7 @@ def get_package_data(package_name: str) -> Package:
 
     package_data = Package(
         name=package_name,
+        dependencies=dependencies,
         version=version,
         source_url=source_url,
         source_url_key=source_url_key,
