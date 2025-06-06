@@ -16,7 +16,9 @@ class NoteDescr:
 class Dependency:
     name: str
     specifiers: List[str]
-    include_check: Optional[str] = None
+    environment_marker: Optional[str] = None
+    extras: List[str] = field(default_factory=list)
+    extra_marker: Optional[str] = None
 
 
 @dataclass
