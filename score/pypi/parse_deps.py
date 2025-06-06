@@ -30,17 +30,12 @@ def parse_dep(dep_string: str) -> Dependency:
     if extras_str:
         extras = [extra.strip() for extra in extras_str.split(",") if extra.strip()]
 
+    specifiers: List[str] = []
     # Handle URL specifications (@ http://...)
-    if spec_part.startswith("@"):
-        # For URL dependencies, we don't parse version specifiers
-        specifiers = []
-    else:
-        # Extract version specifiers
-        specifiers = []
-        if spec_part:
-            # Find all version specifiers (>=, ==, !=, <, >, ~=, etc.)
-            spec_matches = re.findall(r"[><=!~]+[^,;\s]+", spec_part)
-            specifiers = [spec.strip() for spec in spec_matches]
+    if spec_part and not spec_part.startswith("@"):
+        # Find all version specifiers (>=, ==, !=, <, >, ~=, etc.)
+        spec_matches = re.findall(r"[><=!~]+[^,;\s]+", spec_part)
+        specifiers = [spec.strip() for spec in spec_matches]
 
     # Extract extra_marker from environment_marker if present
     extra_marker = None
