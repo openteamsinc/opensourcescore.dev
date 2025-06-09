@@ -4,8 +4,6 @@ import tempfile
 import pytest
 from git import Repo
 
-from score.notes import Note
-
 from .clone_repo import clone_repo
 
 
