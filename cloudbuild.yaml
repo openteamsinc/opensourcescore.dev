@@ -58,7 +58,7 @@ steps:
         --allow-unauthenticated
         --revision-suffix=$SHORT_SHA
         --max-instances=20
-        --concurrency=20
+        --concurrency=40
         --memory=2Gi
         --set-env-vars DEPLOY_DATE=$(date +'%Y-%m-%d')
 

@@ -25,7 +25,17 @@ def get_npm_package_data(package_name: str) -> Package:
     res.raise_for_status()
     package_data = res.json()
 
-    source_url = package_data.get("repository", {}).get("url")
+    package_repo = package_data.get("repository", {})
+    if isinstance(package_repo, dict):
+        source_url = package_repo.get("url")
+    elif isinstance(package_repo, str):
+        source_url = package_repo
+    else:
+        log.warning(
+            f"Unexpected repository format for package {package_name}: {package_repo} (type: {type(package_repo)})"
+        )
+        source_url = None
+
     source_url = normalize_source_url(source_url)
 
     # ndownloads = get_npm_package_downloads(package)
