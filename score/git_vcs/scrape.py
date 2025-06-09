@@ -73,6 +73,8 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
     rolling_authors = daily_authors.rolling(window="30D").sum()
     max_monthly_authors_count = rolling_authors.max()
 
+    first_commit = commits.when.min()
+    latest_commit = commits.when.max()
     # Return the required metadata
     return {
         "recent_authors_count": int(recent_authors_count),
@@ -81,8 +83,8 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
             if pd.isna(max_monthly_authors_count)
             else int(max_monthly_authors_count)
         ),
-        "first_commit": commits.when.min(),
-        "latest_commit": commits.when.max(),
+        "first_commit": None if pd.isna(first_commit) else first_commit,
+        "latest_commit": None if pd.isna(latest_commit) else latest_commit,
     }
 
 
