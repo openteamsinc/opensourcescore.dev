@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 import tempfile
 import time
 from contextlib import contextmanager
@@ -116,7 +117,7 @@ def clone_repo(url: str):
             # Clean up the temporary directory
             if tmpdir is not None:
                 try:
-                    os.rmdir(tmpdir)
+                    shutil.rmtree(tmpdir)
                 except OSError as e:
                     log.error(f"Error removing temporary directory {tmpdir}: {e}")
         return
