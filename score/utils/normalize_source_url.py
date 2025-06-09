@@ -1,7 +1,10 @@
 from urllib.parse import urlparse
 
 
-def normalize_source_url(url: str):
+def normalize_source_url(url: str | None):
+    if not url:
+        return None
+
     URL = urlparse(url)
     if URL.hostname in ["github.com", "gitlab.com", "bitbucket.org"]:
         path_components = URL.path.strip("/").split("/")

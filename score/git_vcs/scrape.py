@@ -76,7 +76,11 @@ def get_commit_metadata(repo: Repo, url: str) -> dict:
     # Return the required metadata
     return {
         "recent_authors_count": int(recent_authors_count),
-        "max_monthly_authors_count": int(max_monthly_authors_count),
+        "max_monthly_authors_count": (
+            None
+            if pd.isna(max_monthly_authors_count)
+            else int(max_monthly_authors_count)
+        ),
         "first_commit": commits.when.min(),
         "latest_commit": commits.when.max(),
     }
