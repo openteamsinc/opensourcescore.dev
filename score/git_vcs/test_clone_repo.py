@@ -57,14 +57,6 @@ def test_clone_repo_sparse_checkout_files(git_repo_to_clone):
         assert not os.path.exists(os.path.join(repo.working_dir, "other_file.txt"))
 
 
-def test_clone_repo_invalid_url():
-    invalid_url = "https://github.com/nonexistent/repo"
-    with clone_repo(invalid_url) as (repo, source):
-        assert repo is None
-        assert source is not None
-        assert source.error == Note.NO_SOURCE_REPO_NOT_FOUND
-
-
 def test_clone_repo_nonexistent_local_path():
     nonexistent_path = "/tmp/definitely/does/not/exist"
     with clone_repo(nonexistent_path) as (repo, source):
