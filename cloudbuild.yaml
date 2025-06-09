@@ -57,7 +57,7 @@ steps:
         --service-account=scraper@$PROJECT_ID.iam.gserviceaccount.com
         --allow-unauthenticated
         --revision-suffix=$SHORT_SHA
-        --max-instances=10
+        --max-instances=20
         --concurrency=20
         --memory=2Gi
         --set-env-vars DEPLOY_DATE=$(date +'%Y-%m-%d')
