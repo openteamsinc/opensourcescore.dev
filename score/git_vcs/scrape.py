@@ -36,7 +36,11 @@ def create_git_metadata(url: str) -> Source:
             return metadata
         metadata = replace(metadata, **get_commit_metadata(repo, url))
         metadata.licenses = list(get_license_type(repo, url))
+        log.info(f"Found {len(metadata.licenses)} licenses in {repo.working_dir}")
         metadata.package_destinations.extend(get_all_pypackage_names(repo))
+        log.info(
+            f"Found {len(metadata.package_destinations)} package destinations in {repo.working_dir}"
+        )
 
         return metadata
 
@@ -100,17 +104,30 @@ def is_valid_license(path: str, content: str) -> bool:
     return True
 
 
+MAX_FILES = 2500
+
+
 def get_license_type(repo: Repo, url: str) -> Iterator[License]:
 
-    license_file_paths = [
-        path
-        for pattern in LICENSE_PATTERNS
-        for path in glob(os.path.join(repo.working_dir, pattern), recursive=True)
-        if is_valid_license_filename(path)
-    ]
+    license_file_paths = sorted(
+        [
+            path
+            for pattern in LICENSE_PATTERNS
+            for path in glob(os.path.join(repo.working_dir, pattern), recursive=True)
+            if is_valid_license_filename(path)
+        ],
+        key=lambda x: (len(x), x),
+    )
 
-    for license_file_path in license_file_paths:
-        log.info(f"Found license file: {license_file_path}")
+    if len(license_file_paths) > MAX_FILES:
+        log.warning(
+            f"Found {len(license_file_paths)} license files in {repo.working_dir}. "
+            "This is more than the expected number of license files. "
+            "Please check if this is correct."
+        )
+    log.info(f"Extracting {len(license_file_paths[:MAX_FILES])} license files")
+    for license_file_path in license_file_paths[:MAX_FILES]:
+        log.debug(f"Found license file: {license_file_path}")
         try:
             with open(
                 license_file_path, encoding="utf8", errors="ignore"

@@ -1,11 +1,13 @@
 import re
+from dataclasses import replace
 from difflib import unified_diff
 from functools import lru_cache
-from hashlib import md5
+from hashlib import md5, sha256
 from pathlib import Path
 from typing import Union
 
 import pandas as pd
+from cachetools import LRUCache, cached
 from spdx_license_matcher.find import find_license
 from strsimpy import SorensenDice
 
@@ -38,6 +40,15 @@ def normalize(content: str) -> str:
 def identify_license(
     source_url: str, license_content: str, license_file_path: str
 ) -> License:
+    license = identify_license_cached(license_content)
+    return replace(license, path=license_file_path)
+
+
+@cached(
+    LRUCache(10_000, getsizeof=lambda x: 1),
+    key=lambda content: sha256(content.encode("utf-8")).hexdigest(),
+)
+def identify_license_cached(license_content: str) -> License:
 
     spdx_licenses = find_license(license_content)
     if spdx_licenses:
@@ -51,7 +62,7 @@ def identify_license(
 
         return License(
             license=spdx_id,
-            path=license_file_path,
+            # path=license_file_path,
             kind=kind or spdx_id.split("-", 1)[0] if spdx_id else "n/a",
             similarity=1,
             modified=False,
@@ -84,7 +95,7 @@ def identify_license(
         return License(
             license="Unknown",
             kind="Unknown",
-            path=license_file_path,
+            # path=license_file_path,
             similarity=similarity,
             best_match=best_match,
             modified=False,
@@ -98,7 +109,7 @@ def identify_license(
             all_licenses[best_match].splitlines(),
             license_content.splitlines(),
             fromfile=f"https://opensource.org/license/{best_match}",
-            tofile=f"{source_url}",
+            tofile="LICENSE",
         )
     )
 
@@ -108,7 +119,7 @@ def identify_license(
 
     matched = License(
         license=best_match,
-        path=license_file_path,
+        # path=license_file_path,
         kind=kind,
         similarity=similarity,
         modified=modified,
