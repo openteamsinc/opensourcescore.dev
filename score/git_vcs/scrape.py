@@ -56,6 +56,8 @@ sparse_checkout = """
 def clone_repo(url: str):
     log.info(f"Cloning {url}")
     source = Source(package_destinations=[], source_url=url)
+    tmpdir = None
+    repo = None
 
     with tempfile.TemporaryDirectory(
         prefix="score", suffix=".git", ignore_cleanup_errors=True
@@ -103,6 +105,20 @@ def clone_repo(url: str):
                 log.error(f"{url}: {err.stderr}")
                 source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
                 yield None, source
+        finally:
+            if repo is not None:
+                try:
+                    repo.close()
+                except Exception as e:
+                    log.error(f"Error closing repo: {e}")
+            else:
+                log.info("No repo to close")
+            # Clean up the temporary directory
+            if tmpdir is not None:
+                try:
+                    os.rmdir(tmpdir)
+                except OSError as e:
+                    log.error(f"Error removing temporary directory {tmpdir}: {e}")
         return
 
 
