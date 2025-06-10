@@ -84,15 +84,23 @@ def clone_repo(url: str):
             source.error = Note.NO_SOURCE_UNSAFE_GIT_PROTOCOL
             yield None, source
         except GitCommandError as err:
-            if err.status == 128 and "not found" in err.stderr.lower():
-                source.error = Note.NO_SOURCE_REPO_NOT_FOUND
-                yield None, source
+            if err.status == 128:
+                if "not found" in err.stderr.lower():
+                    source.error = Note.NO_SOURCE_REPO_NOT_FOUND
+                    yield None, source
+                if "could not read username for" in err.stderr.lower():
+                    source.error = Note.NO_SOURCE_PRIVATE_REPO
+                    yield None, source
+                else:
+                    log.error(f"{url}: {err.status}: {repr(err.stderr)}")
+                    source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
+                    yield None, source
             elif err.status == -9 and "timeout:" in err.stderr.lower():
                 source.error = Note.NO_SOURCE_GIT_TIMEOUT
                 yield None, source
-
             else:
-                log.error(f"{url}: {err.stderr}")
+
+                log.error(f"{url}: {err.status}: {err.stderr}")
                 source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
                 yield None, source
         finally:

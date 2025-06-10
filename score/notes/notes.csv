@@ -46,3 +46,4 @@ LICENSE_RESTRICTION_USER_DATA_ACCESS,Legal,Caution Needed,"License requires acce
 LICENSE_RESTRICTION_CRYPTOGRAPHIC_AUTONOMY,Legal,Caution Needed,"License includes a cryptographic autonomy clause",
 LICENSE_RESTRICTION_WEAK_COPYLEFT,Legal,Caution Needed,"License has weak copyleft provisions",
 PACKAGE_LICENSE_NOT_SPDX_ID,Legal,Caution Needed,"Package license is not listed in the SPDX license list",OSS-RISK-7
+NO_SOURCE_PRIVATE_REPO,Any,Unknown,"Source code is in a private repository",
