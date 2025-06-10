@@ -28,13 +28,16 @@ def create_git_metadata_cached(
     if not invalidate_cache and cache_hit(cache_filename, days=1):
         cached_git = load_from_cache(Source, cache_filename)
         if cached_git is not None:
-            append_header("git-cache-hit", "true")
-            return cached_git
+            if cached_git.error is not None:
+                log.info(f"Cached git metadata for {url} has error: {cached_git.error}")
+            else:
+                append_header("git-cache-hit", "true")
+                return cached_git
 
     append_header("git-cache-hit", "false")
     git = create_git_metadata(url)
-
-    save_to_cache(git, cache_filename)
+    if git.error is None:
+        save_to_cache(git, cache_filename)
 
     return git
 
@@ -50,7 +53,7 @@ def get_vuln_data_cached(
 
     if not invalidate_cache and cache_hit(cache_filename, days=7):
         cached_vuln = load_from_cache(Vulnerabilities, cache_filename)
-        if cached_vuln is not None:
+        if cached_vuln is not None and cached_vuln.error is None:
             append_header("vuln-cache-hit", "true")
             return cached_vuln
 
@@ -58,7 +61,8 @@ def get_vuln_data_cached(
     append_header("vuln-cache-hit", "false")
     vuln = scrape_vulnerability(ecosystem, package_name)
 
-    save_to_cache(vuln, cache_filename)
+    if vuln.error is None:
+        save_to_cache(vuln, cache_filename)
 
     return vuln
 
