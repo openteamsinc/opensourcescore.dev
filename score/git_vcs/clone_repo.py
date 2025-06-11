@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import time
 from contextlib import contextmanager
+from typing import Tuple
 
 from git import Repo
 from git.cmd import Git
@@ -42,6 +43,45 @@ sparse_checkout = """
 """
 
 
+def git_command_error(
+    url: str, err: GitCommandError, source: Source
+) -> Tuple[None, Source]:
+    if err.status == 128:
+        if "not found" in err.stderr.lower():
+            source.error = Note.NO_SOURCE_REPO_NOT_FOUND
+            return None, source
+        if "could not read username for" in err.stderr.lower():
+            source.error = Note.NO_SOURCE_PRIVATE_REPO
+            return None, source
+        else:
+            log.error(f"{url}: {err.status}: {repr(err.stderr)}")
+            source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
+            return None, source
+    if err.status == -9 and "timeout:" in err.stderr.lower():
+        source.error = Note.NO_SOURCE_GIT_TIMEOUT
+        return None, source
+
+    log.error(f"{url}: {err.status}: {err.stderr}")
+    source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
+    return None, source
+
+
+def cleanup(repo: Repo | None, tmpdir: str | None):
+    if repo is not None:
+        try:
+            repo.close()
+        except Exception as e:
+            log.error(f"Error closing repo: {e}")
+    else:
+        log.info("No repo to close")
+    # Clean up the temporary directory
+    if tmpdir is not None:
+        try:
+            shutil.rmtree(tmpdir)
+        except OSError as e:
+            log.error(f"Error removing temporary directory {tmpdir}: {e}")
+
+
 @contextmanager
 def clone_repo(url: str):
     log.info(f"Cloning {url}")
@@ -78,43 +118,14 @@ def clone_repo(url: str):
             s = time.time()
             repo.git.checkout("HEAD")
             log.info(f"Checked out in {time.time() - s:.2f} seconds")
-            yield repo, source
 
         except UnsafeProtocolError:
             source.error = Note.NO_SOURCE_UNSAFE_GIT_PROTOCOL
-            yield None, source
+            repo = None
         except GitCommandError as err:
-            if err.status == 128:
-                if "not found" in err.stderr.lower():
-                    source.error = Note.NO_SOURCE_REPO_NOT_FOUND
-                    yield None, source
-                if "could not read username for" in err.stderr.lower():
-                    source.error = Note.NO_SOURCE_PRIVATE_REPO
-                    yield None, source
-                else:
-                    log.error(f"{url}: {err.status}: {repr(err.stderr)}")
-                    source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
-                    yield None, source
-            elif err.status == -9 and "timeout:" in err.stderr.lower():
-                source.error = Note.NO_SOURCE_GIT_TIMEOUT
-                yield None, source
-            else:
+            repo, source = git_command_error(url, err, source)
 
-                log.error(f"{url}: {err.status}: {err.stderr}")
-                source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
-                yield None, source
+        try:
+            yield repo, source
         finally:
-            if repo is not None:
-                try:
-                    repo.close()
-                except Exception as e:
-                    log.error(f"Error closing repo: {e}")
-            else:
-                log.info("No repo to close")
-            # Clean up the temporary directory
-            if tmpdir is not None:
-                try:
-                    shutil.rmtree(tmpdir)
-                except OSError as e:
-                    log.error(f"Error removing temporary directory {tmpdir}: {e}")
-        return
+            cleanup(repo, tmpdir)
