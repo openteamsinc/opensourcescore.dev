@@ -13,7 +13,7 @@ ENV REVISION_ID=$REVISION_ID
 ARG DEPLOY_DATE
 ENV DEPLOY_DATE=$DEPLOY_DATE
 
-RUN apt-get update && apt-get  install git -y
+RUN apt-get update && apt-get  install git procps -y
 
 COPY requirements.txt ./requirements.txt
 
