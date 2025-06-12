@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 def normalize_source_url(url: str | None):
     if not url:
         return None
+    if url.startswith("git@github.com:"):
+        url = f"https://github.com/{url[15:]}"
 
     URL = urlparse(url)
     if URL.hostname in ["github.com", "gitlab.com", "bitbucket.org"]:

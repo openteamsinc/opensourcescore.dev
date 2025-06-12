@@ -57,9 +57,9 @@ def git_command_error(
             log.error(f"{url}: {err.status}: {repr(err.stderr)}")
             source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
             return None, source
+
     if err.status == -9 and "timeout:" in err.stderr.lower():
-        source.error = Note.NO_SOURCE_GIT_TIMEOUT
-        return None, source
+        raise
 
     log.error(f"{url}: {err.status}: {err.stderr}")
     source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
