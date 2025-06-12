@@ -1,14 +1,18 @@
 from urllib.parse import urlparse
+import re
+
+TWO_COMPONENT_HOSTS = ["github.com", "gitlab.com", "bitbucket.org"]
 
 
 def normalize_source_url(url: str | None):
     if not url:
         return None
-    if url.startswith("git@github.com:"):
-        url = f"https://github.com/{url[15:]}"
+
+    # replace git ssh syntax with url syntax
+    url = re.sub(r"git@([^:]+):(.+)", r"https://\1/\2", url)
 
     URL = urlparse(url)
-    if URL.hostname in ["github.com", "gitlab.com", "bitbucket.org"]:
+    if URL.hostname in TWO_COMPONENT_HOSTS:
         path_components = URL.path.strip("/").split("/")
         if len(path_components) != 2:
             # Invalid git*.com/ URL

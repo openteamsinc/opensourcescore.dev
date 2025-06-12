@@ -59,7 +59,7 @@ def git_command_error(
             return None, source
 
     if err.status == -9 and "timeout:" in err.stderr.lower():
-        raise
+        raise TimeoutError(f"Timeout while cloning {url}")
 
     log.error(f"{url}: {err.status}: {err.stderr}")
     source.error = Note.NO_SOURCE_OTHER_GIT_ERROR
