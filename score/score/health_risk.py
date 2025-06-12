@@ -21,7 +21,7 @@ def score_contributors(git_info: Source):
     if mma_count is not None and mma_count < FEW_MAX_MONTHLY_AUTHORS_CONST:
         yield Note.FEW_MAX_MONTHLY_AUTHORS
 
-    if recent_count is not None and recent_count < 2:
+    if recent_count == 1:
         yield Note.ONE_AUTHOR_THIS_YEAR
 
 
