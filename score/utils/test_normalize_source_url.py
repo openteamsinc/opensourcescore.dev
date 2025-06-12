@@ -1,5 +1,3 @@
-import pytest
-
 from .normalize_source_url import normalize_source_url
 
 
