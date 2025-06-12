@@ -36,7 +36,6 @@ sparse_checkout = """
 **/setup.cfg
 **/setup.py
 **/requirements.txt
-**/METADATA.toml
 **/LICEN?E*
 **/licen?e*
 **/COPYING*
