@@ -97,6 +97,9 @@ def is_valid_license_filename(path: str) -> bool:
 
 def is_valid_license(path: str, content: str) -> bool:
     path = path.lower()
+    if "/test/" in path:
+        log.info(f"Skipping {path} due to test directory")
+        return False
     if path.startswith("docs"):
         # This is documentation including a license file
         if path.endswith("license.rst") and (
