@@ -1,5 +1,5 @@
-from urllib.parse import urlparse
 import re
+from urllib.parse import urlparse
 
 TWO_COMPONENT_HOSTS = ["github.com", "gitlab.com", "bitbucket.org"]
 
