@@ -141,6 +141,16 @@ def get_npm_pypackage_names(repo: Repo):
             yield f"npm/{name}", source_file
 
 
+def python_typeshed_special_case(repo: Repo):
+    for full_path in checkout_suffix(repo, "METADATA.toml"):
+        stub_path = full_path.replace(str(repo.working_dir), "")
+        if not stub_path.startswith("/stubs"):
+            continue
+        name = stub_path[7:-14]
+        yield f"pypi/types-{name}", stub_path
+    return
+
+
 def get_pypi_pypackage_names(repo: Repo):
     full_paths = get_pyproject_tomls(repo)
     found_names = False
@@ -150,6 +160,9 @@ def get_pypi_pypackage_names(repo: Repo):
         if name and source_file:
             found_names = True
             yield f"pypi/{name}", source_file
+
+            if name == "typeshed":
+                yield from python_typeshed_special_case(repo)
 
     full_paths = get_setup_configs(repo)
     log.info(f"Found {len(full_paths)} setup.cfg files")
