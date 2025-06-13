@@ -11,7 +11,7 @@ gcsfs==2025.5.1
 fsspec==2025.5.1
 
 # --
-spdx_license_matcher~=1.0.8
+spdx_license_matcher~=1.0.9
 # --
 
 google-cloud-logging~=3.12.1
