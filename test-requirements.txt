@@ -1,13 +1,13 @@
 black~=25.1.0
-flake8~=7.2.0
+flake8~=7.3.0
 isort~=6.0.1
-pytest~=8.4.0
+pytest~=8.4.1
 pytest-env~=1.1.5
-robotframework==7.2.2
+robotframework==7.3.2
 robotframework-requests==0.9.7
-sqlfluff==3.4.0
+sqlfluff==3.4.2
 httpx~=0.28.1
-mypy~=1.16.0
+mypy~=1.17.1
 
 # TYPES
 
